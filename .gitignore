@@ -1,0 +1,5 @@
+build
+dist
+run.spec
+run
+#remove run from ignore list when ready to ship
