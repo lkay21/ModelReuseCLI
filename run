@@ -4,8 +4,4 @@ if [ "$1" == "install" ]; then
     pip install -r requirements.txt
     exit $?
 fi
-if [ "$1" == "test" ]; then
-    python3 main.py test
-    exit $?
-fi
 python3 main.py "$@" 
