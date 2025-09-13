@@ -56,3 +56,20 @@ class HFClient:
             return getattr(card, "text", None)
         except Exception:
             return None
+        
+def run_hf_test():
+    """Simple smoke test for Hugging Face integration."""
+    print("Running Hugging Face smoke test...")
+    hf = HFClient()
+
+    m = hf.model_info("bert-base-uncased")
+    d = hf.dataset_info("rajpurkar/squad")
+    card = hf.model_card_text("bert-base-uncased")
+
+    print("model ok:", bool(m), "modelId:", m.get("modelId"))
+    print("dataset ok:", bool(d), "id:", d.get("id"))
+    print("card text chars:", len(card or ""))
+
+
+if __name__ == "__main__":
+    run_hf_test()
