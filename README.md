@@ -3,6 +3,10 @@
 ## Setup
 Put your Gemini-2.0-flash API key into gemini_key.txt
 
+Optionally, set up a GitHub token for higher rate limits:
+- Preferred: set an environment variable `GITHUB_TOKEN`
+- Or create a file `git_token.txt` with your token in the first line
+
 Optionally, set up a Hugging Face token for higher rate limits:
 - Preferred: set an environment variable `HF_TOKEN`
 - Or create a file `hf_key.txt` with your token on the first line (this file is ignored by git)
