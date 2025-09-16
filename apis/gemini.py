@@ -1,6 +1,20 @@
 import requests
 import json
 from typing import Optional
+import os
+
+
+def get_gemini_key() -> Optional[str]:
+    """Retrieve the Gemini API key from a local file or environment variable."""
+    try:
+        gemini_token = os.getenv("GEMINI_API_KEY")
+        if gemini_token:
+            return gemini_token
+        with open('gemini_key.txt', 'r') as file:
+            return file.readline().strip()
+    except FileNotFoundError:
+        print("Gemini API key file not found.")
+        return None
 
 
 def prompt_gemini(prompt: str, api_key: str) -> Optional[str]:
