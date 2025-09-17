@@ -1,6 +1,9 @@
 import threading
 import time
 
+from metrics.ramp_up_time import ramp_up_time
+
+
 class Code:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -8,7 +11,7 @@ class Code:
         self._metadata = {}
         self._path_to_cloned = ""
         self._code_quality = 0
-        
+
     def getURL(self) -> str:
         return self._url
     def getName(self) -> str:
@@ -19,7 +22,8 @@ class Code:
         return self._path_to_cloned
     def getCodeQuality(self) -> int:
         return self._code_quality
-    
+
+
 class Dataset:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -27,7 +31,7 @@ class Dataset:
         self._metadata = {}
         self._path_to_cloned = ""
         self._dataset_quality = 0
-        
+
     def getURL(self) -> str:
         return self._url
     def getName(self) -> str:
@@ -38,27 +42,52 @@ class Dataset:
         return self._path_to_cloned
     def getDatasetQuality(self) -> int:
         return self._dataset_quality
-    
+
 
 class Model:
     def __init__(self, url: str) -> None:
         self.url = url
         self.name: str = ""
-        self.code = None  # instance of Code class
-        self.dataset = None  # instance of Dataset class
+        self.code = None      # instance of Code
+        self.dataset = None   # instance of Dataset
         self.metadata = {}
-        self.metrics = {"ramp_up_time": 0, "bus_factor": 0, "performance_claims": 0, "license": 0, "size_score": 0, "dataset_and_code_score": 0, "dataset_quality": 0, "code_quality": 0}
+        self.metrics = {
+            "ramp_up_time": 0,
+            "bus_factor": 0,
+            "performance_claims": 0,
+            "license": 0,
+            "size_score": 0,
+            "dataset_and_code_score": 0,
+            "dataset_quality": 0,
+            "code_quality": 0,
+        }
         self.netScore = 0.0
         self.hfAPIData = {}
         self.gitAPIData = {}
 
+        self.latencies = {
+            "ramp_up_time_latency": 0,
+            "bus_factor_latency": 0,
+            "performance_claims_latency": 0,
+            "License_latency": 0,
+            "size_score_latency": 0,
+            "dataset_and_code_score_latency": 0,
+            "dataset_quality_latency": 0,
+            "code_quality_latency": 0,
+        }
+
     def calcMetricsParallel(self) -> None:
         threads = []
-        funcs = {"ramp_up_time": self.calcRampUp, "bus_factor": self.calcBusFactor, 
-                 "performance_claims": self.calcPerformanceClaims, "license": self.calcLicense, 
-                 "size_score": self.calcSize, "dataset_and_code_score": self.calcDatasetCode, 
-                 "dataset_quality": self.calcDatasetQuality, "code_quality": self.calcCodeQuality
-                }
+        funcs = {
+            "ramp_up_time": self.calcRampUp,
+            "bus_factor": self.calcBusFactor,
+            "performance_claims": self.calcPerformanceClaims,
+            "license": self.calcLicense,
+            "size_score": self.calcSize,
+            "dataset_and_code_score": self.calcDatasetCode,
+            "dataset_quality": self.calcDatasetQuality,
+            "code_quality": self.calcCodeQuality,
+        }
         for key in funcs:
             t = threading.Thread(target=funcs[key])
             threads.append(t)
@@ -66,12 +95,16 @@ class Model:
             t.start()
         for t in threads:
             t.join()
-    
+
     def calcSize(self) -> None:
         self.metrics["size_score"] = 1
 
     def calcRampUp(self) -> None:
-        self.metrics["ramp_up_time"] = 1
+        # prefer parsed name if URL parser filled it; else derive from URL
+        model_id = self.name or (self.url.split("huggingface.co/")[-1].strip("/") if "huggingface.co/" in self.url else self.url)
+        res = ramp_up_time(model_id)
+        self.metrics["ramp_up_time"] = res["score"]
+        self.latencies["ramp_up_time_latency"] = res["duration_ms"]
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
@@ -93,12 +126,16 @@ class Model:
 
     def linkCode(self, code: Code):
         self.code = code
-    
+
+    def linkDataset(self, dataset: Dataset):
+        self.dataset = dataset
+
 
 if __name__ == "__main__":
-    model = Model("url")
+    model = Model("https://huggingface.co/bert-base-uncased")
     t = time.time()
     model.calcMetricsParallel()
     print(model.metrics)
-    print(time.time() - t)
+    print("elapsed:", time.time() - t)
+
     
