@@ -15,7 +15,6 @@ def license_score(model_id: str, api_key: str) -> float:
     """
     client = HFClient()
     modelcard_license = client.model_info(model_id).get("license", "No license information found on model card.")
-    print(modelcard_license)
 
     model_info = client.model_info(model_id)
 
@@ -34,11 +33,17 @@ def license_score(model_id: str, api_key: str) -> float:
         If the license is not explicitly mentioned, consider common open-source licenses and their compatibility with LGPLv2.1. Evaluate the information on its clarity & permissiveness (0.5 points) and compatibility with the LGPLv2.1 license (0.5 points). In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of 0.5 points). Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>
         '''
 
-    license_compatibility = prompt_gemini(license_compatibility_prompt, api_key)
-    match = re.match(r"([0-1](\.\d+)?):\s*(.*)", license_compatibility)
-    if match:
-        score = float(match.group(1))
-        explanation = match.group(3)
+    num_retries = 0
+    max_retries = 3
+
+    while num_retries < max_retries:
+        license_compatibility = prompt_gemini(license_compatibility_prompt, api_key)
+        match = re.match(r"([0-1](\.\d+)?):\s*(.*)", license_compatibility)
+        if match:
+            score = float(match.group(1))
+            explanation = match.group(3)
+            break
+        num_retries += 1
     else:
         raise ValueError("Could not parse the license score from the response.")
     return score, explanation
