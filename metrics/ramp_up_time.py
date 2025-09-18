@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import Dict, Any
+
 
 from apis.hf_client import HFClient
 
@@ -9,7 +9,7 @@ def _clamp01(x: float) -> float:
     return 0.0 if x < 0 else 1.0 if x > 1 else x
 
 
-def ramp_up_time(model_id: str) -> Dict[str, Any]:
+def ramp_up_time(model_id: str) -> float:
     """
     Ramp-up score from README + HF metadata (regex-free) with optional LLM blend.
     Returns: {'score': float in [0,1]}
@@ -71,7 +71,7 @@ def ramp_up_time(model_id: str) -> Dict[str, Any]:
         if llm_score is not None:
             score = _clamp01(0.7 * heur_score + 0.3 * llm_score)
 
-    return {"score": score}
+    return score
 
 
 if __name__ == "__main__":

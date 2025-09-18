@@ -56,16 +56,6 @@ class Model:
         self.hfAPIData = {}
         self.gitAPIData = {}
 
-        self.latencies = {
-            "ramp_up_time_latency": 0,
-            "bus_factor_latency": 0,
-            "performance_claims_latency": 0,
-            "License_latency": 0,
-            "size_score_latency": 0,
-            "dataset_and_code_score_latency": 0,
-            "dataset_quality_latency": 0,
-            "code_quality_latency": 0,
-        }
 
     def calcMetricsParallel(self) -> None:
         threads = []
@@ -93,11 +83,17 @@ class Model:
         self.latencies["size_score_latency"] = time.perf_counter() - t
 
     def calcRampUp(self) -> None:
-        # prefer parsed name if URL parser filled it; else derive from URL
-        model_id = self.name or (self.url.split("huggingface.co/")[-1].strip("/") if "huggingface.co/" in self.url else self.url)
-        res = ramp_up_time(model_id)
-        self.metrics["ramp_up_time"] = res["score"]
-        self.latencies["ramp_up_time_latency"] = res["duration_ms"]
+        if getattr(self, "id", ""):
+            model_id = self.id
+        elif "huggingface.co/" in self.url:
+            model_id = self.url.split("huggingface.co/")[-1].strip("/")
+        else:
+            model_id = (self.url or self.id)
+
+        t = time.perf_counter()
+        score = ramp_up_time(model_id)   #returns float
+        self.metrics["ramp_up_time"] = score
+        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t #latency
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
