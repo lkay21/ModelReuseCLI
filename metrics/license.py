@@ -1,6 +1,7 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
 import re
+from typing import Tuple, Optional
 
 
 def license_score(model_id: str, api_key: str) -> float:
@@ -11,7 +12,6 @@ def license_score(model_id: str, api_key: str) -> float:
         api_key (str): Gemini API key
     Returns:
         score (float): License compliance score between 0 and 1
-        explanation (str): Explanation of the score by Gemini
     """
     client = HFClient()
     modelcard_license = client.model_info(model_id).get("license", "No license information found on model card.")
@@ -42,11 +42,12 @@ def license_score(model_id: str, api_key: str) -> float:
         if match:
             score = float(match.group(1))
             explanation = match.group(3)
+            # print(f"License Score Explanation: {explanation}")
             break
         num_retries += 1
     else:
         raise ValueError("Could not parse the license score from the response.")
-    return score, explanation
+    return score
 
 
 if __name__ == "__main__":
@@ -56,5 +57,3 @@ if __name__ == "__main__":
     l_score, explanation = license_score(model_id, api_key)
     print(f"License Score for {model_id}: {l_score}")
     print(f"Explanation: {explanation}")
-
-    
