@@ -33,7 +33,6 @@ def ramp_up_time(model_id: str) -> Dict[str, Any]:
     ]) else 0
     has_meta       = 1 if any(hf_info.get(k) for k in ("pipeline_tag", "tags", "cardData")) else 0
 
-    # weights sum to 1.0
     heur_score = (
         0.10 * has_readme +
         0.25 * has_quickstart +
