@@ -1,7 +1,6 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
 import re
-from typing import Tuple, Optional
 
 
 def license_score(model_id: str, api_key: str) -> float:
