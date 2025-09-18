@@ -1,38 +1,19 @@
 from __future__ import annotations
 import os
-import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
-from apis.hf_client import HFClient  
-
-try:
-    from apis.gemini import prompt_gemini  # (prompt_gemini(prompt, api_key) -> str|None)
-except Exception:
-    prompt_gemini = None  
+from apis.hf_client import HFClient
 
 
 def _clamp01(x: float) -> float:
     return 0.0 if x < 0 else 1.0 if x > 1 else x
 
 
-def _read_first_line(path: str) -> Optional[str]:
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.readline().strip()
-    except FileNotFoundError:
-        return None
-
-
 def ramp_up_time(model_id: str) -> Dict[str, Any]:
     """
-    Minimal ramp-up score:
-      - Heuristic signals from README + HF metadata
-      - LLM blend if GEMINI_API_KEY (or gemini_key.txt) is present
-
-    Returns: {'score': float in [0,1], 'duration_ms': int}
+    Ramp-up score from README + HF metadata (regex-free) with optional LLM blend.
+    Returns: {'score': float in [0,1]}
     """
-    t0 = time.perf_counter()
-
     # --- fetch HF data ---
     hf = HFClient()
     hf_info = hf.model_info(model_id) or {}
@@ -63,8 +44,16 @@ def ramp_up_time(model_id: str) -> Dict[str, Any]:
     score = _clamp01(heur_score)
 
     # LLM blend (70% heuristics, 30% Gemini) 
-    key = os.getenv("GEMINI_API_KEY") or _read_first_line("gemini_key.txt")
-    if key and prompt_gemini and card_text:
+    # lazy import; prefer get_gemini_key() from apis.gemini if available
+    key = os.getenv("GEMINI_API_KEY")
+    _pg = None
+    try:
+        from apis.gemini import get_gemini_key, prompt_gemini as _pg  
+        key = get_gemini_key() or key
+    except Exception:
+        pass  
+
+    if key and _pg and card_text:
         prompt = (
             "Grade how easy it is to start using a model from this README.\n"
             "Return ONLY a float in [0,1].\n"
@@ -72,8 +61,8 @@ def ramp_up_time(model_id: str) -> Dict[str, Any]:
             "0.0 = academic or unclear with no quickstart.\n\nREADME:\n"
             f"{card_text[:6000]}\n\nJust the number:"
         )
-        txt = (prompt_gemini(prompt, key) or "").strip()
-        llm_score: Optional[float] = None
+        txt = (_pg(prompt, key) or "").strip()
+        llm_score = None
         for tok in txt.replace(",", " ").split():
             try:
                 llm_score = _clamp01(float(tok))
@@ -83,11 +72,9 @@ def ramp_up_time(model_id: str) -> Dict[str, Any]:
         if llm_score is not None:
             score = _clamp01(0.7 * heur_score + 0.3 * llm_score)
 
-    return {
-        "score": score,
-        "duration_ms": int((time.perf_counter() - t0) * 1000),
-    }
+    return {"score": score}
 
 
 if __name__ == "__main__":
     print(ramp_up_time("bert-base-uncased"))
+
