@@ -83,17 +83,10 @@ class Model:
         self.latencies["size_score_latency"] = time.perf_counter() - t
 
     def calcRampUp(self) -> None:
-        if getattr(self, "id", ""):
-            model_id = self.id
-        elif "huggingface.co/" in self.url:
-            model_id = self.url.split("huggingface.co/")[-1].strip("/")
-        else:
-            model_id = (self.url or self.id)
-
         t = time.perf_counter()
-        score = ramp_up_time(model_id)   #returns float
+        score = ramp_up_time(self.id)  # returns float 
         self.metrics["ramp_up_time"] = score
-        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t #latency
+        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
