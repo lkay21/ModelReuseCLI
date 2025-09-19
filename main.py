@@ -6,6 +6,7 @@ from typing import Dict
 
 from apis.gemini import prompt_gemini
 from apis.hf_client import HFClient, resolve_hf_token
+from utils.url_parser import parse_URL_file, print_model_summary
 
 
 def get_api_keys() -> Dict[str, str]:
@@ -42,11 +43,29 @@ def main():
         print("Running tests...")
         pass
     else:
+        # Treat as URL_FILE path
         url_file = args.option
-        # add processing here
-        pass
+        
+        # Check if the file exists
+        if not os.path.exists(url_file):
+            print(f"Error: File '{url_file}' not found.")
+            sys.exit(2)  # More specific error code for file not found
+        
+        # Parse the URL file and create Model objects
+        models, dataset_registry = parse_URL_file(url_file)
+        
+        if not models:
+            print("No models found in the file.")
+            sys.exit(3)  # Specific error code for no models found
+        
+        # Print summary of parsed models
+        print_model_summary(models, dataset_registry)
+        
+        print("\nURL parsing complete! Created:")
+        print(f"  - {len(models)} Model objects")
+        print(f"  - {len(dataset_registry)} unique datasets")
+        print("Objects ready for metric calculation teams.")
 
 
 if __name__ == "__main__":
     main()
-

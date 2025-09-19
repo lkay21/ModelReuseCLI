@@ -1,7 +1,7 @@
 import threading
 import time
-
-
+from metrics.size_score import size_score
+import json
 class Code:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -51,14 +51,27 @@ class Dataset:
 
 
 class Model:
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str = "", id: str = "") -> None:
         self.url = url
-        self.name: str = ""
+        self.id: str = id
         self.code = None  # instance of Code class
         self.dataset = None  # instance of Dataset class
         self.metadata = {}
-        self.metrics = {"ramp_up_time": 0, "bus_factor": 0, "performance_claims": 0, "license": 0,
-                        "size_score": 0, "dataset_and_code_score": 0, "dataset_quality": 0, "code_quality": 0}
+        self.metrics = {
+            "ramp_up_time": 0, 
+            "bus_factor": 0, 
+            "performance_claims": 0, 
+            "license": 0, 
+            "size_score": {
+                "raspberry_pi": 0.0,
+                "jetson_nano": 0.0,
+                "desktop_pc": 0.0,
+                "aws_server": 0.0
+            }, 
+            "dataset_and_code_score": 0, 
+            "dataset_quality": 0, 
+            "code_quality": 0
+        }
         self.netScore = 0.0
         self.hfAPIData = {}
         self.gitAPIData = {}
@@ -80,7 +93,9 @@ class Model:
             t.join()
 
     def calcSize(self) -> None:
-        self.metrics["size_score"] = 1
+        t = time.perf_counter()
+        self.metrics["size_score"] = size_score(self.id)
+        self.latencies["size_score_latency"] = time.perf_counter() - t
 
     def calcRampUp(self) -> None:
         self.metrics["ramp_up_time"] = 1
@@ -105,11 +120,25 @@ class Model:
 
     def linkCode(self, code: Code):
         self.code = code
-
+    
+    def linkDataset(self, dataset: Dataset):
+        self.dataset = dataset
+    
 
 if __name__ == "__main__":
-    model = Model("url")
-    t = time.time()
+    model = Model(id = "microsoft/DialoGPT-medium")
     model.calcMetricsParallel()
-    print(model.metrics)
-    print(time.time() - t)
+    output = {}
+    output.update(model.metrics)
+    output.update(model.latencies)
+
+    print(json.dumps(output, indent=4))
+    
+    model = Model(id = "deepseek-ai/DeepSeek-R1")
+    model.calcMetricsParallel()
+    output = {}
+    output.update(model.metrics)
+    output.update(model.latencies)
+
+    print(json.dumps(output, indent=4))
+    
