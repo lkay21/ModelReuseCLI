@@ -1,6 +1,7 @@
 import threading
 import time
 from metrics.size_score import size_score
+from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
 class Code:
@@ -10,7 +11,7 @@ class Code:
         self._metadata = {}
         self._path_to_cloned = ""
         self._code_quality = 0
-        
+
     def getURL(self) -> str:
         return self._url
     def getName(self) -> str:
@@ -21,7 +22,8 @@ class Code:
         return self._path_to_cloned
     def getCodeQuality(self) -> int:
         return self._code_quality
-    
+
+
 class Dataset:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -29,7 +31,7 @@ class Dataset:
         self._metadata = {}
         self._path_to_cloned = ""
         self._dataset_quality = 0
-        
+
     def getURL(self) -> str:
         return self._url
     def getName(self) -> str:
@@ -40,7 +42,7 @@ class Dataset:
         return self._path_to_cloned
     def getDatasetQuality(self) -> int:
         return self._dataset_quality
-    
+
 
 class Model:
     def __init__(self, url: str = "", id: str = "") -> None:
@@ -95,11 +97,16 @@ class Model:
 
     def calcMetricsParallel(self) -> None:
         threads = []
-        funcs = {"ramp_up_time": self.calcRampUp, "bus_factor": self.calcBusFactor, 
-                 "performance_claims": self.calcPerformanceClaims, "license": self.calcLicense, 
-                 "size_score": self.calcSize, "dataset_and_code_score": self.calcDatasetCode, 
-                 "dataset_quality": self.calcDatasetQuality, "code_quality": self.calcCodeQuality
-                }
+        funcs = {
+            "ramp_up_time": self.calcRampUp,
+            "bus_factor": self.calcBusFactor,
+            "performance_claims": self.calcPerformanceClaims,
+            "license": self.calcLicense,
+            "size_score": self.calcSize,
+            "dataset_and_code_score": self.calcDatasetCode,
+            "dataset_quality": self.calcDatasetQuality,
+            "code_quality": self.calcCodeQuality,
+        }
         for key in funcs:
             t = threading.Thread(target=funcs[key])
             threads.append(t)
@@ -107,7 +114,7 @@ class Model:
             t.start()
         for t in threads:
             t.join()
-    
+
     def calcSize(self) -> None:
         # Time in milliseconds
         t = int(time.perf_counter_ns() / 1e6)
@@ -115,7 +122,10 @@ class Model:
         self.latencies["size_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcRampUp(self) -> None:
-        self.metrics["ramp_up_time"] = 1
+        t = time.perf_counter()
+        score = ramp_up_time(self.id)  # returns float 
+        self.metrics["ramp_up_time"] = score
+        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
