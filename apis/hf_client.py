@@ -27,7 +27,7 @@ class HFClient:
             HfFolder.save_token(token)
         self.api = HfApi()
 
-    #Models 
+    # Models
     def model_info(self, model_id: str) -> Dict[str, Any]:
         try:
             info = self.api.model_info(model_id)
@@ -42,7 +42,7 @@ class HFClient:
         except Exception:
             return None
 
-    #Datasets
+    # Datasets
     def dataset_info(self, dataset_id: str) -> Dict[str, Any]:
         try:
             info = self.api.dataset_info(dataset_id)
@@ -56,7 +56,8 @@ class HFClient:
             return getattr(card, "text", None)
         except Exception:
             return None
-        
+
+
 def run_hf_test():
     """Simple smoke test for Hugging Face integration."""
     print("Running Hugging Face smoke test...")

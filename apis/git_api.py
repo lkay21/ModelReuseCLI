@@ -38,7 +38,11 @@ def make_request(url: str, headers: Dict[str, str], max_time: int = 60) -> reque
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             return response
-        elif response.status_code == 403 and 'X-RateLimit-Remaining' in response.headers and response.headers['X-RateLimit-Remaining'] == '0':
+        elif (
+            response.status_code == 403
+            and 'X-RateLimit-Remaining' in response.headers
+            and response.headers['X-RateLimit-Remaining'] == '0'
+        ):
             reset_time = int(response.headers.get('X-RateLimit-Reset', time.time() + wait_time))
             sleep_time = max(reset_time - time.time(), wait_time)
             print(f"Rate limit exceeded. Sleeping for {sleep_time} seconds.")
@@ -80,11 +84,11 @@ def get_contributors(owner: str, repo: str) -> List[Dict[str, Any]]:
 def get_commit_history(owner: str, repo: str) -> List[Dict[str, Any]]:
     """
     Retrieve commits from a GitHub repository.
-    
+
     Args:
         owner (str): Repository owner (e.g., "octocat")
         repo (str): Repository name (e.g., "hello-world")
-    
+
     Returns:
         list: A list of commit objects (dicts) from the GitHub API
     """
