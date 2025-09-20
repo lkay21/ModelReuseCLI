@@ -63,7 +63,7 @@ def extract_name_from_url(url: str) -> str:
         namespace, name = hf_match.groups()
         return namespace, name
     
-    return ""
+    return "", ""
 
 
 def populate_code_info(code: Code) -> None:
@@ -94,7 +94,8 @@ def populate_dataset_info(dataset: Dataset) -> None:
         dataset (Dataset): Dataset object to populate
     """
     # Extract name from URL
-    dataset._name = extract_name_from_url(dataset._url)
+    owner, name = extract_name_from_url(dataset._url)
+    dataset._name = owner + "/" + name
     # TODO: Add HuggingFace API calls to populate metadata
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient

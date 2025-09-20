@@ -6,6 +6,7 @@ import json
 from typing import Dict, Union
 # from clone_bridge import clone_with_isogit
 from metrics.performance_claims import performance_claims
+from metrics.dataset_and_code_score import dataset_and_code_score
 
 class Code:
     def __init__(self, url: str) -> None:
@@ -149,7 +150,11 @@ class Model:
         self.metrics["license"] = 1
 
     def calcDatasetCode(self) -> None:
-        self.metrics["dataset_and_code_score"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        if self.dataset and self.code:
+            code_id = self.code._url[self.code._url.index("github.com")+11:]
+            self.metrics["dataset_and_code_score"] = dataset_and_code_score(self.id, self.dataset._name, code_id)
+        self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
         self.metrics["dataset_quality"] = 1
