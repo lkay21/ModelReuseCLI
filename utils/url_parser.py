@@ -61,7 +61,7 @@ def extract_name_from_url(url: str) -> str:
     hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
     if hf_match:
         namespace, name = hf_match.groups()
-        return name
+        return namespace, name
     
     return ""
 
@@ -113,7 +113,8 @@ def populate_model_info(model: Model) -> None:
         model (Model): Model object to populate
     """
     # Extract name from URL
-    model.name = extract_name_from_url(model.url)
+    owner, model.name = extract_name_from_url(model.url)
+    model.id = owner + "/" + model.name
     # TODO: Add HuggingFace API calls to populate hfAPIData
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient
