@@ -4,7 +4,7 @@ from apis.hf_client import HFClient
 
 def compute_dataset_quality(dataset_id: str) -> float:
     '''
-    Compute the quality score of 1 datasetby checking the size, descriptions, and other relevant info.
+    Compute the quality score of 1 dataset by checking the size, descriptions, and other relevant info.
     Ask Gemini to score the datasets based on the information given. Score from 0 to 1.
 
     Args:
@@ -13,7 +13,6 @@ def compute_dataset_quality(dataset_id: str) -> float:
         score (float): The dataset quality score from 0 to 1
     '''
     hf_client = HFClient()
-    dataset_info = hf_client.dataset_info(dataset_id)
     dataset_card = hf_client.dataset_card_text(dataset_id)
 
     api_key = get_gemini_key()
@@ -21,18 +20,14 @@ def compute_dataset_quality(dataset_id: str) -> float:
         return 0.0
 
     prompt = f"""Analyze the following dataset information and its card from Hugging Face.
-
 Dataset ID: {dataset_id}
-Dataset Info: {dataset_info}
 Dataset Card:
-{dataset_card[:8000] if dataset_card else "No dataset card available"}
-
+{dataset_card if dataset_card else "No dataset card available"}
 Based on the information, evaluate the dataset's quality on a scale from 0.0 to 1.0. Consider:
-- Completeness and clarity of the description.
-- Presence of data splits (train, validation, test).
-- Clear licensing and citation information.
-- General usability and documentation.
-
+- Completeness and clarity of the documentation. [0.4 points]
+- Size and diversity of the dataset. [0.2 points]
+- Presence of data splits (train, validation, test). [0.2 points]
+- Clear licensing and citation information. [0.2 points]
 Respond with ONLY the final score as a single float in the format x.xx
 Response:"""
 
@@ -48,7 +43,6 @@ Response:"""
         return 0.0
 
     return 0.0
-
 
 
 def compute_avg_dataset_quality(dataset_ids: list) -> float:
@@ -68,3 +62,6 @@ def compute_avg_dataset_quality(dataset_ids: list) -> float:
     avg_score = sum(dataset_scores) / len(dataset_scores)
     return avg_score
 
+
+if __name__ == "__main__":
+    print(compute_dataset_quality("rajpurkar/squad"))
