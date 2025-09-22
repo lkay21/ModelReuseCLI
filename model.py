@@ -106,12 +106,6 @@ class Model:
     def calcMetricsParallel(self) -> None:
         threads = []
         funcs = {
-<<<<<<< HEAD
-            "ramp_up_time": self.calcRampUp, "bus_factor": self.calcBusFactor,
-            "performance_claims": self.calcPerformanceClaims, "license": self.calcLicense,
-            "size_score": self.calcSize, "dataset_and_code_score": self.calcDatasetCode,
-            "dataset_quality": self.calcDatasetQuality, "code_quality": self.calcCodeQuality
-=======
             "ramp_up_time": self.calcRampUp,
             "bus_factor": self.calcBusFactor,
             "performance_claims": self.calcPerformanceClaims,
@@ -120,7 +114,6 @@ class Model:
             "dataset_and_code_score": self.calcDatasetCode,
             "dataset_quality": self.calcDatasetQuality,
             "code_quality": self.calcCodeQuality,
->>>>>>> main
         }
         for key in funcs:
             t = threading.Thread(target=funcs[key])
@@ -158,7 +151,21 @@ class Model:
         self.metrics["dataset_quality"] = 1
 
     def calcCodeQuality(self) -> None:
-        self.metrics["code_quality"] = 1
+        try:
+            from metrics.code_quality import code_quality
+        except Exception:
+            return
+        target = ""
+        if self.code and getattr(self.code, "_url", ""):
+            target = self.code._url  # Git URL
+        elif self.code and getattr(self.code, "_path_to_cloned", ""):
+            target = self.code._path_to_cloned  # local path if you set it elsewhere
+        else:
+            return
+        t = time.perf_counter()
+        self.metrics["code_quality"] = code_quality(target)
+        self.latencies["code_quality_latency"] = time.perf_counter() - t
+
 
     def calcNetScore(self) -> None:
         self.metrics['net_score'] = 0.08 * (0.05 * self.metrics["size_score"]["raspberry_pi"] + \
