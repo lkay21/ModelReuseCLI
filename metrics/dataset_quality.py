@@ -39,7 +39,7 @@ Response:"""
     try:
         response = prompt_gemini(prompt, api_key)
         if response:
-            score = float(response.strip().split('\\n')[-1])
+            score = float(response.strip().split('\\n')[-1])  # take just the last line, in case of extra output
             return score
     except (ValueError, IndexError):
         return 0.0
