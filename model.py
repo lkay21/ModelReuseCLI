@@ -15,6 +15,7 @@ class Code:
         self._metadata = {}
         self._path_to_cloned = ""
         self._code_quality = 0
+        self.type = ""
 
     def getURL(self) -> str:
         return self._url
@@ -154,9 +155,10 @@ class Model:
 
     def calcDatasetCode(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
-        code_id = self.code._url[self.code._url.index("github.com")+11:] if self.code else None
+        code_type = self.code.type if self.code else None
+        code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
         dataset_id = self.dataset._name if self.dataset else None
-        self.metrics["dataset_and_code_score"] = dataset_and_code_score(self.id, dataset_id, code_id)
+        self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_id, code_id, code_type)
         self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
