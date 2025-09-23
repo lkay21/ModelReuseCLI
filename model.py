@@ -144,7 +144,10 @@ class Model:
         self.metrics["bus_factor"] = 1
 
     def calcPerformanceClaims(self) -> None:
+        t = int(time.perf_counter_ns() / 1e6)
         self.metrics["performance_claims"] = performance_claims(self.id)
+        self.latencies["performance_claims_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcLicense(self) -> None:
         self.metrics["license"] = 1
@@ -185,18 +188,18 @@ class Model:
 
 if __name__ == "__main__":
     model = Model(id = "microsoft/DialoGPT-medium")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+    # model.calcMetricsParallel()
+    # output = {}
+    # output.update(model.metrics)
+    # output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+    # print(json.dumps(output, indent=4))
     
-    model = Model(id = "deepseek-ai/DeepSeek-R1")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+    # model = Model(id = "deepseek-ai/DeepSeek-R1")
+    # model.calcMetricsParallel()
+    # # output = {}
+    # # output.update(model.metrics)
+    # # output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+    # print(json.dumps(output, indent=4))
     
