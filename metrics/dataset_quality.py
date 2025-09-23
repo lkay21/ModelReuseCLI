@@ -16,6 +16,9 @@ def compute_dataset_quality(dataset_id: str) -> float:
     hf_client = HFClient()
     dataset_card = hf_client.dataset_card_text(dataset_id)
 
+    if not dataset_card:
+        return 0.0
+
     api_key = get_gemini_key()
     if not api_key:
         return 0.0
@@ -47,24 +50,6 @@ Your answer should be in the following format: <score between 0-1>: <explanation
     else:
         raise ValueError("Could not parse the dataset quality score from the response.")
     return score
-
-def compute_avg_dataset_quality(dataset_ids: list) -> float:
-    '''
-    Compute the average quality score of all datasets for a given model.
-
-    Args:
-        dataset_ids (list): A list of dataset identifiers on Hugging Face
-    Returns:
-        avg_score (float): The average dataset quality score from 0 to 1
-    '''
-    if len(dataset_ids) == 0:
-        return 0.0
-    dataset_scores = []
-    for dataset_id in dataset_ids:
-        dataset_scores.append(compute_dataset_quality(dataset_id))
-    avg_score = sum(dataset_scores) / len(dataset_scores)
-    return avg_score
-
 
 if __name__ == "__main__":
     # Example usage
