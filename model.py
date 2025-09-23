@@ -154,10 +154,10 @@ class Model:
 
     def calcDatasetCode(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
-        if self.dataset and self.code:
-            code_id = self.code._url[self.code._url.index("github.com")+11:]
-            self.metrics["dataset_and_code_score"] = dataset_and_code_score(self.id, self.dataset._name, code_id)
-        self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+        code_id = self.code._url[self.code._url.index("github.com")+11:] if self.code else None
+        dataset_id = self.dataset._name if self.dataset else None
+        self.metrics["dataset_and_code_score"] = dataset_and_code_score(self.id, dataset_id, code_id)
+        self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
         self.metrics["dataset_quality"] = 1
