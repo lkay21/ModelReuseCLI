@@ -1,5 +1,6 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
+import re
 
 
 def compute_dataset_quality(dataset_id: str) -> float:
@@ -19,31 +20,33 @@ def compute_dataset_quality(dataset_id: str) -> float:
     if not api_key:
         return 0.0
 
-    prompt = f"""Analyze the following dataset information and its card from Hugging Face.
+    dataset_quality_prompt = f"""Analyze the following dataset information and its card from Hugging Face.
 Dataset ID: {dataset_id}
 Dataset Card:
 {dataset_card if dataset_card else "No dataset card available"}
 Based on the information, evaluate the dataset's quality on a scale from 0.0 to 1.0. Consider:
-- Completeness and clarity of the documentation. [0.4 points]
-- Size and diversity of the dataset. [0.2 points]
-- Presence of data splits (train, validation, test). [0.2 points]
-- Clear licensing and citation information. [0.2 points]
-Respond with ONLY the final score as a single float in the format x.xx
-Response:"""
+- Completeness and clarity of the documentation. [score out of 0.4 points]
+- Size and diversity of the dataset. [score out of 0.2 points]
+- Presence of data splits (train, validation, test). [score out of 0.2 points]
+- Clear licensing and citation information. [score out of 0.2 points]
+In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of the total points listed).
+Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>"""
 
-    try:
-        response = prompt_gemini(prompt, api_key)
-        if response:
-            score = float(response.strip().split('\\n')[-1])  # take just the last line, in case of extra output
-            return score
-    except (ValueError, IndexError):
-        return 0.0
-    except Exception as e:
-        print(f"An error occurred during Gemini API call for dataset quality: {e}")
-        return 0.0
+    num_retries = 0
+    max_retries = 3
 
-    return 0.0
-
+    while num_retries < max_retries:
+        dq_check = prompt_gemini(dataset_quality_prompt, api_key)
+        match = re.match(r"([0-1](?:\.\d+)?):(.*)", dq_check, re.DOTALL)
+        if match:
+            score = float(match.group(1))
+            explanation = match.group(2).strip()
+            # print(f"Dataset Quality Explanation: {explanation}")
+            break
+        num_retries += 1
+    else:
+        raise ValueError("Could not parse the dataset quality score from the response.")
+    return score
 
 def compute_avg_dataset_quality(dataset_ids: list) -> float:
     '''
@@ -64,4 +67,5 @@ def compute_avg_dataset_quality(dataset_ids: list) -> float:
 
 
 if __name__ == "__main__":
+    # Example usage
     print(compute_dataset_quality("rajpurkar/squad"))
