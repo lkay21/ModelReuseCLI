@@ -14,8 +14,14 @@ def compute_dataset_quality(dataset_id: str) -> float:
         score (float): The dataset quality score from 0 to 1
     '''
     hf_client = HFClient()
-    dataset_card = hf_client.dataset_card_text(dataset_id)
+    
+    try:
+        dataset_card = hf_client.dataset_card_text(dataset_id)
+    except Exception:
+        # Unable to fetch dataset card as it may not exist or it is not on Hugging Face
+        return 0.0
 
+    # If dataset card is , return 0.0
     if not dataset_card:
         return 0.0
 
