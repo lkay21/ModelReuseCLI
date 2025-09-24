@@ -3,7 +3,9 @@ import os
 from pathlib import Path
 
 def clone_with_isogit(repo_url: str, local_dir: str = "./models") -> None:
-    os.makedirs(local_dir, exist_ok=True)
+    # Resolve local_dir to absolute path
+    local_dir_abs = str(Path(local_dir).resolve())
+    os.makedirs(local_dir_abs, exist_ok=True)
 
     # Resolve absolute path to cloning/clone.js 
     script_path = Path(__file__).resolve().with_name("clone.js")
@@ -11,12 +13,11 @@ def clone_with_isogit(repo_url: str, local_dir: str = "./models") -> None:
     if not script_path.exists():
         raise RuntimeError(f"clone.js not found at: {script_path}")
 
-    # Run Node with an absolute path; set cwd to the cloning/ folder
+    # Run Node with absolute paths
     result = subprocess.run(
-        ["node", str(script_path), repo_url, local_dir],
+        ["node", str(script_path), repo_url, local_dir_abs],
         capture_output=True,
         text=True,
-        cwd=str(script_path.parent),
     )
     if result.returncode != 0:
         raise RuntimeError(f"Clone failed:\n{result.stderr.strip()}")

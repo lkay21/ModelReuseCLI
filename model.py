@@ -4,6 +4,7 @@ from metrics.size_score import size_score
 from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
+
 class Code:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -11,6 +12,7 @@ class Code:
         self._metadata = {}
         self._path_to_cloned = ""
         self._code_quality = 0
+        self.type = ""
 
     def getURL(self) -> str:
         return self._url
@@ -55,7 +57,8 @@ class Dataset:
 class Model:
     def __init__(self, url: str = "", id: str = "") -> None:
         self.url = url
-        self.id: str = id
+        self.id = id
+        self.name = ""
         self.code = None  # instance of Code class
         self.dataset = None  # instance of Dataset class
         self.metadata = {}
@@ -96,7 +99,7 @@ class Model:
         self.calcNetScore()
         self.latencies["net_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
         res =  {
-            "name": self.id,
+            "name": self.name,
             "category": "MODEL",
         }
         res.update(self.metrics)
@@ -130,10 +133,10 @@ class Model:
         self.latencies["size_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcRampUp(self) -> None:
-        t = time.perf_counter()
+        t = int(time.perf_counter_ns() / 1e6)
         score = ramp_up_time(self.id)  # returns float 
         self.metrics["ramp_up_time"] = score
-        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t
+        self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
@@ -162,9 +165,9 @@ class Model:
             target = self.code._path_to_cloned  # local path if you set it elsewhere
         else:
             return
-        t = time.perf_counter()
+        t = int(time.perf_counter_ns() / 1e6)
         self.metrics["code_quality"] = code_quality(target)
-        self.latencies["code_quality_latency"] = time.perf_counter() - t
+        self.latencies["code_quality_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
 
     def calcNetScore(self) -> None:
@@ -190,18 +193,18 @@ class Model:
 
 if __name__ == "__main__":
     model = Model(id = "microsoft/DialoGPT-medium")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+    # model.calcMetricsParallel()
+    # output = {}
+    # output.update(model.metrics)
+    # output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+    # print(json.dumps(output, indent=4))
     
-    model = Model(id = "deepseek-ai/DeepSeek-R1")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+    # model = Model(id = "deepseek-ai/DeepSeek-R1")
+    # model.calcMetricsParallel()
+    # # output = {}
+    # # output.update(model.metrics)
+    # # output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+    # print(json.dumps(output, indent=4))
     

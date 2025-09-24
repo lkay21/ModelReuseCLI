@@ -24,15 +24,26 @@ def classify_url(url: str) -> str:
     url = url.strip()
     
     # GitHub patterns
+    # hugging face code space ex: huggingface.co/spaces/abidlabs/en2fr
+    # GitHub code pattern
     if re.search(r'github\.com', url, re.IGNORECASE):
-        return 'code'
+        return 'github'
+
+    # GitLab code pattern
+    if re.search(r'gitlab\.[^/]+', url, re.IGNORECASE):
+        return 'gitlab'
+
+    # HuggingFace Spaces (code) pattern
+    if re.search(r'huggingface\.co/spaces/', url, re.IGNORECASE):
+        return 'hfspace'
     
     # HuggingFace dataset patterns
     if re.search(r'huggingface\.co/datasets/', url, re.IGNORECASE):
         return 'dataset'
     
-    # HuggingFace model patterns
-    if re.search(r'huggingface\.co/', url, re.IGNORECASE):
+    # HuggingFace model patterns (exclude spaces and datasets explicitly)
+    if (re.search(r'huggingface\.co/', url, re.IGNORECASE) and 
+        not re.search(r'huggingface\.co/(spaces|datasets)/', url, re.IGNORECASE)):
         return 'model'
     
     return 'unknown'
@@ -51,22 +62,44 @@ def extract_name_from_url(url: str) -> str:
     if not url:
         return ""
     
-    # GitHub pattern: extract repo name
+    # code pattern: github/gitlab/hfspace
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
     if github_match:
         owner, repo = github_match.groups()
         return repo.replace('.git', '')
-    
+
+    gitlab_match = re.search(r'(?:git@|https?://)gitlab\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$', url, re.IGNORECASE)
+    if gitlab_match:
+        return gitlab_match.group('repo')
+
+    hfcode_match = re.search(r'^https?://(?:www\.)?huggingface\.co/spaces/(?P<owner>[^/]+)/(?P<space>[^/]+)(?:/.*)?$', url, re.IGNORECASE)
+    if hfcode_match:
+        return hfcode_match.group('space')
+
     # HuggingFace pattern: extract model/dataset name
-    hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
-    if hf_match:
-        namespace, name = hf_match.groups()
+    # HuggingFace dataset pattern: huggingface.co/datasets/namespace/name
+    hf_dataset_match = re.search(r'huggingface\.co/datasets/([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
+    if hf_dataset_match:
+        namespace, name = hf_dataset_match.groups()
+        return f"{namespace}/{name}"
+
+    # HuggingFace model pattern: handle both single and double segment formats
+    # Two segments: huggingface.co/namespace/modelname
+    hf_model_two_match = re.search(r'huggingface\.co/([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
+    if hf_model_two_match:
+        namespace, name = hf_model_two_match.groups()
+        return name
+    
+    # Single segment: huggingface.co/modelname
+    hf_model_one_match = re.search(r'huggingface\.co/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
+    if hf_model_one_match:
+        name = hf_model_one_match.group(1)
         return name
     
     return ""
 
 
-def populate_code_info(code: Code) -> None:
+def populate_code_info(code: Code, code_type: str) -> None:
     """
     Populate Code object with additional information from GitHub API
     
@@ -75,6 +108,7 @@ def populate_code_info(code: Code) -> None:
     """
     # Extract name from URL
     code._name = extract_name_from_url(code._url)
+    code.type = code_type
     # TODO: Add GitHub API calls to populate metadata
     # Example implementation for metrics teams:
     # from apis.git_api import get_contributors, get_commit_history
@@ -94,7 +128,7 @@ def populate_dataset_info(dataset: Dataset) -> None:
         dataset (Dataset): Dataset object to populate
     """
     # Extract name from URL
-    dataset._name = extract_name_from_url(dataset._url)
+    dataset._id = extract_name_from_url(dataset._url)
     # TODO: Add HuggingFace API calls to populate metadata
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient
@@ -157,11 +191,12 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                 code = None
                 if code_link:
                     code_type = classify_url(code_link)
-                    if code_type == 'code':
+                    # print(code_type)
+                    if code_type == 'github' or code_type == 'gitlab' or code_type == 'hfspace':
                         code = Code(code_link)
-                        populate_code_info(code)
+                        populate_code_info(code, code_type)
                     else:
-                        print(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
+                        print(f"Warning: Code link on line {line_num} is unknown: {code_link}")
                 
                 # Create Dataset object only if URL exists
                 dataset = None
@@ -232,22 +267,28 @@ def print_model_summary(models: List[Model], dataset_registry: Dict[str, Dataset
 if __name__ == "__main__":
     # Test the URL parser
     # Note: Run this from the project root directory: python3 -m utils.url_parser
-    test_content = """https://github.com/google-research/bert,https://huggingface.co/datasets/bookcorpus/bookcorpus,https://huggingface.co/google-bert/bert-base-uncased
-,,https://huggingface.co/parvk11/audience_classifier_model
-,,https://huggingface.co/openai/whisper-tiny"""
-    
-    with open("test_input.txt", "w") as f:
-        f.write(test_content)
-    
-    print("Testing URL parser standalone...")
-    try:
-        models, dataset_registry = parse_URL_file("test_input.txt")
-        print_model_summary(models, dataset_registry)
-    except Exception as e:
-        print(f"Test failed: {e}")
-        print("Note: Run with 'python3 -m utils.url_parser' from project root")
-    finally:
-        # Clean up test file
-        import os
-        if os.path.exists("test_input.txt"):
-            os.remove("test_input.txt")
+    nametest_cases = [
+        # GitHub URLs
+        ("https://github.com/google-research/bert", "bert"),
+        ("https://github.com/user/my-repo.git", "my-repo"),
+        
+        # GitLab URLs
+        ("https://gitlab.com/user/awesome-project", "awesome-project"),
+        ("git@gitlab.com:user/cool-app.git", "cool-app"),
+        
+        # HuggingFace Spaces
+        ("https://huggingface.co/spaces/abidlabs/en2fr", "en2fr"),
+        ("https://huggingface.co/spaces/microsoft/DialoGPT-medium", "DialoGPT-medium"),
+
+        # Model URLs
+        ("https://huggingface.co/roberta-base", "roberta-base"),
+        ("https://huggingface.co/distilbert-base-uncased", "distilbert-base-uncased")
+    ]
+
+    print(extract_name_from_url("https://huggingface.co/roberta-base"))
+    print(extract_name_from_url("https://huggingface.co/distilbert-base-uncased"))
+
+    # for url, expected_name in nametest_cases:
+    #     extracted_name = extract_name_from_url(url)
+    #     assert extracted_name == expected_name, f"Failed for {url}: expected {expected_name}, got {extracted_name}"
+    #     print(f"Passed: {url} -> {extracted_name}")
