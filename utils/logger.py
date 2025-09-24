@@ -11,7 +11,7 @@ def setup_logger() -> logging.Logger:
     Returns:
         logging.Logger: Configured logger instance.
     """
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
     log_file = os.getenv('LOG_FILE')
     if not log_file:
@@ -25,18 +25,24 @@ def setup_logger() -> logging.Logger:
     # Map numeric levels to logging levels
     if log_level == 0:
         logging.disable(logging.CRITICAL)  # silence everything
-        level = logging.NOTSET # won't be used
+        level = logging.NOTSET  # won't actually be used
     elif log_level == 1:
+        logging.disable(logging.NOTSET)  # enable logging
         level = logging.INFO
     elif log_level == 2:
+        logging.disable(logging.NOTSET)  # enable logging
         level = logging.DEBUG
-
+    else:
+        logging.disable(logging.CRITICAL)
+        level = logging.NOTSET
+    
     logger = logging.getLogger('cli_logger')
     logger.setLevel(level)
 
-    if log_file:
+    if log_file and not logger.hasHandlers():
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
+        file_handler.setLevel(level)
         logger.addHandler(file_handler)
     
     return logger

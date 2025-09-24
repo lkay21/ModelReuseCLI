@@ -4,10 +4,20 @@ import sys
 import os
 from typing import Dict
 import json
+import logging
 
 from apis.gemini import prompt_gemini
 from apis.hf_client import HFClient, resolve_hf_token
 from utils.url_parser import parse_URL_file, print_model_summary
+from utils.logger import setup_logger
+
+# For Testing: Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()  # reads .env file into environment variables
+# REMOVE ABOVE LINES IN PRODUCTION
+
+setup_logger()  # configure logging once
+logger = logging.getLogger('cli_logger')
 
 
 def get_api_keys() -> Dict[str, str]:
@@ -17,6 +27,7 @@ def get_api_keys() -> Dict[str, str]:
     Returns:
         keys (dict): Dictionary of API keys with service names as keys
     """
+    logger.info("Compiling API keys from available sources...")
     keys = {}
 
     try:
@@ -24,7 +35,7 @@ def get_api_keys() -> Dict[str, str]:
             gemini_api_key = file.readline().strip()
         keys.update({'gemini': gemini_api_key})
     except FileNotFoundError:
-        print("API key file not found. Please create 'gemini_key.txt' with your Gemini API key.")
+        logger.error("API key file not found. Please create 'gemini_key.txt' with your Gemini API key.")
         sys.exit(-1)
 
     # Hugging Face
@@ -36,12 +47,13 @@ def get_api_keys() -> Dict[str, str]:
 
 
 def main():
+    logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
     parser.add_argument('option', type=str, help="'install', 'test', or URL_FILE")
     args = parser.parse_args()
 
     if args.option == "test":
-        print("Running tests...")
+        logger.info("Running tests...")
         pass
     else:
         # Treat as URL_FILE path
@@ -49,25 +61,25 @@ def main():
         
         # Check if the file exists
         if not os.path.exists(url_file):
-            print(f"Error: File '{url_file}' not found.")
+            logger.error(f"Error: File '{url_file}' not found.")
             sys.exit(2)  # More specific error code for file not found
         
         # Parse the URL file and create Model objects
         models, dataset_registry = parse_URL_file(url_file)
         
         if not models:
-            print("No models found in the file.")
+            logger.error("No models found in the file.")
             sys.exit(3)  # Specific error code for no models found
         
         # Print summary of parsed models
-        # print_model_summary(models, dataset_registry)
+        print_model_summary(models, dataset_registry)
         
-        # print("\nURL parsing complete! Created:")
-        # print(f"  - {len(models)} Model objects")
-        # print(f"  - {len(dataset_registry)} unique datasets")
-        # print("Objects ready for metric calculation teams.")
+        logger.debug("\nURL parsing complete! Created:")
+        logger.debug(f"  - {len(models)} Model objects")
+        logger.debug(f"  - {len(dataset_registry)} unique datasets")
+        logger.info("Objects ready for metric calculation teams.")
         for model in models:
-            print(json.dumps(model.evaluate(), indent=4))
+            logger.debug(json.dumps(model.evaluate(), indent=4))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,10 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
 import re
+import logging
+
+
+logger = logging.getLogger('cli_logger')
 
 
 def compute_dataset_quality(dataset_id: str) -> float:
@@ -18,7 +22,7 @@ def compute_dataset_quality(dataset_id: str) -> float:
     try:
         dataset_card = hf_client.dataset_card_text(dataset_id)
     except Exception:
-        # Unable to fetch dataset card as it may not exist or it is not on Hugging Face
+        logger.warning(f"Unable to fetch dataset card for {dataset_id}. It may not exist or it is not on Hugging Face.")
         return 0.0
 
     # If dataset card is , return 0.0
@@ -50,13 +54,14 @@ Your answer should be in the following format: <score between 0-1>: <explanation
         if match:
             score = float(match.group(1))
             explanation = match.group(2).strip()
-            # print(f"Dataset Quality Explanation: {explanation}")
+            logger.debug(f"Dataset Quality Explanation for {dataset_id}: {explanation}")
             break
         num_retries += 1
     else:
+        logger.error("Could not parse the dataset quality score from the response.")
         raise ValueError("Could not parse the dataset quality score from the response.")
     return score
 
-if __name__ == "__main__":
-    # Example usage
-    print(compute_dataset_quality("rajpurkar/squad"))
+# if __name__ == "__main__":
+#     # Example usage
+#     print(compute_dataset_quality("rajpurkar/squad"))

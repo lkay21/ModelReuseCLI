@@ -2,6 +2,10 @@ import os
 import requests
 import time
 from typing import List, Dict, Any, Optional
+import logging
+
+
+logger = logging.getLogger('cli_logger')
 
 
 def check_git_token() -> Optional[str]:
@@ -16,6 +20,7 @@ def check_git_token() -> Optional[str]:
             with open("git_token.txt", "r") as f:
                 token = f.read().strip()
         except FileNotFoundError:
+            logger.warning("GitHub token not found in environment variables or 'git_token.txt' file.")
             return None
     return token
 
@@ -45,13 +50,14 @@ def make_request(url: str, headers: Dict[str, str], max_time: int = 60) -> reque
         ):
             reset_time = int(response.headers.get('X-RateLimit-Reset', time.time() + wait_time))
             sleep_time = max(reset_time - time.time(), wait_time)
-            print(f"Rate limit exceeded. Sleeping for {sleep_time} seconds.")
+            logger.warning(f"Rate limit exceeded. Sleeping for {sleep_time} seconds.")
             time.sleep(sleep_time)
         else:
-            print(f"Request failed with status code {response.status_code}. Retrying in {wait_time} seconds.")
+            logger.warning(f"Request failed with status code {response.status_code}. Retrying in {wait_time} seconds.")
             time.sleep(wait_time)
             wait_time *= 2
 
+    logger.error(f"Failed to fetch data from {url} after multiple attempts.")
     raise Exception(f"Failed to fetch data from {url} after multiple attempts.")
 
 
@@ -98,16 +104,16 @@ def get_commit_history(owner: str, repo: str) -> List[Dict[str, Any]]:
     return response.json()
 
 
-if __name__ == "__main__":
-    # Sample Output
-    owner = "ECE461ProjTeam"
-    repo = "ModelReuseCLI"
-    contributers = get_contributors(owner, repo)
-    print("Contributors:")
-    for contributor in contributers:
-        print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
-    commits = get_commit_history(owner, repo)
-    print("\nCommits:")
-    for commit in commits:
-        print(f"Commit: {commit['sha']} - {commit['commit']['message']}")
-        print(f"Author: {commit['commit']['author']['name']} <{commit['commit']['author']['email']}>")
+# if __name__ == "__main__":
+#     # Sample Output
+#     owner = "ECE461ProjTeam"
+#     repo = "ModelReuseCLI"
+#     contributers = get_contributors(owner, repo)
+#     print("Contributors:")
+#     for contributor in contributers:
+#         print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
+#     commits = get_commit_history(owner, repo)
+#     print("\nCommits:")
+#     for commit in commits:
+#         print(f"Commit: {commit['sha']} - {commit['commit']['message']}")
+#         print(f"Author: {commit['commit']['author']['name']} <{commit['commit']['author']['email']}>")

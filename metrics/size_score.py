@@ -28,8 +28,8 @@ def size_score(model_id: str) -> Dict[str, float]:
         
     return result
     
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    model_id = "deepseek-ai/DeepSeek-R1"
-    score = size_score(model_id)
-    print(score)
+#     model_id = "deepseek-ai/DeepSeek-R1"
+#     score = size_score(model_id)
+#     print(score)

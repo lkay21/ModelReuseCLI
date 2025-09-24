@@ -4,6 +4,8 @@ from metrics.size_score import size_score
 from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
+
+
 class Code:
     def __init__(self, url: str) -> None:
         self._url = url
@@ -174,20 +176,20 @@ class Model:
         self.dataset = dataset
     
 
-if __name__ == "__main__":
-    model = Model(id = "microsoft/DialoGPT-medium")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+# if __name__ == "__main__":
+#     model = Model(id = "microsoft/DialoGPT-medium")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
     
-    model = Model(id = "deepseek-ai/DeepSeek-R1")
-    model.calcMetricsParallel()
-    output = {}
-    output.update(model.metrics)
-    output.update(model.latencies)
+#     model = Model(id = "deepseek-ai/DeepSeek-R1")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
     
