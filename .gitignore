@@ -1,5 +1,6 @@
 venv
 .venv/
+.env
 __pycache__/
 .pytest_cache/
 .DS_Store
@@ -8,4 +9,5 @@ __pycache__/
 !requirements.txt
 node_modules
 models/
+*.log
 #remove run from ignore list when ready to ship
