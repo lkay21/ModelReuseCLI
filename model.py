@@ -106,12 +106,6 @@ class Model:
     def calcMetricsParallel(self) -> None:
         threads = []
         funcs = {
-<<<<<<< HEAD
-            "ramp_up_time": self.calcRampUp, "bus_factor": self.calcBusFactor,
-            "performance_claims": self.calcPerformanceClaims, "license": self.calcLicense,
-            "size_score": self.calcSize, "dataset_and_code_score": self.calcDatasetCode,
-            "dataset_quality": self.calcDatasetQuality, "code_quality": self.calcCodeQuality
-=======
             "ramp_up_time": self.calcRampUp,
             "bus_factor": self.calcBusFactor,
             "performance_claims": self.calcPerformanceClaims,
@@ -120,7 +114,6 @@ class Model:
             "dataset_and_code_score": self.calcDatasetCode,
             "dataset_quality": self.calcDatasetQuality,
             "code_quality": self.calcCodeQuality,
->>>>>>> main
         }
         for key in funcs:
             t = threading.Thread(target=funcs[key])
