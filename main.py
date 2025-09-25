@@ -25,7 +25,7 @@ logger = logging.getLogger('cli_logger')
 def main():
     logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
-    parser.add_argument('option', type=str, help="'install', 'test', or URL_FILE")
+    parser.add_argument('option', type=str, help="URL_FILE")
     args = parser.parse_args()
 
     if args.option == "test":
