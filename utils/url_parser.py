@@ -30,7 +30,10 @@ def classify_url(url: str) -> str:
     
     # GitHub patterns
     if re.search(r'github\.com', url, re.IGNORECASE):
-        return 'code'
+        return 'github'
+    
+    if re.search(r'gitlab\.com', url, re.IGNORECASE):
+        return 'gitlab'
     
     # HuggingFace dataset patterns
     if re.search(r'huggingface\.co/datasets/', url, re.IGNORECASE):
@@ -67,12 +70,12 @@ def extract_name_from_url(url: str) -> str:
     hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
     if hf_match:
         namespace, name = hf_match.groups()
-        return name
+        return namespace, name
     
-    return ""
+    return "", ""
 
 
-def populate_code_info(code: Code) -> None:
+def populate_code_info(code: Code, code_type: str) -> None:
     """
     Populate Code object with additional information from GitHub API
     
@@ -81,6 +84,7 @@ def populate_code_info(code: Code) -> None:
     """
     # Extract name from URL
     code._name = extract_name_from_url(code._url)
+    code.type = code_type
     # TODO: Add GitHub API calls to populate metadata
     # Example implementation for metrics teams:
     # from apis.git_api import get_contributors, get_commit_history
@@ -100,7 +104,8 @@ def populate_dataset_info(dataset: Dataset) -> None:
         dataset (Dataset): Dataset object to populate
     """
     # Extract name from URL
-    dataset._name = extract_name_from_url(dataset._url)
+    owner, name = extract_name_from_url(dataset._url)
+    dataset._name = owner + "/" + name
     # TODO: Add HuggingFace API calls to populate metadata
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient
@@ -119,7 +124,8 @@ def populate_model_info(model: Model) -> None:
         model (Model): Model object to populate
     """
     # Extract name from URL
-    model.name = extract_name_from_url(model.url)
+    owner, model.name = extract_name_from_url(model.url)
+    model.id = owner + "/" + model.name
     # TODO: Add HuggingFace API calls to populate hfAPIData
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient
@@ -164,9 +170,9 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                 code = None
                 if code_link:
                     code_type = classify_url(code_link)
-                    if code_type == 'code':
+                    if code_type == 'github' or code_type == 'gitlab':
                         code = Code(code_link)
-                        populate_code_info(code)
+                        populate_code_info(code, code_type)
                     else:
                         logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
                 

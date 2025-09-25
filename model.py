@@ -4,7 +4,9 @@ from metrics.size_score import size_score
 from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
-
+# from clone_bridge import clone_with_isogit
+from metrics.performance_claims import performance_claims
+from metrics.dataset_and_code_score import dataset_and_code_score
 
 class Code:
     def __init__(self, url: str) -> None:
@@ -13,6 +15,7 @@ class Code:
         self._metadata = {}
         self._path_to_cloned = ""
         self._code_quality = 0
+        self.type = ""
 
     def getURL(self) -> str:
         return self._url
@@ -57,7 +60,8 @@ class Dataset:
 class Model:
     def __init__(self, url: str = "", id: str = "") -> None:
         self.url = url
-        self.id: str = id
+        self.id = id
+        self.name = ""
         self.code = None  # instance of Code class
         self.dataset = None  # instance of Dataset class
         self.metadata = {}
@@ -98,7 +102,7 @@ class Model:
         self.calcNetScore()
         self.latencies["net_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
         res =  {
-            "name": self.id,
+            "name": self.name,
             "category": "MODEL",
         }
         res.update(self.metrics)
@@ -132,22 +136,30 @@ class Model:
         self.latencies["size_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcRampUp(self) -> None:
-        t = time.perf_counter()
+        t = int(time.perf_counter_ns() / 1e6)
         score = ramp_up_time(self.id)  # returns float 
         self.metrics["ramp_up_time"] = score
-        self.latencies["ramp_up_time_latency"] = time.perf_counter() - t
+        self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcBusFactor(self) -> None:
         self.metrics["bus_factor"] = 1
 
     def calcPerformanceClaims(self) -> None:
-        self.metrics["performance_claims"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        self.metrics["performance_claims"] = performance_claims(self.id)
+        self.latencies["performance_claims_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcLicense(self) -> None:
         self.metrics["license"] = 1
 
     def calcDatasetCode(self) -> None:
-        self.metrics["dataset_and_code_score"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        code_type = self.code.type if self.code else None
+        code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
+        dataset_id = self.dataset._name if self.dataset else None
+        self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_id, code_id, code_type)
+        self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
         self.metrics["dataset_quality"] = 1
@@ -192,4 +204,5 @@ class Model:
 #     output.update(model.latencies)
 
 #     print(json.dumps(output, indent=4))
+
     
