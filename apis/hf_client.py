@@ -35,7 +35,6 @@ class HFClient:
             info = self.api.model_info(model_id)
             return getattr(info, "__dict__", {}) or {}
         except Exception:
-            print(model_id)
             logger.info(f"Failed to fetch model info for {model_id}")
             return {}
 
