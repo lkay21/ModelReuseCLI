@@ -1,22 +1,34 @@
 import subprocess
 import os
 import logging
+from pathlib import Path
 
 logger = logging.getLogger('cli_logger')
 
 
 def clone_with_isogit(repo_url: str, local_dir: str = "./models") -> None:
-    os.makedirs(local_dir, exist_ok=True)
-    logger.debug(f"Cloning {repo_url} into {local_dir} using isogit...")
+    # Resolve paths
+    local_dir_abs = str(Path(local_dir).resolve())
+    script_path = Path(__file__).parent / "clone.js"
+    
+    # Create directory if it doesn't exist
+    os.makedirs(local_dir_abs, exist_ok=True)
+    
+    # Check if clone.js exists
+    if not script_path.exists():
+        raise FileNotFoundError(f"clone.js not found at {script_path}")
+    
+    logger.debug(f"Cloning {repo_url} into {local_dir_abs} using isogit...")
+    
     result = subprocess.run(
-        ["node", "clone.js", repo_url, local_dir],
+        ["node", str(script_path), repo_url, local_dir_abs],
         capture_output=True,
-        text=True
+        text=True,
     )
     if result.returncode != 0:
         logger.error(f"Clone failed:\n{result.stderr}")
-        raise Exception(f"Clone failed: {result.stderr}")
-    logger.info(f"Successfully cloned {repo_url} into {local_dir}.")
+        raise RuntimeError(f"Clone failed: {result.stderr}")
+    logger.info(f"Successfully cloned {repo_url} into {local_dir_abs}.")
 
 
 # For testing purposes only - delete upon integration

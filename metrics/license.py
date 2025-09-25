@@ -46,7 +46,7 @@ def license_score(model_id: str, api_key: str) -> float:
             score = float(match.group(1))
             explanation = match.group(3)
             logger.debug(f"License Score Explanation for {model_id}: {explanation}")
-            break
+            break 
         num_retries += 1
     else:
         logger.error("Could not parse the license score from the response.")

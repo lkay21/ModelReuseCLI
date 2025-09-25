@@ -4,7 +4,7 @@ import git from "isomorphic-git";
 import path from "path";
 
 const repoUrl = process.argv[2];        // full repo URL from Python
-const localDir = "./models";
+const localDir = process.argv[3] || "./models";
 
 if (!repoUrl) {
   console.error("Missing repo URL argument");

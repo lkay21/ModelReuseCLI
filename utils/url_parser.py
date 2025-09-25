@@ -29,18 +29,26 @@ def classify_url(url: str) -> str:
     url = url.strip()
     
     # GitHub patterns
+    # hugging face code space ex: huggingface.co/spaces/abidlabs/en2fr
+    # GitHub code pattern
     if re.search(r'github\.com', url, re.IGNORECASE):
         return 'github'
-    
-    if re.search(r'gitlab\.com', url, re.IGNORECASE):
+
+    # GitLab code pattern
+    if re.search(r'gitlab\.[^/]+', url, re.IGNORECASE):
         return 'gitlab'
+
+    # HuggingFace Spaces (code) pattern
+    if re.search(r'huggingface\.co/spaces/', url, re.IGNORECASE):
+        return 'hfspace'
     
     # HuggingFace dataset patterns
     if re.search(r'huggingface\.co/datasets/', url, re.IGNORECASE):
         return 'dataset'
     
-    # HuggingFace model patterns
-    if re.search(r'huggingface\.co/', url, re.IGNORECASE):
+    # HuggingFace model patterns (exclude spaces and datasets explicitly)
+    if (re.search(r'huggingface\.co/', url, re.IGNORECASE) and 
+        not re.search(r'huggingface\.co/(spaces|datasets)/', url, re.IGNORECASE)):
         return 'model'
     
     return 'unknown'
@@ -60,19 +68,27 @@ def extract_name_from_url(url: str) -> str:
     if not url:
         return ""
     
-    # GitHub pattern: extract repo name
+    # code pattern: github/gitlab/hfspace
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
     if github_match:
         owner, repo = github_match.groups()
         return repo.replace('.git', '')
-    
+
+    gitlab_match = re.search(r'(?:git@|https?://)gitlab\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$', url, re.IGNORECASE)
+    if gitlab_match:
+        return gitlab_match.group('repo')
+
+    hfcode_match = re.search(r'^https?://(?:www\.)?huggingface\.co/spaces/(?P<owner>[^/]+)/(?P<space>[^/]+)(?:/.*)?$', url, re.IGNORECASE)
+    if hfcode_match:
+        return hfcode_match.group('space')
+
     # HuggingFace pattern: extract model/dataset name
     hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
     if hf_match:
         namespace, name = hf_match.groups()
         return namespace, name
     
-    return "", ""
+    return ""
 
 
 def populate_code_info(code: Code, code_type: str) -> None:
@@ -170,8 +186,10 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                 code = None
                 if code_link:
                     code_type = classify_url(code_link)
-                    if code_type == 'github' or code_type == 'gitlab':
+                    # print(code_type)
+                    if code_type == 'github' or code_type == 'gitlab' or code_type == 'hfspace':
                         code = Code(code_link)
+                        populate_code_info(code, code_type)
                         populate_code_info(code, code_type)
                     else:
                         logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
