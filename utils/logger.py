@@ -3,7 +3,8 @@ import logging
 
 
 def setup_logger() -> logging.Logger:
-    """Function to setup a logger ; creates a logger that writes to a file and the console.
+    """
+    Function to setup a logger ; creates a logger that writes to a file.
     Extract file name from env variable LOG_FILE.
     Check LOG_LEVEL env variable for log level: (0 means silent, 1 means informational messages, 2 means debug messages)
     Default log level is 0.
