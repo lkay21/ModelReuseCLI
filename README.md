@@ -1,12 +1,18 @@
 # A CLI for Trustworthy Pre-Trained Model Re-Use
 
 ## Setup
-Put your Gemini-2.0-flash API key into gemini_key.txt
+### LLM
+If you are using Gemini-2.0-flash, place your API key into `gemini_key.txt` or in the environment variable called `GEMINI_API_KEY` in the .env file. 
+If you are using Purdue GenAI Studio (preferred), then place your API key into the environment variable called `GEN_AI_STUDIO_API_KEY` in the .env file.
 
+Note: .env file must be created locally for each user
+
+### GitHub
 Optionally, set up a GitHub token for higher rate limits:
 - Preferred: set an environment variable `GITHUB_TOKEN`
 - Or create a file `git_token.txt` with your token in the first line
 
+### HuggingFace
 Optionally, set up a Hugging Face token for higher rate limits:
 - Preferred: set an environment variable `HF_TOKEN`
 - Or create a file `hf_key.txt` with your token on the first line (this file is ignored by git)
