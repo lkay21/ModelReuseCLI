@@ -31,18 +31,15 @@ def get_purdue_genai_key() -> Optional[str]:
         return None
     
 
-def prompt_purdue_genai(prompt: str) -> Optional[str]:
+def prompt_purdue_genai(prompt: str, api_key: str) -> Optional[str]:
     """
     Make a request to Purdue's GenAI Studio API to generate responses based on a text prompt.
     Args:
         prompt (str): The text prompt to send to the model
+        api_key (str): Purdue GenAI Studio API key
     Returns:
         generated_text (str): GenAI Studio's response
     """
-    api_key = get_purdue_genai_key()
-    if not api_key:
-        logger.error("Purdue GenAI Studio API key not found.")
-        return None
 
     url = "https://genai.rcac.purdue.edu/api/chat/completions"
     headers = {
