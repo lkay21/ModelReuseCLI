@@ -8,6 +8,10 @@ from pathlib import Path
 
 from cloning.clone_bridge import clone_with_isogit  
 
+import logging
+logger = logging.getLogger('cli_logger')
+
+
 def _ensure_flake8() -> None:
     try:
         subprocess.run(
@@ -17,8 +21,8 @@ def _ensure_flake8() -> None:
             text=True,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("flake8 required. Try: pip install flake8", file=sys.stderr)
-        raise
+        logger.error("flake8 required. Try: pip install flake8")
+        raise FileNotFoundError("flake8 not found. Please install it via 'pip install flake8'.")
 
 def _simple_lint_check(repo_dir: Path) -> tuple[int, int]:
     _ensure_flake8()
@@ -32,13 +36,7 @@ def _simple_lint_check(repo_dir: Path) -> tuple[int, int]:
             break
         if not any(part in exclude_dirs for part in f.parts):
             py_files.append(f)
-    
-    # Skip linting for huge repos
-    if len(py_files) > 50:
-        print(f"  Skipping lint (too many files: {len(py_files)})", file=sys.stderr)
-        return 0, 0
-    
-    # Take first 25 files (reasonable sample)
+        
     sample_files = py_files[:25]
     if not sample_files:
         return 0, 0
@@ -68,7 +66,7 @@ def _simple_lint_check(repo_dir: Path) -> tuple[int, int]:
         return 0, len(sample_files)
         
     except subprocess.TimeoutExpired:
-        print(f"  Lint timeout, skipping", file=sys.stderr)
+        logger.error(f"  Lint timeout, skipping", file=sys.stderr)
         return 0, 0
 
 
@@ -158,11 +156,11 @@ def code_quality(target: str, *, clone_root: str = "./models") -> float:
         repo_dir = Path(clone_root) / name
 
     num_errors, files_checked = _simple_lint_check(repo_dir)
-    print(f"  Found {num_errors} linting errors in {files_checked} files for {target}", file=sys.stderr)
+    logger.debug(f"  Found {num_errors} linting errors in {files_checked} files for {target}")
     lint01 = _lint_score(num_errors, files_checked)
     naming05 = _maybe_gemini_naming(repo_dir)
     if naming05 is None:
-        print(f"  Using lint-only score: {lint01:.3f}", file=sys.stderr)
+        logger.debug(f"  Using lint-only score: {lint01:.3f}")
         return 2 * lint01
 
     return max(0.0, min(1.0, lint01 + naming05))
