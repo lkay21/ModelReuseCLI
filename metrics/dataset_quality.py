@@ -1,5 +1,7 @@
-from apis.gemini import *
+from utils.prompt_key import get_prompt_key
 from apis.hf_client import HFClient
+from apis.gemini import prompt_gemini
+from apis.purdue_genai import prompt_purdue_genai
 import re
 import logging
 
@@ -10,7 +12,7 @@ logger = logging.getLogger('cli_logger')
 def compute_dataset_quality(dataset_id: str) -> float:
     '''
     Compute the quality score of 1 dataset by checking the size, descriptions, and other relevant info.
-    Ask Gemini to score the datasets based on the information given. Score from 0 to 1.
+    Ask Gemini/Purdue GenAI Studio to score the datasets based on the information given. Score from 0 to 1.
 
     Args:
         dataset_id (str): The dataset identifier on Hugging Face
@@ -29,7 +31,7 @@ def compute_dataset_quality(dataset_id: str) -> float:
     if not dataset_card:
         return 0.0
 
-    api_key = get_gemini_key()
+    api_key = get_prompt_key()
     if not api_key:
         return 0.0
 
@@ -49,7 +51,10 @@ Your answer should be in the following format: <score between 0-1>: <explanation
     max_retries = 3
 
     while num_retries < max_retries:
-        dq_check = prompt_gemini(dataset_quality_prompt, api_key)
+        if 'purdue_genai' in api_key:
+            dq_check = prompt_purdue_genai(dataset_quality_prompt, api_key['purdue_genai'])
+        elif 'gemini' in api_key:
+            dq_check = prompt_gemini(dataset_quality_prompt, api_key)
         match = re.match(r"([0-1](?:\.\d+)?):(.*)", dq_check, re.DOTALL)
         if match:
             score = float(match.group(1))

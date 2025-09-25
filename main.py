@@ -6,10 +6,12 @@ from typing import Dict
 import json
 import logging
 
-from apis.gemini import prompt_gemini
-from apis.hf_client import HFClient, resolve_hf_token
 from utils.url_parser import parse_URL_file, print_model_summary
 from utils.logger import setup_logger
+from typing import Dict
+from apis.gemini import *
+from apis.purdue_genai import *
+from apis.hf_client import resolve_hf_token
 
 # For Testing: Load environment variables from .env file
 from dotenv import load_dotenv
@@ -18,32 +20,6 @@ load_dotenv()  # reads .env file into environment variables
 
 setup_logger()  # configure logging once
 logger = logging.getLogger('cli_logger')
-
-
-def get_api_keys() -> Dict[str, str]:
-    """
-    Compile all available API keys into a dictionary.
-
-    Returns:
-        keys (dict): Dictionary of API keys with service names as keys
-    """
-    logger.info("Compiling API keys from available sources...")
-    keys = {}
-
-    try:
-        with open('gemini_key.txt', 'r') as file:
-            gemini_api_key = file.readline().strip()
-        keys.update({'gemini': gemini_api_key})
-    except FileNotFoundError:
-        logger.error("API key file not found. Please create 'gemini_key.txt' with your Gemini API key.")
-        sys.exit(-1)
-
-    # Hugging Face
-    hf_token = resolve_hf_token()
-    if hf_token:
-        keys.update({'huggingface': hf_token})
-
-    return keys
 
 
 def main():

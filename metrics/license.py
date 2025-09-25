@@ -1,5 +1,7 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
+from utils.prompt_key import get_prompt_key
+from apis.purdue_genai import prompt_purdue_genai
 import re
 import logging
 
@@ -7,12 +9,11 @@ import logging
 logger = logging.getLogger('cli_logger')
 
 
-def license_score(model_id: str, api_key: str) -> float:
+def license_score(model_id: str) -> float:
     """
     Evaluate the license compliance of the model using Gemini API to inspect the README content or model card license information.
     Args:
         model_id (str): The Hugging Face model ID
-        api_key (str): Gemini API key
     Returns:
         score (float): License compliance score between 0 and 1
     """
@@ -22,10 +23,17 @@ def license_score(model_id: str, api_key: str) -> float:
     model_info = client.model_info(model_id)
 
     readme_text = client.model_card_text(model_id)
-    license_info = prompt_gemini(
-        f"Extract all license-related information from the following README content:\n{readme_text}. If no license information is found, respond with 'No license information found in README'.",
-        api_key
-    )
+    api_key = get_prompt_key()
+    extraction_prompt = f"Extract all license-related information from the following README content:\n{readme_text}. If no license information is found, respond with 'No license information found in README'."
+    
+    if 'purdue_genai' in api_key:
+        prompt_function = prompt_purdue_genai
+        api_key_value = api_key['purdue_genai']
+    elif 'gemini' in api_key:
+        prompt_function = prompt_gemini
+        api_key_value = api_key['gemini']
+    
+    license_info = prompt_function(extraction_prompt, api_key_value)
 
     if "No license information found" in modelcard_license:
         license_compatibility_prompt = f'''Based on the following license information of a model, determine the license score on a scale of 0 to 1:\n{license_info}
@@ -40,7 +48,7 @@ def license_score(model_id: str, api_key: str) -> float:
     max_retries = 3
 
     while num_retries < max_retries:
-        license_compatibility = prompt_gemini(license_compatibility_prompt, api_key)
+        license_compatibility = prompt_function(license_compatibility_prompt, api_key)
         match = re.match(r"([0-1](\.\d+)?):\s*(.*)", license_compatibility)
         if match:
             score = float(match.group(1))
