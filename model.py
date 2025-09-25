@@ -188,20 +188,21 @@ class Model:
         self.dataset = dataset
     
 
-if __name__ == "__main__":
-    model = Model(id = "microsoft/DialoGPT-medium")
-    # model.calcMetricsParallel()
-    # output = {}
-    # output.update(model.metrics)
-    # output.update(model.latencies)
+# if __name__ == "__main__":
+#     model = Model(id = "microsoft/DialoGPT-medium")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    # print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
     
-    # model = Model(id = "deepseek-ai/DeepSeek-R1")
-    # model.calcMetricsParallel()
-    # # output = {}
-    # # output.update(model.metrics)
-    # # output.update(model.latencies)
+#     model = Model(id = "deepseek-ai/DeepSeek-R1")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    # print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
+
     

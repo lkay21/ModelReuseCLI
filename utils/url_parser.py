@@ -6,6 +6,10 @@ Handles parsing URL files and creating Model, Code, Dataset objects
 import re
 from typing import List, Tuple, Dict
 from model import Model, Code, Dataset
+import logging
+
+
+logger = logging.getLogger('cli_logger')
 
 
 def classify_url(url: str) -> str:
@@ -18,6 +22,7 @@ def classify_url(url: str) -> str:
     Returns:
         str: 'code', 'dataset', 'model', or 'unknown'
     """
+    logger.debug(f"Classifying URL: {url}")
     if not url or not url.strip():
         return 'unknown'
     
@@ -51,6 +56,7 @@ def extract_name_from_url(url: str) -> str:
     Returns:
         str: Extracted name or empty string if extraction fails
     """
+    logger.debug(f"Extracting name from URL: {url}")
     if not url:
         return ""
     
@@ -145,6 +151,7 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
     dataset_registry = {}  # Track all datasets by name
     
     try:
+        logger.info(f"Parsing URL file: {file_path}")
         with open(file_path, 'r', encoding='utf-8') as file:
             for line_num, line in enumerate(file, 1):
                 line = line.strip()
@@ -154,7 +161,7 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                 
                 # Ensure we have exactly 3 parts
                 if len(parts) != 3:
-                    print(f"Warning: Line {line_num} does not have exactly 3 columns: {line}")
+                    logger.warning(f"Warning: Line {line_num} does not have exactly 3 columns: {line}")
                     continue
                 
                 code_link, dataset_link, model_link = parts
@@ -167,7 +174,7 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                         code = Code(code_link)
                         populate_code_info(code, code_type)
                     else:
-                        print(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
+                        logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
                 
                 # Create Dataset object only if URL exists
                 dataset = None
@@ -178,16 +185,16 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                         populate_dataset_info(dataset)
                         dataset_registry[dataset._name] = dataset  # Add to registry
                     else:
-                        print(f"Warning: Dataset link on line {line_num} is not a HuggingFace dataset URL: {dataset_link}")
+                        logger.warning(f"Warning: Dataset link on line {line_num} is not a HuggingFace dataset URL: {dataset_link}")
                 
                 # Create Model object (always required)
                 if not model_link:
-                    print(f"Warning: Model link is missing on line {line_num}")
+                    logger.warning(f"Warning: Model link is missing on line {line_num}")
                     continue
                 
                 model_type = classify_url(model_link)
                 if model_type != 'model':
-                    print(f"Warning: Model link on line {line_num} is not a HuggingFace model URL: {model_link}")
+                    logger.warning(f"Warning: Model link on line {line_num} is not a HuggingFace model URL: {model_link}")
                     continue
                 
                 # Create and populate Model object
@@ -204,10 +211,10 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                 models.append(model)
                 
     except FileNotFoundError:
-        print(f"Error: File {file_path} not found")
+        logger.error(f"Error: File {file_path} not found")
         return [], {}
     except Exception as e:
-        print(f"Error reading file {file_path}: {e}")
+        logger.error(f"Error reading file {file_path}: {e}")
         return [], {}
     
     return models, dataset_registry
@@ -221,39 +228,38 @@ def print_model_summary(models: List[Model], dataset_registry: Dict[str, Dataset
         models (List[Model]): List of Model objects
         dataset_registry (Dict[str, Dataset]): Registry of all datasets
     """
-    print(f"\nParsed {len(models)} models:")
+    logger.debug(f"\nParsed {len(models)} models:")
     
     for i, model in enumerate(models, 1):
-        print(f"Model {i}: {model.name}")
-        print(f"  URL: {model.url}")
-        print(f"  Code: {model.code._name if model.code else 'None (void)'}")
-        print(f"  Dataset: {model.dataset._name if model.dataset else 'None (void)'}\n")
+        logger.debug(f"Model {i}: {model.name}")
+        logger.debug(f"  URL: {model.url}")
+        logger.debug(f"  Code: {model.code._name if model.code else 'None (void)'}")
+        logger.debug(f"  Dataset: {model.dataset._name if model.dataset else 'None (void)'}\n")
     
-    print(f"\nDataset Registry ({len(dataset_registry)} datasets):")
+    logger.debug(f"\nDataset Registry ({len(dataset_registry)} datasets):")
     for name, dataset in dataset_registry.items():
-        print(f"  {name}: {dataset._url}")
-    print()
+        logger.debug(f"  {name}: {dataset._url}")
 
 
-if __name__ == "__main__":
-    # Test the URL parser
-    # Note: Run this from the project root directory: python3 -m utils.url_parser
-    test_content = """https://github.com/google-research/bert,https://huggingface.co/datasets/bookcorpus/bookcorpus,https://huggingface.co/google-bert/bert-base-uncased
-,,https://huggingface.co/parvk11/audience_classifier_model
-,,https://huggingface.co/openai/whisper-tiny"""
+# if __name__ == "__main__":
+#     # Test the URL parser
+#     # Note: Run this from the project root directory: python3 -m utils.url_parser
+#     test_content = """https://github.com/google-research/bert,https://huggingface.co/datasets/bookcorpus/bookcorpus,https://huggingface.co/google-bert/bert-base-uncased
+# ,,https://huggingface.co/parvk11/audience_classifier_model
+# ,,https://huggingface.co/openai/whisper-tiny"""
     
-    with open("test_input.txt", "w") as f:
-        f.write(test_content)
+#     with open("test_input.txt", "w") as f:
+#         f.write(test_content)
     
-    print("Testing URL parser standalone...")
-    try:
-        models, dataset_registry = parse_URL_file("test_input.txt")
-        print_model_summary(models, dataset_registry)
-    except Exception as e:
-        print(f"Test failed: {e}")
-        print("Note: Run with 'python3 -m utils.url_parser' from project root")
-    finally:
-        # Clean up test file
-        import os
-        if os.path.exists("test_input.txt"):
-            os.remove("test_input.txt")
+#     print("Testing URL parser standalone...")
+#     try:
+#         models, dataset_registry = parse_URL_file("test_input.txt")
+#         print_model_summary(models, dataset_registry)
+#     except Exception as e:
+#         print(f"Test failed: {e}")
+#         print("Note: Run with 'python3 -m utils.url_parser' from project root")
+#     finally:
+#         # Clean up test file
+#         import os
+#         if os.path.exists("test_input.txt"):
+#             os.remove("test_input.txt")

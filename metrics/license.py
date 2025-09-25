@@ -1,6 +1,10 @@
 from apis.gemini import *
 from apis.hf_client import HFClient
 import re
+import logging
+
+
+logger = logging.getLogger('cli_logger')
 
 
 def license_score(model_id: str, api_key: str) -> float:
@@ -41,18 +45,19 @@ def license_score(model_id: str, api_key: str) -> float:
         if match:
             score = float(match.group(1))
             explanation = match.group(3)
-            # print(f"License Score Explanation: {explanation}")
+            logger.debug(f"License Score Explanation for {model_id}: {explanation}")
             break
         num_retries += 1
     else:
+        logger.error("Could not parse the license score from the response.")
         raise ValueError("Could not parse the license score from the response.")
     return score
 
 
-if __name__ == "__main__":
-    api_key = get_gemini_key()
+# if __name__ == "__main__":
+#     api_key = get_gemini_key()
 
-    model_id = "meta-llama/Meta-Llama-3-8B"
-    l_score, explanation = license_score(model_id, api_key)
-    print(f"License Score for {model_id}: {l_score}")
-    print(f"Explanation: {explanation}")
+#     model_id = "meta-llama/Meta-Llama-3-8B"
+#     l_score, explanation = license_score(model_id, api_key)
+#     print(f"License Score for {model_id}: {l_score}")
+#     print(f"Explanation: {explanation}")
