@@ -4,6 +4,9 @@ from metrics.size_score import size_score
 from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
+# from clone_bridge import clone_with_isogit
+from metrics.performance_claims import performance_claims
+from metrics.dataset_and_code_score import dataset_and_code_score
 
 class Code:
     def __init__(self, url: str) -> None:
@@ -142,13 +145,21 @@ class Model:
         self.metrics["bus_factor"] = 1
 
     def calcPerformanceClaims(self) -> None:
-        self.metrics["performance_claims"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        self.metrics["performance_claims"] = performance_claims(self.id)
+        self.latencies["performance_claims_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcLicense(self) -> None:
         self.metrics["license"] = 1
 
     def calcDatasetCode(self) -> None:
-        self.metrics["dataset_and_code_score"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        code_type = self.code.type if self.code else None
+        code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
+        dataset_id = self.dataset._name if self.dataset else None
+        self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_id, code_id, code_type)
+        self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
         self.metrics["dataset_quality"] = 1
@@ -191,20 +202,21 @@ class Model:
         self.dataset = dataset
     
 
-if __name__ == "__main__":
-    model = Model(id = "microsoft/DialoGPT-medium")
-    # model.calcMetricsParallel()
-    # output = {}
-    # output.update(model.metrics)
-    # output.update(model.latencies)
+# if __name__ == "__main__":
+#     model = Model(id = "microsoft/DialoGPT-medium")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    # print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
     
-    # model = Model(id = "deepseek-ai/DeepSeek-R1")
-    # model.calcMetricsParallel()
-    # # output = {}
-    # # output.update(model.metrics)
-    # # output.update(model.latencies)
+#     model = Model(id = "deepseek-ai/DeepSeek-R1")
+#     model.calcMetricsParallel()
+#     output = {}
+#     output.update(model.metrics)
+#     output.update(model.latencies)
 
-    # print(json.dumps(output, indent=4))
+#     print(json.dumps(output, indent=4))
+
     

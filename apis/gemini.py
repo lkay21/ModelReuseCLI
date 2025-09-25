@@ -2,6 +2,10 @@ import requests
 import json
 from typing import Optional
 import os
+import logging
+
+
+logger = logging.getLogger('cli_logger')
 
 
 def get_gemini_key() -> Optional[str]:
@@ -13,7 +17,7 @@ def get_gemini_key() -> Optional[str]:
         with open('gemini_key.txt', 'r') as file:
             return file.readline().strip()
     except FileNotFoundError:
-        print("Gemini API key file not found.")
+        logger.warning("Gemini API key file not found.")
         return None
 
 
@@ -56,25 +60,25 @@ def prompt_gemini(prompt: str, api_key: str) -> Optional[str]:
         return generated_text
 
     except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+        logger.error(f"Request error: {e}")
         return None
     except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
+        logger.error(f"JSON decode error: {e}")
         return None
 
 
-if __name__ == "__main__":
-    with open('gemini_key.txt', 'r') as file:
-        GEMINI_API_KEY = file.readline().strip()
+# if __name__ == "__main__":
+#     with open('gemini_key.txt', 'r') as file:
+#         GEMINI_API_KEY = file.readline().strip()
 
-    prompt_text = "How do you say Hi in French?"
+#     prompt_text = "How do you say Hi in French?"
 
-    result = prompt_gemini(prompt_text, GEMINI_API_KEY)
+#     result = prompt_gemini(prompt_text, GEMINI_API_KEY)
 
-    if result:
-        try:
-            print(f"\nGenerated Response: {result}")
-        except (KeyError, IndexError) as e:
-            print(f"Error extracting response: {e}")
-    else:
-        print("Request failed")
+#     if result:
+#         try:
+#             logger.debug(f"\nGenerated Response: {result}")
+#         except (KeyError, IndexError) as e:
+#             print(f"Error extracting response: {e}")
+#     else:
+#         print("Request failed")

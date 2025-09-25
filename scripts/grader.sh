@@ -1,7 +1,7 @@
 #!/bin/bash
 # Simple wrapper for autograder endpoints
 
-BASE="https://nonedified-andreas-degradedly.ngrok-free.app/api"
+BASE="http://dl-berlin.ecn.purdue.edu/api"
 GROUP=2
 REPO="https://github.com/ECE461ProjTeam/ModelReuseCLI"
 
