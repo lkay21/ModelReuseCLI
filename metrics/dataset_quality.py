@@ -54,7 +54,7 @@ Your answer should be in the following format: <score between 0-1>: <explanation
         if 'purdue_genai' in api_key:
             dq_check = prompt_purdue_genai(dataset_quality_prompt, api_key['purdue_genai'])
         elif 'gemini' in api_key:
-            dq_check = prompt_gemini(dataset_quality_prompt, api_key)
+            dq_check = prompt_gemini(dataset_quality_prompt, api_key['gemini'])
         match = re.match(r"([0-1](?:\.\d+)?):(.*)", dq_check, re.DOTALL)
         if match:
             score = float(match.group(1))

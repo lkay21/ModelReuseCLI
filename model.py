@@ -167,7 +167,7 @@ class Model:
 
     def calcLicense(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
-        self.metrics["license"] = license_score(self.id, get_gemini_key())
+        self.metrics["license"] = license_score(self.id)
         self.latencies["license_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
 
@@ -181,7 +181,10 @@ class Model:
 
     def calcDatasetQuality(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
-        self.metrics["dataset_quality"] = compute_dataset_quality(self.dataset._name if self.dataset else "")
+        if self.dataset:
+            self.metrics["dataset_quality"] = compute_dataset_quality(self.dataset._name)
+        else:
+            self.metrics["dataset_quality"] = 0
         self.latencies["dataset_quality_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
 

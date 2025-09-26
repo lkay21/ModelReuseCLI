@@ -48,7 +48,7 @@ def license_score(model_id: str) -> float:
     max_retries = 3
 
     while num_retries < max_retries:
-        license_compatibility = prompt_function(license_compatibility_prompt, api_key)
+        license_compatibility = prompt_function(license_compatibility_prompt, api_key_value)
         match = re.match(r"([0-1](\.\d+)?):\s*(.*)", license_compatibility)
         if match:
             score = float(match.group(1))
