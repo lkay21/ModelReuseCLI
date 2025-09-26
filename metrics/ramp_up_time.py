@@ -1,8 +1,9 @@
 from __future__ import annotations
 import os
-
-
 from apis.hf_client import HFClient
+from utils.prompt_key import get_prompt_key
+from apis.gemini import prompt_gemini, get_gemini_key
+from apis.purdue_genai import prompt_purdue_genai, get_purdue_genai_key
 
 
 def _clamp01(x: float) -> float:
@@ -44,15 +45,15 @@ def ramp_up_time(model_id: str) -> float:
 
     # LLM blend (70% heuristics, 30% Gemini) 
     # lazy import; prefer get_gemini_key() from apis.gemini if available
-    key = os.getenv("GEMINI_API_KEY")
-    _pg = None
-    try:
-        from apis.gemini import get_gemini_key, prompt_gemini as _pg  
-        key = get_gemini_key() or key
-    except Exception:
-        pass  
+    prompt_key = get_prompt_key()
+    if 'purdue_genai' in prompt_key:
+        prompt_function = prompt_purdue_genai
+        api_key = get_purdue_genai_key()
+    elif 'gemini' in prompt_key:
+        prompt_function = prompt_gemini
+        api_key = get_gemini_key()
 
-    if key and _pg and card_text:
+    if api_key and prompt_function and card_text:
         prompt = (
             "Grade how easy it is to start using a model from this README.\n"
             "Return ONLY a float in [0,1].\n"
@@ -60,7 +61,7 @@ def ramp_up_time(model_id: str) -> float:
             "0.0 = academic or unclear with no quickstart.\n\nREADME:\n"
             f"{card_text[:6000]}\n\nJust the number:"
         )
-        txt = (_pg(prompt, key) or "").strip()
+        txt = (prompt_function(prompt, api_key) or "").strip()
         llm_score = None
         for tok in txt.replace(",", " ").split():
             try:
@@ -74,6 +75,6 @@ def ramp_up_time(model_id: str) -> float:
     return score
 
 
-if __name__ == "__main__":
-    print(ramp_up_time("bert-base-uncased"))
+# if __name__ == "__main__":
+#     print(ramp_up_time("bert-base-uncased"))
 
