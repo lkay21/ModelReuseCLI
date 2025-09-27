@@ -34,7 +34,7 @@ def bus_factor(id: str) -> float:
         raw_bus_factor += 1
         if cumulative_commits >= total_commits / 2:
             break
-    score /= len(contributors)
+    score = raw_bus_factor/len(contributors)
     bus_factor = 1 - score
     
     return bus_factor
