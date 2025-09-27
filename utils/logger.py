@@ -1,6 +1,6 @@
 import os
 import logging
-
+import sys
 
 def setup_logger() -> logging.Logger:
     """
@@ -16,7 +16,7 @@ def setup_logger() -> logging.Logger:
 
     log_file = os.getenv('LOG_FILE')
     if not log_file:
-        raise ValueError("Environment variable 'LOG_FILE' is not set.")
+        sys.exit(1)
     
     try:
         log_level = int(os.getenv("LOG_LEVEL", "0"))
