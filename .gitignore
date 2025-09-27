@@ -10,4 +10,5 @@ __pycache__/
 node_modules
 models/
 *.log
+.coverage
 #remove run from ignore list when ready to ship
