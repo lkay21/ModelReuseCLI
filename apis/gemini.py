@@ -3,6 +3,7 @@ import json
 from typing import Optional
 import os
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_result
 
 
 logger = logging.getLogger('cli_logger')
@@ -21,6 +22,14 @@ def get_gemini_key() -> Optional[str]:
         return None
 
 
+@retry(
+    retry=(
+        retry_if_exception_type((requests.exceptions.RequestException, json.JSONDecodeError)) |
+        retry_if_result(lambda result: result is None)
+    ),
+    wait=wait_exponential(multiplier=1, max=10),  # seconds
+    stop=stop_after_attempt(3)
+)
 def prompt_gemini(prompt: str, api_key: str) -> Optional[str]:
     """
     Make a request to Google's Gemini API to generate responses based on a text prompt.

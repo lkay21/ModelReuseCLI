@@ -29,38 +29,33 @@ def main():
     
     logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
-    parser.add_argument('option', type=str, help="URL_FILE")
+    parser.add_argument('url_file', type=str, help="Path to URL_FILE for analysis")
     args = parser.parse_args()
 
-    if args.option == "test":
-        logger.info("Running tests...")
-        pass
-    else:
-        # Treat as URL_FILE path
-        url_file = args.option
-        
-        # Check if the file exists
-        if not os.path.exists(url_file):
-            logger.error(f"Error: File '{url_file}' not found.")
-            sys.exit(2)  # More specific error code for file not found
-        
-        # Parse the URL file and create Model objects
-        models, dataset_registry = parse_URL_file(url_file)
-        
-        if not models:
-            logger.error("No models found in the file.")
-            sys.exit(3)  # Specific error code for no models found
-        
-        # Print summary of parsed models
-        print_model_summary(models, dataset_registry)
-        
-        logger.debug("\nURL parsing complete! Created:")
-        logger.debug(f"  - {len(models)} Model objects")
-        logger.debug(f"  - {len(dataset_registry)} unique datasets")
-        logger.info("Objects ready for metric calculation teams.")
-        for model in models:
-            print(json.dumps(model.evaluate()))
-            logger.info(f"Successfully evaludated model {model.name}!")
+    # Treat as URL_FILE path
+    url_file = args.url_file
+    
+    # Check if the file exists
+    if not os.path.exists(url_file):
+        logger.error(f"Error: File '{url_file}' not found.")
+        sys.exit(2)  # More specific error code for file not found
+    
+    # Parse the URL file and create Model objects
+    models, dataset_registry = parse_URL_file(url_file)
+    
+    if not models:
+        logger.error("No models found in the file.")
+        sys.exit(3)  # Specific error code for no models found
+    
+    # Print summary of parsed models
+    print_model_summary(models, dataset_registry)
+    
+    logger.debug("\nURL parsing complete! Created:")
+    logger.debug(f"  - {len(models)} Model objects")
+    logger.debug(f"  - {len(dataset_registry)} unique datasets")
+    logger.info("Objects ready for metric calculation teams.")
+    for model in models:
+        print(json.dumps(model.evaluate()))
 
 
 if __name__ == "__main__":

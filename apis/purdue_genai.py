@@ -3,6 +3,7 @@ import json
 from typing import Optional
 import os
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_result
 
 
 logger = logging.getLogger('cli_logger')
@@ -30,7 +31,14 @@ def get_purdue_genai_key() -> Optional[str]:
         logger.warning("Purdue GenAI Studio API key file not found.")
         return None
     
-
+@retry(
+    retry=(
+        retry_if_exception_type((requests.exceptions.RequestException, json.JSONDecodeError, Exception)) |
+        retry_if_result(lambda result: result is None)
+    ),
+    wait=wait_exponential(multiplier=1, max=10),
+    stop=stop_after_attempt(3)
+)
 def prompt_purdue_genai(prompt: str, api_key: str) -> Optional[str]:
     """
     Make a request to Purdue's GenAI Studio API to generate responses based on a text prompt.

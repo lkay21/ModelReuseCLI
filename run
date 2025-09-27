@@ -5,4 +5,10 @@ if [ "$1" == "install" ]; then
     npm install || exit $?
     exit 0
 fi
+
+if [ "$1" == "test" ]; then
+    python3 -m pytest tests/ -v || exit $?
+    exit 0
+fi
+
 python3 main.py "$@" 
