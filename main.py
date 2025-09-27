@@ -8,6 +8,7 @@ import logging
 
 from utils.url_parser import parse_URL_file, print_model_summary
 from utils.logger import setup_logger
+from utils.env_check import check_environment
 from typing import Dict
 from apis.gemini import *
 from apis.purdue_genai import *
@@ -21,11 +22,6 @@ load_dotenv()  # reads .env file into environment variables
 setup_logger()  # configure logging once
 logger = logging.getLogger('cli_logger')
 
-
-def check_environment() -> bool:
-    if os.getenv("GIT_TOKEN") and os.getenv("LOG_FILE"):
-        return True
-    return False
 
 def main():
     logger.info("Starting ModelReuseCLI...")
