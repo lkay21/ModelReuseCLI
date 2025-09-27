@@ -25,17 +25,18 @@ def bus_factor(id: str) -> float:
     elif len(contributors) == 1:
         return 1
 
-    bus_factor = 0
+    raw_bus_factor = 0
     total_commits = sum(contributor['contributions'] for contributor in contributors)
     sorted_contributors = sorted(contributors, key=lambda x: x['contributions'], reverse=True)
     cumulative_commits = 0
     for contributor in sorted_contributors:
         cumulative_commits += contributor['contributions']
-        bus_factor += 1
+        raw_bus_factor += 1
         if cumulative_commits >= total_commits / 2:
             break
-    bus_factor /= len(contributors)
-
+    score /= len(contributors)
+    bus_factor = 1 - score
+    
     return bus_factor
 
 
