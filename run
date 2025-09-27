@@ -7,8 +7,25 @@ if [ "$1" == "install" ]; then
 fi
 
 if [ "$1" == "test" ]; then
-    python3 -m pytest tests/ -v || exit $?
-    exit 0
+    # Run tests with coverage, capture output for parsing
+    output=$(python3 -m coverage run -m pytest tests/ --tb=no -q 2>&1)
+    test_exit_code=$?
+    
+    # Extract test counts from pytest output
+    passed=$(echo "$output" | grep -o '[0-9]\+ passed' | cut -d' ' -f1 | head -1)
+    failed=$(echo "$output" | grep -o '[0-9]\+ failed' | cut -d' ' -f1 | head -1)
+    
+    # Set defaults if not found
+    passed=${passed:-0}
+    failed=${failed:-0}
+    total=$((passed + failed))
+    
+    # Get coverage percentage
+    coverage_percent=$(python3 -m coverage report | tail -1 | awk '{print $NF}' | sed 's/%//')
+    coverage_percent=${coverage_percent:-0}
+    
+    echo "${passed}/${total} test cases passed. ${coverage_percent}% line coverage achieved."
+    exit $test_exit_code
 fi
 
 python3 main.py "$@" 

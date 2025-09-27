@@ -88,12 +88,11 @@ class TestMetricsSeparate(BaseCLITestCase):
 
     def test_bus_factor(self):
         """Test bus_factor function."""
-        owner = "freeCodeCamp"
-        repo = "freeCodeCamp"
+        id = "freeCodeCamp/freeCodeCamp"
         
         # Call the function and capture the result
-        result = bus_factor(owner, repo)
-        self.logger.debug(f"Bus Factor for {owner}/{repo}: {result}")
+        result = bus_factor(id)
+        self.logger.debug(f"Bus Factor for {id}: {result}")
 
         # # Case 2: Small open source repo (us)
         # owner = "ECE461ProjTeam"
