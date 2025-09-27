@@ -22,11 +22,19 @@ setup_logger()  # configure logging once
 logger = logging.getLogger('cli_logger')
 
 
+def check_environment() -> bool:
+    if os.getenv("GIT_TOKEN") and os.getenv("LOG_FILE"):
+        return True
+    return False
+
 def main():
     logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
     parser.add_argument('option', type=str, help="URL_FILE")
     args = parser.parse_args()
+
+    if not check_environment():
+        sys.exit(1)
 
     if args.option == "test":
         logger.info("Running tests...")
