@@ -119,8 +119,22 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
 
-    def test_license_metric(self):
-        """Test license_score function."""
+    @patch("metrics.license.HFClient")
+    @patch("metrics.license.get_prompt_key")
+    @patch("metrics.license.prompt_purdue_genai")
+    def test_license_metric(self, mock_prompt_purdue, mock_get_prompt_key, mock_hf_client):
+        """Test license_score function with mocked dependencies."""
+        # Mock the HFClient
+        mock_client = mock_hf_client.return_value
+        mock_client.model_info.return_value = {"license": "MIT"}
+        mock_client.model_card_text.return_value = "This model is licensed under MIT license."
+        
+        # Mock the API key
+        mock_get_prompt_key.return_value = {'purdue_genai': 'fake-api-key'}
+        
+        # Mock the prompt response with the expected format
+        mock_prompt_purdue.return_value = "0.8: This model has a clear MIT license (0.4/0.5) and is compatible with LGPLv2.1 (0.4/0.5)"
+        
         model_id = "test-model"
         result = license_score(model_id)
 
@@ -133,7 +147,7 @@ class TestMetricsSeparate(BaseCLITestCase):
     def test_code_quality(self):
         """Test code_quality function."""
         code_url = "https://github.com/google-research/bert"
-        result = code_quality(code_url, "./models")
+        result = code_quality(code_url)
 
         self.logger.debug(f"Code quality result: {result}")
 
