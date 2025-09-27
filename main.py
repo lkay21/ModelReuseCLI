@@ -56,6 +56,7 @@ def main():
         logger.info("Objects ready for metric calculation teams.")
         for model in models:
             print(json.dumps(model.evaluate(), indent=4))
+            logger.info(f"Successfully evaludated model {model.name}!")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,520 @@
+2025-09-26 11:10:51,099 - INFO - Starting ModelReuseCLI...
+2025-09-26 11:10:51,100 - INFO - Parsing URL file: urls.txt
+2025-09-26 11:10:51,100 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-26 11:10:51,100 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-26 11:10:51,101 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-26 11:10:51,101 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:10:51,101 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:10:51,102 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:10:51,102 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:10:51,102 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:10:51,102 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:10:51,102 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:10:51,103 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:10:51,103 - DEBUG - 
+Parsed 3 models:
+2025-09-26 11:10:51,103 - DEBUG - Model 1: bert-base-uncased
+2025-09-26 11:10:51,103 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:10:51,104 - DEBUG -   Code: bert
+2025-09-26 11:10:51,104 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-26 11:10:51,104 - DEBUG - Model 2: audience_classifier_model
+2025-09-26 11:10:51,104 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:10:51,105 - DEBUG -   Code: None (void)
+2025-09-26 11:10:51,105 - DEBUG -   Dataset: None (void)
+
+2025-09-26 11:10:51,105 - DEBUG - Model 3: whisper-tiny
+2025-09-26 11:10:51,105 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:10:51,106 - DEBUG -   Code: None (void)
+2025-09-26 11:10:51,106 - DEBUG -   Dataset: None (void)
+
+2025-09-26 11:10:51,106 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-26 11:10:51,106 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:10:51,107 - DEBUG - 
+URL parsing complete! Created:
+2025-09-26 11:10:51,107 - DEBUG -   - 3 Model objects
+2025-09-26 11:10:51,107 - DEBUG -   - 1 unique datasets
+2025-09-26 11:10:51,107 - INFO - Objects ready for metric calculation teams.
+2025-09-26 11:10:51,108 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:10:51,111 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:10:51,113 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-26 11:10:51,664 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-26 11:10:51,842 - INFO - Compiling API key from available sources...
+2025-09-26 11:10:51,940 - INFO - Compiling API key from available sources...
+2025-09-26 11:10:51,987 - INFO - Compiling API key from available sources...
+2025-09-26 11:10:52,162 - INFO - Compiling API key from available sources...
+2025-09-26 11:10:52,263 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-26 11:10:55,271 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-26 11:10:58,371 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The license information is completely absent, which makes it impossible to evaluate its clarity & permissiveness (0/0.5 points) and compatibility with the LGPLv2.1 license (0/0.5 points). Without any information, we cannot make an educated assessment of the license's terms or how it interacts with LGPLv2.1. Therefore, the score is 0.0.
+2025-09-26 11:10:59,847 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:10:59,934 - INFO - Compiling API key from available sources...
+2025-09-26 11:10:59,999 - INFO - Compiling API key from available sources...
+2025-09-26 11:11:00,085 - INFO - Compiling API key from available sources...
+2025-09-26 11:11:07,607 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely missing, and the README explicitly states that more information is needed. 
+2025-09-26 11:11:07,612 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:11:07,709 - INFO - Compiling API key from available sources...
+2025-09-26 11:11:07,770 - INFO - Compiling API key from available sources...
+2025-09-26 11:11:07,860 - INFO - Compiling API key from available sources...
+2025-09-26 11:11:14,867 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-26 11:11:21,776 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information in its README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-26 11:17:25,172 - INFO - Starting ModelReuseCLI...
+2025-09-26 11:17:25,173 - INFO - Parsing URL file: urls.txt
+2025-09-26 11:17:25,173 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-26 11:17:25,173 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-26 11:17:25,173 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-26 11:17:25,173 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:17:25,174 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:17:25,174 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:17:25,175 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:17:25,175 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:17:25,175 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:17:25,175 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:17:25,176 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:17:25,176 - DEBUG - 
+Parsed 3 models:
+2025-09-26 11:17:25,176 - DEBUG - Model 1: bert-base-uncased
+2025-09-26 11:17:25,176 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-26 11:17:25,177 - DEBUG -   Code: bert
+2025-09-26 11:17:25,177 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-26 11:17:25,177 - DEBUG - Model 2: audience_classifier_model
+2025-09-26 11:17:25,177 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-26 11:17:25,177 - DEBUG -   Code: None (void)
+2025-09-26 11:17:25,178 - DEBUG -   Dataset: None (void)
+
+2025-09-26 11:17:25,178 - DEBUG - Model 3: whisper-tiny
+2025-09-26 11:17:25,178 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-26 11:17:25,178 - DEBUG -   Code: None (void)
+2025-09-26 11:17:25,178 - DEBUG -   Dataset: None (void)
+
+2025-09-26 11:17:25,179 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-26 11:17:25,179 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-26 11:17:25,179 - DEBUG - 
+URL parsing complete! Created:
+2025-09-26 11:17:25,179 - DEBUG -   - 3 Model objects
+2025-09-26 11:17:25,180 - DEBUG -   - 1 unique datasets
+2025-09-26 11:17:25,180 - INFO - Objects ready for metric calculation teams.
+2025-09-26 11:17:25,181 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:17:25,185 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:17:25,189 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-26 11:17:25,568 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:25,570 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:25,616 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-26 11:17:25,618 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:25,688 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:26,090 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-26 11:17:29,556 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-26 11:17:34,062 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information in its README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-26 11:17:34,070 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:17:34,157 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:34,214 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:34,281 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:42,503 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely absent, with the README only indicating that more information is needed but not providing any actual details about the license. 
+2025-09-26 11:17:42,507 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-26 11:17:42,601 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:42,661 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:42,735 - INFO - Compiling API key from available sources...
+2025-09-26 11:17:49,749 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-26 11:17:55,867 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information in its README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:07:35,663 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:07:35,664 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:07:35,664 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:07:35,664 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:07:35,665 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:07:35,665 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:07:35,665 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:07:35,666 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:07:35,666 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:07:35,666 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:07:35,666 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:07:35,666 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:07:35,667 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:07:35,667 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:07:35,667 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:07:35,667 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:07:35,667 - DEBUG -   Code: bert
+2025-09-27 14:07:35,668 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:07:35,668 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:07:35,668 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:07:35,668 - DEBUG -   Code: None (void)
+2025-09-27 14:07:35,669 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:07:35,669 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:07:35,669 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:07:35,670 - DEBUG -   Code: None (void)
+2025-09-27 14:07:35,670 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:07:35,670 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:07:35,670 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:07:35,671 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:07:35,671 - DEBUG -   - 3 Model objects
+2025-09-27 14:07:35,671 - DEBUG -   - 1 unique datasets
+2025-09-27 14:07:35,671 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:07:35,673 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:07:35,675 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:07:35,681 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:07:36,085 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:36,116 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:36,173 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:07:36,175 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:36,187 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:36,676 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:07:39,615 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:07:42,611 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information, which makes it difficult to assess its clarity, permissiveness, and compatibility with LGPLv2.1. 
+2025-09-27 14:07:43,984 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:07:44,088 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:44,133 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:44,484 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:51,434 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely missing, and the README only indicates that more information is needed without providing any details. 
+2025-09-27 14:07:51,439 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:07:51,543 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:51,594 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:51,671 - INFO - Compiling API key from available sources...
+2025-09-27 14:07:58,735 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-27 14:08:07,560 - DEBUG - License Score Explanation for openai/whisper-tiny: The license information is completely absent, which makes it impossible to evaluate its clarity & permissiveness (0/0.5 points) and compatibility with the LGPLv2.1 license (0/0.5 points). Without any information, we cannot assume any level of compatibility or permissiveness, resulting in a score of 0. 
+2025-09-27 14:11:28,721 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:11:28,722 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:11:28,723 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:11:28,723 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:11:28,723 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:11:28,723 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:11:28,724 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:11:28,724 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:11:28,724 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:11:28,725 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:11:28,725 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:11:28,725 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:11:28,725 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:11:28,726 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:11:28,726 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:11:28,726 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:11:28,726 - DEBUG -   Code: bert
+2025-09-27 14:11:28,727 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:11:28,727 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:11:28,727 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:11:28,727 - DEBUG -   Code: None (void)
+2025-09-27 14:11:28,728 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:11:28,728 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:11:28,728 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:11:28,728 - DEBUG -   Code: None (void)
+2025-09-27 14:11:28,729 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:11:28,729 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:11:28,729 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:11:28,730 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:11:28,730 - DEBUG -   - 3 Model objects
+2025-09-27 14:11:28,730 - DEBUG -   - 1 unique datasets
+2025-09-27 14:11:28,730 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:11:28,732 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:11:28,734 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:11:28,741 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:11:29,247 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:11:29,345 - INFO - Compiling API key from available sources...
+2025-09-27 14:11:29,347 - INFO - Compiling API key from available sources...
+2025-09-27 14:11:29,376 - INFO - Compiling API key from available sources...
+2025-09-27 14:11:29,410 - INFO - Compiling API key from available sources...
+2025-09-27 14:11:29,757 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:11:32,133 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:11:37,676 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information in the README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:12:01,326 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:12:01,326 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:12:01,327 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:12:01,327 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:12:01,327 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:12:01,327 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:12:01,328 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:12:01,328 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:12:01,328 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:12:01,329 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:12:01,329 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:12:01,329 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:12:01,330 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:12:01,330 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:12:01,330 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:12:01,330 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:12:01,331 - DEBUG -   Code: bert
+2025-09-27 14:12:01,331 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:12:01,331 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:12:01,332 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:12:01,332 - DEBUG -   Code: None (void)
+2025-09-27 14:12:01,332 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:12:01,332 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:12:01,333 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:12:01,333 - DEBUG -   Code: None (void)
+2025-09-27 14:12:01,333 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:12:01,333 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:12:01,334 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:12:01,334 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:12:01,334 - DEBUG -   - 3 Model objects
+2025-09-27 14:12:01,334 - DEBUG -   - 1 unique datasets
+2025-09-27 14:12:01,335 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:12:01,336 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:12:01,338 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:12:01,344 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:12:01,834 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:12:01,959 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:01,985 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:02,053 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:02,150 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:02,418 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:12:05,326 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:12:06,966 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information, which makes it impossible to assess its clarity & permissiveness and compatibility with LGPLv2.1. 
+2025-09-27 14:12:08,823 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:12:08,905 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:08,972 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:09,096 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:16,186 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely absent, which makes it impossible to evaluate its clarity, permissiveness, or compatibility with LGPLv2.1. 
+2025-09-27 14:12:16,191 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:12:16,278 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:16,352 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:17,369 - INFO - Compiling API key from available sources...
+2025-09-27 14:12:24,832 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information in the README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:15:57,778 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:15:57,779 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:15:57,779 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:15:57,779 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:15:57,780 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:15:57,780 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:15:57,780 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:15:57,781 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:15:57,781 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:15:57,781 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:15:57,781 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:15:57,781 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:15:57,781 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:15:57,782 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:15:57,782 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:15:57,782 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:15:57,782 - DEBUG -   Code: bert
+2025-09-27 14:15:57,783 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:15:57,783 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:15:57,783 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:15:57,783 - DEBUG -   Code: None (void)
+2025-09-27 14:15:57,784 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:15:57,784 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:15:57,784 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:15:57,784 - DEBUG -   Code: None (void)
+2025-09-27 14:15:57,785 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:15:57,785 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:15:57,785 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:15:57,785 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:15:57,786 - DEBUG -   - 3 Model objects
+2025-09-27 14:15:57,786 - DEBUG -   - 1 unique datasets
+2025-09-27 14:15:57,786 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:15:57,787 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:15:57,790 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:15:57,795 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:15:58,329 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:15:58,382 - INFO - Compiling API key from available sources...
+2025-09-27 14:15:58,382 - INFO - Compiling API key from available sources...
+2025-09-27 14:15:58,487 - INFO - Compiling API key from available sources...
+2025-09-27 14:15:58,555 - INFO - Compiling API key from available sources...
+2025-09-27 14:15:58,840 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:16:01,767 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:16:01,767 - ERROR - compute dataset quality: Could not get LLM response
+2025-09-27 14:16:07,118 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information in the README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:16:07,123 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:16:07,236 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:07,263 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:07,336 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:16,327 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information provided is essentially non-existent, with the README indicating "[More Information Needed]" under the "License" section. This means there is no actual information to evaluate on clarity & permissiveness or compatibility with LGPLv2.1.
+2025-09-27 14:16:16,331 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:16:16,422 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:16,490 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:16,556 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:23,665 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-27 14:16:30,855 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information in its README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:16:40,131 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:16:40,131 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:16:40,132 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:16:40,132 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:16:40,132 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:16:40,132 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:16:40,133 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:16:40,133 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:16:40,133 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:16:40,133 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:16:40,134 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:16:40,134 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:16:40,134 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:16:40,135 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:16:40,135 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:16:40,135 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:16:40,135 - DEBUG -   Code: bert
+2025-09-27 14:16:40,135 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:16:40,136 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:16:40,136 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:16:40,136 - DEBUG -   Code: None (void)
+2025-09-27 14:16:40,136 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:16:40,137 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:16:40,137 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:16:40,137 - DEBUG -   Code: None (void)
+2025-09-27 14:16:40,137 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:16:40,138 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:16:40,138 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:16:40,138 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:16:40,138 - DEBUG -   - 3 Model objects
+2025-09-27 14:16:40,139 - DEBUG -   - 1 unique datasets
+2025-09-27 14:16:40,139 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:16:40,140 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:16:40,143 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:16:40,149 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:16:40,631 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:16:40,639 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:40,655 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:40,714 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:40,781 - INFO - Compiling API key from available sources...
+2025-09-27 14:16:41,045 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:16:44,190 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:16:44,191 - ERROR - compute dataset quality: Could not get LLM response
+2025-09-27 14:17:07,254 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:17:07,255 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:17:07,255 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:17:07,255 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:17:07,256 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:17:07,256 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:17:07,256 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:17:07,257 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:17:07,257 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:17:07,257 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:17:07,257 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:17:07,258 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:17:07,258 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:17:07,258 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:17:07,258 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:17:07,258 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:17:07,259 - DEBUG -   Code: bert
+2025-09-27 14:17:07,259 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:17:07,259 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:17:07,259 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:17:07,260 - DEBUG -   Code: None (void)
+2025-09-27 14:17:07,260 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:17:07,260 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:17:07,260 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:17:07,261 - DEBUG -   Code: None (void)
+2025-09-27 14:17:07,261 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:17:07,261 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:17:07,261 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:17:07,262 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:17:07,262 - DEBUG -   - 3 Model objects
+2025-09-27 14:17:07,262 - DEBUG -   - 1 unique datasets
+2025-09-27 14:17:07,262 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:17:07,264 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:17:07,266 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:17:07,272 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:17:07,735 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:07,738 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:07,797 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:17:07,808 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:07,918 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:08,291 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:17:11,081 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:17:11,081 - ERROR - compute dataset quality: Could not get LLM response
+2025-09-27 14:17:14,007 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information in the README, which immediately suggests a lack of clarity regarding its licensing terms. 
+2025-09-27 14:17:14,938 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:17:15,024 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:15,080 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:15,153 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:22,781 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely missing, and the README explicitly states that more information is needed. 
+2025-09-27 14:17:22,786 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:17:22,875 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:22,972 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:23,125 - INFO - Compiling API key from available sources...
+2025-09-27 14:17:30,045 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-27 14:17:33,828 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information, which makes it impossible to evaluate its clarity & permissiveness and compatibility with LGPLv2.1. 
+2025-09-27 14:18:47,955 - INFO - Starting ModelReuseCLI...
+2025-09-27 14:18:47,956 - INFO - Parsing URL file: urls.txt
+2025-09-27 14:18:47,956 - DEBUG - Classifying URL: https://github.com/google-research/bert
+2025-09-27 14:18:47,956 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:18:47,957 - DEBUG - Extracting name from URL: https://github.com/google-research/bert
+2025-09-27 14:18:47,957 - DEBUG - Classifying URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:18:47,957 - DEBUG - Extracting name from URL: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:18:47,958 - DEBUG - Classifying URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:18:47,958 - DEBUG - Extracting name from URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:18:47,958 - DEBUG - Classifying URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:18:47,958 - DEBUG - Extracting name from URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:18:47,958 - DEBUG - Classifying URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:18:47,958 - DEBUG - Extracting name from URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:18:47,959 - DEBUG - 
+Parsed 3 models:
+2025-09-27 14:18:47,959 - DEBUG - Model 1: bert-base-uncased
+2025-09-27 14:18:47,959 - DEBUG -   URL: https://huggingface.co/google-bert/bert-base-uncased
+2025-09-27 14:18:47,959 - DEBUG -   Code: bert
+2025-09-27 14:18:47,960 - DEBUG -   Dataset: bookcorpus/bookcorpus
+
+2025-09-27 14:18:47,960 - DEBUG - Model 2: audience_classifier_model
+2025-09-27 14:18:47,960 - DEBUG -   URL: https://huggingface.co/parvk11/audience_classifier_model
+2025-09-27 14:18:47,960 - DEBUG -   Code: None (void)
+2025-09-27 14:18:47,960 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:18:47,961 - DEBUG - Model 3: whisper-tiny
+2025-09-27 14:18:47,961 - DEBUG -   URL: https://huggingface.co/openai/whisper-tiny/tree/main
+2025-09-27 14:18:47,961 - DEBUG -   Code: None (void)
+2025-09-27 14:18:47,962 - DEBUG -   Dataset: None (void)
+
+2025-09-27 14:18:47,962 - DEBUG - 
+Dataset Registry (1 datasets):
+2025-09-27 14:18:47,962 - DEBUG -   bookcorpus/bookcorpus: https://huggingface.co/datasets/bookcorpus/bookcorpus
+2025-09-27 14:18:47,962 - DEBUG - 
+URL parsing complete! Created:
+2025-09-27 14:18:47,963 - DEBUG -   - 3 Model objects
+2025-09-27 14:18:47,963 - DEBUG -   - 1 unique datasets
+2025-09-27 14:18:47,963 - INFO - Objects ready for metric calculation teams.
+2025-09-27 14:18:47,964 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:18:47,967 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:18:47,973 - DEBUG - Cloning https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models using isogit...
+2025-09-27 14:18:48,347 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:48,361 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:48,417 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:48,453 - INFO - Successfully cloned https://github.com/google-research/bert into /home/shay/a/mgoloven/Desktop/ece461/ModelReuseCLI/models.
+2025-09-27 14:18:48,489 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:48,925 - DEBUG -   Found 1622 linting errors in 13 files for https://github.com/google-research/bert
+2025-09-27 14:18:51,912 - ERROR - Error: 400, {"detail":"'JSONResponse' object has no attribute 'get'"}
+2025-09-27 14:18:51,912 - ERROR - compute dataset quality: Could not get LLM response
+2025-09-27 14:18:55,261 - DEBUG - License Score Explanation for google-bert/bert-base-uncased: The model does not provide any license information, which makes it impossible to evaluate its clarity & permissiveness and compatibility with LGPLv2.1. 
+2025-09-27 14:18:59,357 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:18:59,440 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:59,497 - INFO - Compiling API key from available sources...
+2025-09-27 14:18:59,577 - INFO - Compiling API key from available sources...
+2025-09-27 14:19:06,965 - DEBUG - License Score Explanation for parvk11/audience_classifier_model: The license information is completely missing, and the README explicitly states that more information is needed. 
+2025-09-27 14:19:06,970 - WARNING - GitHub token not found in environment variables or 'git_token.txt' file.
+2025-09-27 14:19:07,059 - INFO - Compiling API key from available sources...
+2025-09-27 14:19:07,135 - INFO - Compiling API key from available sources...
+2025-09-27 14:19:07,194 - INFO - Compiling API key from available sources...
+2025-09-27 14:19:14,238 - ERROR - ERROR: Could not parse performance claims score from LLM response.
+2025-09-27 14:19:20,294 - DEBUG - License Score Explanation for openai/whisper-tiny: The model does not provide any license information in its README, which immediately suggests a lack of clarity regarding its licensing terms. 

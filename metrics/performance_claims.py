@@ -27,9 +27,9 @@ def performance_claims(model_id: str) -> float:
                     "and another 0.33 points if there are testing scores present "\
                     ", add another 0.1 points for presence of other performance claims." \
                     "and another 0.24 if the card contains specific and data-backed claims (partial credit is allowed for this 0.24)" \
-                    "The last line of your response must only contain the final score as a float." \
-                    "Reply only with a float in the format x.xx" \
+                    "Reply ONLY with the total score float in the format x.xx. No other words or characters except the float" \
                     f"{model_card}", api_key)
+    logger.debug(f"performance claims explanation: {res}")
     try:
         score = float(res.rstrip())
         return score
