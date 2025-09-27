@@ -51,7 +51,7 @@ def main():
     logger.debug(f"  - {len(dataset_registry)} unique datasets")
     logger.info("Objects ready for metric calculation teams.")
     for model in models:
-        logger.debug(json.dumps(model.evaluate(), indent=4))
+        print(json.dumps(model.evaluate()))
 
 
 if __name__ == "__main__":
