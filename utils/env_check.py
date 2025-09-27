@@ -38,14 +38,7 @@ def check_environment() -> bool:
 
     # 2. Check if log file path exists
     if not os.path.exists(log_file_path):
-        try:
-            # Create an empty log file
-            with open(log_file_path, 'w') as f:
-                pass
-            logger.info(f"Created log file at: {log_file_path}")
-        except Exception as e:
-            logger.error(f"Failed to create log file: {e}")
-            return False
+        return False
 
     # Return true if both checks pass
     logger.info("Environment is valid.")
