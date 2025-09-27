@@ -17,15 +17,15 @@ def check_environment() -> bool:
     git_token = os.getenv("GIT_TOKEN")
     log_file_path = os.getenv("LOG_FILE")
     
+    # 1. Check if log file path exists
+    if not os.path.exists(log_file_path):
+        return False
+
     if not git_token:
         logger.error("GIT_TOKEN environment variable is not set.")
         return False
-
-    if not log_file_path:
-        logger.error("LOG_FILE environment variable is not set.")
-        return False
     
-    # 1. Check GitHub token validity
+    # 2. Check GitHub token validity
     headers = {"Authorization": f"token {git_token}"}
     try:
         response = requests.get("https://api.github.com/user", headers=headers)
@@ -36,9 +36,7 @@ def check_environment() -> bool:
         logger.error(f"Error checking GitHub token: {e}")
         return False
 
-    # 2. Check if log file path exists
-    if not os.path.exists(log_file_path):
-        return False
+    
 
     # Return true if both checks pass
     logger.info("Environment is valid.")
