@@ -55,7 +55,7 @@ def main():
         logger.debug(f"  - {len(dataset_registry)} unique datasets")
         logger.info("Objects ready for metric calculation teams.")
         for model in models:
-            print(json.dumps(model.evaluate(), indent=4))
+            print(json.dumps(model.evaluate()))
             logger.info(f"Successfully evaludated model {model.name}!")
 
 
