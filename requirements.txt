@@ -6,7 +6,6 @@ fsspec==2025.9.0
 hf-xet==1.1.10
 huggingface-hub==0.34.4
 idna==3.10
-logging==0.4.9.6
 mccabe==0.7.0
 packaging==25.0
 pycodestyle==2.14.0
