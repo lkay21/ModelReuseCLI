@@ -1,7 +1,7 @@
 from apis import git_api
 
 
-def bus_factor(owner: str, repo: str) -> float:
+def bus_factor(id: str) -> float:
     """
     Calculate the bus factor of a repository.
     The bus factor is defined as the minimum number of developers that need to be incapacitated
@@ -18,7 +18,7 @@ def bus_factor(owner: str, repo: str) -> float:
     Returns:
         float: The bus factor of the repository. [0-1]
     """
-    contributors = git_api.get_contributors(owner, repo)
+    contributors = git_api.get_contributors(id)
     # Handle edge cases
     if not contributors:
         return 0
@@ -39,24 +39,23 @@ def bus_factor(owner: str, repo: str) -> float:
     return bus_factor
 
 
-# Testing only - remove upon integration
-# if __name__ == "__main__":
-#     # Case 1: Major open source repo
-#     owner = "freeCodeCamp"
-#     repo = "freeCodeCamp"
-#     print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
+if __name__ == "__main__":
+    # Case 1: Major open source repo
+    owner = "google-bert"
+    repo = "bert-base-uncased"
+    print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
 
-#     # Case 2: Small open source repo (us)
-#     owner = "ECE461ProjTeam"
-#     repo = "ModelReuseCLI"
-#     print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
+    # # Case 2: Small open source repo (us)
+    # owner = "ECE461ProjTeam"
+    # repo = "ModelReuseCLI"
+    # print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
 
-#     # Case 3: Repo with 2 contributors
-#     owner = "octocat"
-#     repo = "Hello-World"
-#     print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
+    # # Case 3: Repo with 2 contributors
+    # owner = "octocat"
+    # repo = "Hello-World"
+    # print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
     
-#     # Case 4: Repo with one contributor
-#     owner = "vdudhaiy"
-#     repo = "llmrec-570-copy"
-#     print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
+    # # Case 4: Repo with one contributor
+    # owner = "vdudhaiy"
+    # repo = "llmrec-570-copy"
+    # print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")

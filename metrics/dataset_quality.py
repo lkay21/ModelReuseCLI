@@ -49,12 +49,17 @@ Your answer should be in the following format: <score between 0-1>: <explanation
 
     num_retries = 0
     max_retries = 3
+    score = 0.0
 
     while num_retries < max_retries:
-        if 'purdue_genai' in api_key:
-            dq_check = prompt_purdue_genai(dataset_quality_prompt, api_key['purdue_genai'])
-        elif 'gemini' in api_key:
-            dq_check = prompt_gemini(dataset_quality_prompt, api_key)
+        try:
+            if 'purdue_genai' in api_key:
+                dq_check = prompt_purdue_genai(dataset_quality_prompt, api_key['purdue_genai'])
+            elif 'gemini' in api_key:
+                dq_check = prompt_gemini(dataset_quality_prompt, api_key['gemini'])
+        except:
+            logger.error("compute dataset quality: Could not get LLM response")
+            break
         match = re.match(r"([0-1](?:\.\d+)?):(.*)", dq_check, re.DOTALL)
         if match:
             score = float(match.group(1))
