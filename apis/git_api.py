@@ -70,7 +70,7 @@ def set_git_headers() -> Dict[str, str]:
     return headers
 
 
-def get_contributors(owner: str, repo: str) -> List[Dict[str, Any]]:
+def get_contributors(id: str) -> List[Dict[str, Any]]:
     """
     Retrieve contributors from a GitHub repository.
 
@@ -82,7 +82,7 @@ def get_contributors(owner: str, repo: str) -> List[Dict[str, Any]]:
         list: A list of contributor objects (dicts) from the GitHub API
     """
     headers = set_git_headers()
-    url = f"https://api.github.com/repos/{owner}/{repo}/contributors"
+    url = f"https://api.github.com/repos/{id}/contributors"
     response = make_request(url, headers)
     return response.json()
 
@@ -104,16 +104,15 @@ def get_commit_history(owner: str, repo: str) -> List[Dict[str, Any]]:
     return response.json()
 
 
-# if __name__ == "__main__":
-#     # Sample Output
-#     owner = "ECE461ProjTeam"
-#     repo = "ModelReuseCLI"
-#     contributers = get_contributors(owner, repo)
-#     print("Contributors:")
-#     for contributor in contributers:
-#         print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
-#     commits = get_commit_history(owner, repo)
-#     print("\nCommits:")
-#     for commit in commits:
-#         print(f"Commit: {commit['sha']} - {commit['commit']['message']}")
-#         print(f"Author: {commit['commit']['author']['name']} <{commit['commit']['author']['email']}>")
+if __name__ == "__main__":
+    # Sample Output
+    id = "google-research/bert"
+    contributers = get_contributors(id)
+    print("Contributors:")
+    for contributor in contributers:
+        print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
+    # commits = get_commit_history(owner, repo)
+    # print("\nCommits:")
+    # for commit in commits:
+    #     print(f"Commit: {commit['sha']} - {commit['commit']['message']}")
+    #     print(f"Author: {commit['commit']['author']['name']} <{commit['commit']['author']['email']}>")

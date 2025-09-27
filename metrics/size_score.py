@@ -4,7 +4,7 @@ from typing import Dict
 
 #Changed raspberry pi limit to 1B
 PLATFORM_SIZE_LIMITS = {"raspberry_pi": 1, "jetson_nano": 7, "desktop_pc": 34, "aws_server": 1200}
-LOWER_SIZE_LIMIT = 0.117 
+LOWER_SIZE_LIMIT = 0.01
 
 def size_score(model_id: str) -> Dict[str, float]:
     """Calculate a size-based score for a given model.
@@ -24,7 +24,7 @@ def size_score(model_id: str) -> Dict[str, float]:
         if parameters > PLATFORM_SIZE_LIMITS[plat] or parameters < LOWER_SIZE_LIMIT:
             result[plat] = 0
         else:
-            result[plat] = round(log10(parameters/LOWER_SIZE_LIMIT)/log10(PLATFORM_SIZE_LIMITS[plat]/LOWER_SIZE_LIMIT), ndigits=3)
+            result[plat] = round(log10(parameters/LOWER_SIZE_LIMIT)/log10(PLATFORM_SIZE_LIMITS[plat]/LOWER_SIZE_LIMIT), ndigits=2)
         
     return result
     

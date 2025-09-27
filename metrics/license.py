@@ -24,7 +24,8 @@ def license_score(model_id: str) -> float:
 
     readme_text = client.model_card_text(model_id)
     api_key = get_prompt_key()
-    extraction_prompt = f"Extract all license-related information from the following README content:\n{readme_text}. If no license information is found, respond with 'No license information found in README'."
+    extraction_prompt = f"Extract all license-related information from the following README content:\n{readme_text}. If there is incomplete license information or information vaguely related to license, add it to your response, "\
+    "If absolutely no license information is found, respond with 'No license information found in README'."
     
     if 'purdue_genai' in api_key:
         prompt_function = prompt_purdue_genai
@@ -34,6 +35,7 @@ def license_score(model_id: str) -> float:
         api_key_value = api_key['gemini']
     
     license_info = prompt_function(extraction_prompt, api_key_value)
+    logger.debug(license_info)
 
     if "No license information found" in modelcard_license:
         license_compatibility_prompt = f'''Based on the following license information of a model, determine the license score on a scale of 0 to 1:\n{license_info}

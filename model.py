@@ -1,12 +1,18 @@
 import threading
 import time
-from metrics.size_score import size_score
-from metrics.ramp_up_time import ramp_up_time
 import json
 from typing import Dict, Union
+from apis.gemini import get_gemini_key
 # from clone_bridge import clone_with_isogit
 from metrics.performance_claims import performance_claims
 from metrics.dataset_and_code_score import dataset_and_code_score
+from metrics.size_score import size_score
+from metrics.ramp_up_time import ramp_up_time
+from metrics.dataset_quality import compute_dataset_quality
+from metrics.bus_factor import bus_factor
+from metrics.code_quality import code_quality
+from metrics.license import license_score
+
 
 class Code:
     def __init__(self, url: str) -> None:
@@ -138,11 +144,20 @@ class Model:
     def calcRampUp(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
         score = ramp_up_time(self.id)  # returns float 
-        self.metrics["ramp_up_time"] = score
+        self.metrics["ramp_up_time"] = round(score, ndigits=2)
         self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcBusFactor(self) -> None:
-        self.metrics["bus_factor"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        if self.code:
+            code_type = self.code.type if self.code else None
+            code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
+            self.metrics["bus_factor"] = bus_factor(code_id)
+        else:
+            self.metrics["bus_factor"] = 0.0
+
+        self.latencies["bus_factor_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcPerformanceClaims(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
@@ -151,7 +166,10 @@ class Model:
 
 
     def calcLicense(self) -> None:
-        self.metrics["license"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        self.metrics["license"] = license_score(self.id)
+        self.latencies["license_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcDatasetCode(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
@@ -162,13 +180,15 @@ class Model:
         self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:
-        self.metrics["dataset_quality"] = 1
+        t = int(time.perf_counter_ns() / 1e6)
+        if self.dataset:
+            self.metrics["dataset_quality"] = compute_dataset_quality(self.dataset._url)
+        else:
+            self.metrics["dataset_quality"] = 0
+        self.latencies["dataset_quality_latency"] = int(time.perf_counter_ns() / 1e6 - t)
+
 
     def calcCodeQuality(self) -> None:
-        try:
-            from metrics.code_quality import code_quality
-        except Exception:
-            return
         target = ""
         if self.code and getattr(self.code, "_url", ""):
             target = self.code._url  # Git URL
