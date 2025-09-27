@@ -19,18 +19,18 @@ from dotenv import load_dotenv
 load_dotenv()  # reads .env file into environment variables
 # REMOVE ABOVE LINES IN PRODUCTION
 
-setup_logger()  # configure logging once
-logger = logging.getLogger('cli_logger')
-
 
 def main():
+    if not check_environment():
+        sys.exit(1)
+
+    setup_logger()  # configure logging once
+    logger = logging.getLogger('cli_logger')
+    
     logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
     parser.add_argument('option', type=str, help="URL_FILE")
     args = parser.parse_args()
-
-    if not check_environment():
-        sys.exit(1)
 
     if args.option == "test":
         logger.info("Running tests...")

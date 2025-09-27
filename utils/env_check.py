@@ -18,11 +18,11 @@ def check_environment() -> bool:
     log_file_path = os.getenv("LOG_FILE")
     
     # 1. Check if log file path exists
-    if not os.path.exists(log_file_path):
+    if not log_file_path or not os.path.isfile(log_file_path):
         return False
 
     if not git_token:
-        logger.error("GIT_TOKEN environment variable is not set.")
+        # logger.error("GIT_TOKEN environment variable is not set.")
         return False
     
     # 2. Check GitHub token validity
@@ -30,14 +30,12 @@ def check_environment() -> bool:
     try:
         response = requests.get("https://api.github.com/user", headers=headers)
         if response.status_code != 200:
-            logger.error("Invalid GitHub token.")
+            # logger.error("Invalid GitHub token.")
             return False
     except requests.RequestException as e:
-        logger.error(f"Error checking GitHub token: {e}")
+        # logger.error(f"Error checking GitHub token: {e}")
         return False
 
-    
-
     # Return true if both checks pass
-    logger.info("Environment is valid.")
+    # logger.info("Environment is valid.")
     return True
