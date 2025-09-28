@@ -5,14 +5,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
-
-
 from tests.base import BaseCLITestCase
 from utils.prompt_key import get_prompt_key
 from utils.env_check import check_environment
 from unittest.mock import patch
 from utils.logger import setup_logger
-
 
 
 class TestEnvironment(BaseCLITestCase):
