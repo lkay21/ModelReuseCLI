@@ -51,7 +51,8 @@ class TestEnvironment(BaseCLITestCase):
         GEN_AI_STUDIO_API_KEY. 
         Ensure system exits with code 1.
         '''
-        with patch.dict(os.environ, {"GEMINI_API_KEY": "", "GEN_AI_STUDIO_API_KEY": ""}, clear=True):
+        with patch("utils.prompt_key.get_purdue_genai_key", return_value=None), \
+            patch("utils.prompt_key.get_gemini_key", return_value=None):
             with self.assertRaises(SystemExit) as cm:
                 get_prompt_key()
             self.assertEqual(cm.exception.code, 1)
