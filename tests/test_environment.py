@@ -11,8 +11,8 @@ from tests.base import BaseCLITestCase
 from utils.prompt_key import get_prompt_key
 from utils.env_check import check_environment
 from unittest.mock import patch
+from utils.logger import setup_logger
 
-logger = logging.getLogger('cli_logger')
 
 
 class TestEnvironment(BaseCLITestCase):
@@ -51,19 +51,45 @@ class TestEnvironment(BaseCLITestCase):
         GEN_AI_STUDIO_API_KEY. 
         Ensure system exits with code 1.
         '''
-        os.environ.pop("GEMINI_API_KEY", None)
-        os.environ.pop("GEN_AI_STUDIO_API_KEY", None)
         with patch.dict(os.environ, {"GEMINI_API_KEY": "", "GEN_AI_STUDIO_API_KEY": ""}, clear=True):
             with self.assertRaises(SystemExit) as cm:
                 get_prompt_key()
             self.assertEqual(cm.exception.code, 1)
+    
+    def test_with_log_level_0(self):
+        '''Test code with log level 0. Ensure logger level is set to CRITICAL'''
+        with patch.dict(os.environ, {"LOG_LEVEL": "0"}):
+            setup_logger()
+            logger = logging.getLogger('cli_logger')
+           
+           # Verify that no logs are captured for any standard level
+            for level_name, level_value in [
+                ("DEBUG", logging.DEBUG),
+                ("INFO", logging.INFO),
+                ("WARNING", logging.WARNING),
+                ("ERROR", logging.ERROR),
+                ("CRITICAL", logging.CRITICAL)
+            ]:
+                with self.assertRaises(AssertionError):
+                    with self.assertLogs(logger, level=level_name):
+                        logger.log(level_value, f"This should not appear at {level_name}")
+
+    def test_with_log_level_1(self):
+        '''Test code with log level 1. Ensure logger level is set to INFO'''
+        with patch.dict(os.environ, {"LOG_LEVEL": "1"}):
+            setup_logger()
+            logger = logging.getLogger('cli_logger')
+            self.assertFalse(logger.disabled)
+            self.assertEqual(logger.level, logging.INFO)
+
+    def test_with_log_level_2(self):
+        '''Test code with log level 2. Ensure logger level is set to DEBUG'''
+        with patch.dict(os.environ, {"LOG_LEVEL": "2"}):
+            setup_logger()
+            logger = logging.getLogger('cli_logger')
+            self.assertFalse(logger.disabled)
+            self.assertEqual(logger.level, logging.DEBUG)
+
 
 if __name__ == "__main__":
     unittest.main()
-    
-
-    
-    
-
-    
-
