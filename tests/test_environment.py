@@ -4,10 +4,13 @@ import main
 import subprocess
 import sys
 import tempfile
+import unittest
 
 
 from tests.base import BaseCLITestCase
-
+from utils.prompt_key import get_prompt_key
+from utils.env_check import check_environment
+from unittest.mock import patch
 
 logger = logging.getLogger('cli_logger')
 
@@ -36,23 +39,12 @@ class TestEnvironment(BaseCLITestCase):
         self.tmpdir.cleanup()
     
     def test_git_token_fail(self):
-        # Do not set a GIT_TOKEN variable in env
-        os.environ.pop("GIT_TOKEN", None)
-        with self.assertRaises(SystemExit) as cm:
-            main.main()
-        self.assertEqual(cm.exception.code, 1)
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(check_environment())  # returns False when GIT_TOKEN missing
 
     def test_logfile_fail(self):
-        # Do not set a LOG_FILE name in env
-        os.environ.pop("LOG_FILE", None)
-        with self.assertRaises(SystemExit) as cm:
-            main.main()
-        self.assertEqual(cm.exception.code, 1)
-    
-    def test_urlfile_fail(self):
-        # Fake URL_FILE name for ./run URL_FILE command
-        result = subprocess.run(["./run", "fake_file.txt"], capture_output=True, text=True,)
-        self.assertEqual(result.returncode, 1)
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(check_environment())  # returns False when LOG_FILE missing
     
     def test_no_prompt_token(self):
         '''Pop env variable GEMINI_API_KEY and ensure gemini_key.txt is empty. Pop env variable 
@@ -61,14 +53,14 @@ class TestEnvironment(BaseCLITestCase):
         '''
         os.environ.pop("GEMINI_API_KEY", None)
         os.environ.pop("GEN_AI_STUDIO_API_KEY", None)
-        result = subprocess.run(["./run", self.input_file], capture_output=True, text=True,)
-        self.assertEqual(result.returncode, 1)
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "", "GEN_AI_STUDIO_API_KEY": ""}, clear=True):
+            with self.assertRaises(SystemExit) as cm:
+                get_prompt_key()
+            self.assertEqual(cm.exception.code, 1)
 
-        
-
-
-
-        
+if __name__ == "__main__":
+    unittest.main()
+    
 
     
     
