@@ -87,23 +87,6 @@ def get_contributors(id: str) -> List[Dict[str, Any]]:
     return response.json()
 
 
-def get_commit_history(owner: str, repo: str) -> List[Dict[str, Any]]:
-    """
-    Retrieve commits from a GitHub repository.
-
-    Args:
-        owner (str): Repository owner (e.g., "octocat")
-        repo (str): Repository name (e.g., "hello-world")
-
-    Returns:
-        list: A list of commit objects (dicts) from the GitHub API
-    """
-    headers = set_git_headers()
-    url = f"https://api.github.com/repos/{owner}/{repo}/commits"
-    response = make_request(url, headers)
-    return response.json()
-
-
 if __name__ == "__main__":
     # Sample Output
     id = "google-research/bert"

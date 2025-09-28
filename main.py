@@ -8,6 +8,7 @@ import logging
 
 from utils.url_parser import parse_URL_file, print_model_summary
 from utils.logger import setup_logger
+from utils.prompt_key import get_prompt_key
 from utils.env_check import check_environment
 from typing import Dict
 from apis.gemini import *
@@ -39,14 +40,17 @@ def main():
     # Check if the file exists
     if not os.path.exists(url_file):
         logger.error(f"Error: File '{url_file}' not found.")
-        sys.exit(2)  # More specific error code for file not found
+        sys.exit(1)
+
+    # Ensure LLM tokens are present by attempting to get the keys
+    get_prompt_key()
     
     # Parse the URL file and create Model objects
     models, dataset_registry = parse_URL_file(url_file)
     
     if not models:
         logger.error("No models found in the file.")
-        sys.exit(3)  # Specific error code for no models found
+        sys.exit(1)
     
     # Print summary of parsed models
     print_model_summary(models, dataset_registry)

@@ -16,6 +16,7 @@ def setup_logger() -> logging.Logger:
 
     log_file = os.getenv('LOG_FILE')
     if not log_file:
+        print("ERROR: LOG_FILE environment variable is not set.", file=sys.stderr)
         sys.exit(1)
     
     try:
@@ -45,5 +46,11 @@ def setup_logger() -> logging.Logger:
         file_handler.setFormatter(formatter)
         file_handler.setLevel(level)
         logger.addHandler(file_handler)
-    
+
+        # Console handler (only ERROR and above)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.ERROR)
+        logger.addHandler(console_handler)
+
     return logger

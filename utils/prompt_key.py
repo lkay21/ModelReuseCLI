@@ -28,4 +28,4 @@ def get_prompt_key() -> Dict[str, str]:
     
     if not purdue_genai_token and not gemini_api_key:
         logger.error("No API keys found for Gemini or Purdue GenAI Studio. Exiting.")
-        sys.exit(-1)
+        sys.exit(1)
