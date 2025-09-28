@@ -39,11 +39,11 @@ def license_score(model_id: str) -> float:
 
     if "No license information found" in modelcard_license:
         license_compatibility_prompt = f'''Based on the following license information of a model, determine the license score on a scale of 0 to 1:\n{license_info}
-        If the license is not explicitly mentioned, consider common open-source licenses and their compatibility with LGPLv2.1. Evaluate the information on its clarity & permissiveness (0.5 points) and compatibility with the LGPLv2.1 license (0.5 points). In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of 0.5 points). Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>
+        If the license is not explicitly mentioned, consider common open-source licenses and their compatibility with LGPLv2.1. Evaluate the information on its clarity & permissiveness (0.5 points) and compatibility with the LGPLv2.1 license (0.5 points). If the license mentioned is more restrictive than LGPTv2.1, award it the full 1 point.In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of 0.5 points). Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>
         '''
     else:
         license_compatibility_prompt = f'''Based on the following license information of a model, determine the license score on a scale of 0 to 1:\n{modelcard_license}:{license_info}
-        If the license is not explicitly mentioned, consider common open-source licenses and their compatibility with LGPLv2.1. Evaluate the information on its clarity & permissiveness (0.5 points) and compatibility with the LGPLv2.1 license (0.5 points). In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of 0.5 points). Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>
+        If the license is not explicitly mentioned, consider common open-source licenses and their compatibility with LGPLv2.1. Evaluate the information on its clarity & permissiveness (0.5 points) and compatibility with the LGPLv2.1 license (0.5 points). If the license mentioned is more restrictive than LGPTv2.1, award it the full 1 point. In your explanation, you must ALWAYS specify how many points were scored on each criteria (out of 0.5 points). Your answer should be in the following format: <score between 0-1>: <explanation and score breakdown>
         '''
 
     num_retries = 0

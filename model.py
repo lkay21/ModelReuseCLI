@@ -152,7 +152,7 @@ class Model:
         if self.code:
             code_type = self.code.type if self.code else None
             code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
-            self.metrics["bus_factor"] = bus_factor(code_id)
+            self.metrics["bus_factor"] = bus_factor(code_id, code_type)
         else:
             self.metrics["bus_factor"] = 0.0
 
@@ -190,6 +190,7 @@ class Model:
 
     def calcCodeQuality(self) -> None:
         target = ""
+        code_type = self.code.type if self.code else None
         if self.code and getattr(self.code, "_url", ""):
             target = self.code._url  # Git URL
         elif self.code and getattr(self.code, "_path_to_cloned", ""):
@@ -197,7 +198,7 @@ class Model:
         else:
             return
         t = int(time.perf_counter_ns() / 1e6)
-        self.metrics["code_quality"] = code_quality(target)
+        self.metrics["code_quality"] = code_quality(target, code_type)
         self.latencies["code_quality_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
 

@@ -139,7 +139,7 @@ def _maybe_gemini_naming(repo_dir: Path) -> float | None:
             continue
     return None
 
-def code_quality(target: str, *, clone_root: str = "./models") -> float:
+def code_quality(target: str, code_type: str) -> float:
     """
     Returns float in [0,1].
       - Lint score from flake8 maps to [0,1].
@@ -147,6 +147,9 @@ def code_quality(target: str, *, clone_root: str = "./models") -> float:
             score = 0.5 * lint + naming
         Else, return lint-only (offline-friendly).
     """
+    clone_root: str = "./models"
+    if(code_type != "github"):
+        return 0.1
     p = Path(target)
     if p.exists() and p.is_dir():
         repo_dir = p

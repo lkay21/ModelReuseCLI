@@ -1,7 +1,7 @@
 from apis import git_api
 
 
-def bus_factor(id: str) -> float:
+def bus_factor(id: str, code_type: str) -> float:
     """
     Calculate the bus factor of a repository.
     The bus factor is defined as the minimum number of developers that need to be incapacitated
@@ -18,6 +18,8 @@ def bus_factor(id: str) -> float:
     Returns:
         float: The bus factor of the repository. [0-1]
     """
+    if code_type != "github":
+        return 0.1
     contributors = git_api.get_contributors(id)
     # Handle edge cases
     if not contributors:

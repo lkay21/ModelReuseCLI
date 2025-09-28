@@ -27,7 +27,7 @@ def dataset_and_code_score(dataset_id: str, code_id: str, code_type: str) -> flo
             files_request = make_request(f"https://api.github.com/repos/{code_id}/git/trees/master?recursive=1", headers).json()
             code_files = [item["path"] for item in files_request["tree"]]
         elif code_type == "gitlab":
-            files_request = make_request(f"https://gitlab.example.com/api/v4/projects/{code_id}/repository/tree", headers).json()
+            # files_request = make_request(f"https://gitlab.example.com/api/v4/projects/{code_id}/repository/tree", headers).json()
             code_files = []
             # idk how to do requests to gitlab!!
         
