@@ -14,7 +14,7 @@ def check_git_token() -> Optional[str]:
     If not found, check for a txt file named 'git_token.txt' in the current directory and read the token from there.
     If still not found, return None.
     '''
-    token = os.getenv("GIT_TOKEN")
+    token = os.getenv("GITHUB_TOKEN")
     if not token:
         try:
             with open("git_token.txt", "r") as f:

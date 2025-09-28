@@ -23,8 +23,8 @@ setup_logger()  # configure logging once
 logger = logging.getLogger('cli_logger')
 
 def main():
-    # if not check_environment():
-    #     sys.exit(1)
+    if not check_environment():
+        sys.exit(1)
     
     logger.info("Starting ModelReuseCLI...")
     parser = argparse.ArgumentParser(description="ModelReuseCLI main entry point")
