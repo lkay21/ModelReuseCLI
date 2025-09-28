@@ -37,14 +37,14 @@ def main():
     # Check if the file exists
     if not os.path.exists(url_file):
         logger.error(f"Error: File '{url_file}' not found.")
-        sys.exit(2)  # More specific error code for file not found
+        sys.exit(1)
     
     # Parse the URL file and create Model objects
     models, dataset_registry = parse_URL_file(url_file)
     
     if not models:
         logger.error("No models found in the file.")
-        sys.exit(3)  # Specific error code for no models found
+        sys.exit(1)
     
     # Print summary of parsed models
     print_model_summary(models, dataset_registry)
