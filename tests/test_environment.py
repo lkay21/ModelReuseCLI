@@ -20,7 +20,7 @@ class TestEnvironment(BaseCLITestCase):
 
         # Create sample input.txt
         self.tmpdir = tempfile.TemporaryDirectory()
-        self.input_file = "input.txt"
+        self.input_file = os.path.join(self.tmpdir.name, "input.txt")
 
         content = """https://github.com/google-research/bert, https://huggingface.co/datasets/bookcorpus/bookcorpus, https://huggingface.co/google-bert/bert-base-uncased
 ,,https://huggingface.co/parvk11/audience_classifier_model
