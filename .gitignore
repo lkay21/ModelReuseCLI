@@ -11,4 +11,5 @@ node_modules
 models/
 *.log
 .coverage
+models/
 #remove run from ignore list when ready to ship
