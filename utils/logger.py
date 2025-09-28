@@ -45,5 +45,11 @@ def setup_logger() -> logging.Logger:
         file_handler.setFormatter(formatter)
         file_handler.setLevel(level)
         logger.addHandler(file_handler)
-    
+
+        # Console handler (only ERROR and above)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.ERROR)
+        logger.addHandler(console_handler)
+
     return logger
