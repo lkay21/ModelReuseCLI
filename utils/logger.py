@@ -16,6 +16,7 @@ def setup_logger() -> logging.Logger:
 
     log_file = os.getenv('LOG_FILE')
     if not log_file:
+        print("ERROR: LOG_FILE environment variable is not set.", file=sys.stderr)
         sys.exit(1)
     
     try:
