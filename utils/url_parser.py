@@ -7,6 +7,8 @@ import re
 from typing import List, Tuple, Dict
 from model import Model, Code, Dataset
 import logging
+from apis.purdue_genai import prompt_purdue_genai
+from utils.prompt_key import get_prompt_key
 
 
 logger = logging.getLogger('cli_logger')
@@ -20,11 +22,11 @@ def classify_url(url: str) -> str:
         url (str): The URL to classify
         
     Returns:
-        str: 'code', 'dataset', 'model', or 'unknown'
+        str: 'code', 'dataset', 'model', 'empty' or 'check'
     """
     logger.debug(f"Classifying URL: {url}")
     if not url or not url.strip():
-        return 'unknown'
+        return 'empty'
     
     url = url.strip()
     
@@ -51,7 +53,7 @@ def classify_url(url: str) -> str:
         not re.search(r'huggingface\.co/(spaces|datasets)/', url, re.IGNORECASE)):
         return 'model'
     
-    return 'unknown'
+    return 'check'
 
 
 def extract_name_from_url(url: str) -> str:
@@ -151,6 +153,37 @@ def populate_model_info(model: Model) -> None:
     #     'downloads': ..., 'license': ..., 'size': ...
     # }
 
+def is_dataset_url_llm(url: str) -> Tuple[bool, str]:
+    """
+    Uses the Purdue GenAI LLM to determine if a URL points to a dataset.
+
+    Args:
+        url (str): The URL to check.
+
+    Returns:
+        bool: True if the URL is a dataset, False otherwise.
+    """
+    try:
+        # Create a very specific prompt for a reliable yes/no answer
+        prompt = (
+            f"Analyze the following URL: {url}. "
+            "The URL might point to a machine learning dataset on a platform like Kaggle, Zenodo, or a university website. "
+            "Respond with two lines. On line 1, the name of the dataset or 'None'. On line 2, only the word 'yes' or 'no'. Do not use any punctuation. Is this a valid link to a dataset?"
+        )
+        
+            # "Please explain your reasoning briefly in two sentences whether the link points to a dataset or not."
+        key = get_prompt_key()
+        if 'purdue_genai' in key:
+            response = prompt_purdue_genai(prompt, key['purdue_genai'])
+        
+        # Clean up the response and check for 'yes'
+        if response and response.strip().splitlines()[-1].strip().lower() == 'yes':
+            return True, response.strip().splitlines()[0].strip()  # Return True and dataset name if available
+    except Exception as e:
+        # If the API call fails for any reason, assume it's not a dataset
+        logger.debug(f"LLM validation failed for {url}: {e}") 
+
+    return False, None
 
 def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
     """
@@ -202,8 +235,16 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                         dataset = Dataset(dataset_link)
                         populate_dataset_info(dataset)
                         dataset_registry[dataset._name] = dataset  # Add to registry
+                    elif dataset_type == 'check':
+                        is_dataset, dataset_name = is_dataset_url_llm(dataset_link)
+                        if is_dataset:
+                            dataset = Dataset(dataset_link)
+                            dataset._name = dataset_name
+                            dataset_registry[dataset._name] = dataset  # Add to registry
+                        else:
+                            logger.warning(f"Warning: Dataset link on line {line_num} is not a dataset according to LLM: {dataset_link}")
                     else:
-                        logger.warning(f"Warning: Dataset link on line {line_num} is not a HuggingFace dataset URL: {dataset_link}")
+                        logger.warning(f"Warning: Dataset link on line {line_num} is not valid: {dataset_link}")
                 
                 # Create Model object (always required)
                 if not model_link:
@@ -259,25 +300,34 @@ def print_model_summary(models: List[Model], dataset_registry: Dict[str, Dataset
         logger.debug(f"  {name}: {dataset._url}")
 
 
-# if __name__ == "__main__":
-#     # Test the URL parser
-#     # Note: Run this from the project root directory: python3 -m utils.url_parser
-#     test_content = """https://github.com/google-research/bert,https://huggingface.co/datasets/bookcorpus/bookcorpus,https://huggingface.co/google-bert/bert-base-uncased
-# ,,https://huggingface.co/parvk11/audience_classifier_model
-# ,,https://huggingface.co/openai/whisper-tiny"""
-    
-#     with open("test_input.txt", "w") as f:
-#         f.write(test_content)
-    
-#     print("Testing URL parser standalone...")
-#     try:
-#         models, dataset_registry = parse_URL_file("test_input.txt")
-#         print_model_summary(models, dataset_registry)
-#     except Exception as e:
-#         print(f"Test failed: {e}")
-#         print("Note: Run with 'python3 -m utils.url_parser' from project root")
-#     finally:
-#         # Clean up test file
-#         import os
-#         if os.path.exists("test_input.txt"):
-#             os.remove("test_input.txt")
+if __name__ == "__main__":
+    # Test the URL parser
+    # Note: Run this from the project root directory: python3 -m utils.url_parser
+    # print(is_dataset_url_llm(" https://www.image-net.org/"))
+
+    import os
+    content = """https://github.com/google-research/bert, https://huggingface.co/datasets/bookcorpus/bookcorpus, https://huggingface.co/google-bert/bert-base-uncased
+    ,,https://huggingface.co/parvk11/audience_classifier_model
+    ,,https://huggingface.co/openai/whisper-tiny/tree/main
+    ,https://www.image-net.org/,https://huggingface.co/google-bert/bert-base-uncased
+    """
+
+    temp_path = "temp_test.txt"
+
+    try:
+        print(f"--- Creating temporary file: {temp_path} ---")
+        with open(temp_path, "w") as f:
+            f.write(content.strip())
+        models, dataset_registry = parse_URL_file(temp_path)
+
+        for i, model in enumerate(models, 1):
+            code_name = model.code._name if model.code else 'None'
+            dataset_name = model.dataset._name if model.dataset else 'None'
+            print(f"  Model {i}: {model.id} (Code: {code_name}, Dataset: {dataset_name})")
+        
+        print(f"\nFound {len(dataset_registry)} unique datasets in the registry.")
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            print(f"\n--- Cleaned up temporary file: {temp_path} ---")
