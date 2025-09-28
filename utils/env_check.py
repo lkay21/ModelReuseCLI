@@ -20,6 +20,11 @@ def check_environment() -> bool:
     # 1. Check if log file path exists
     if not log_file_path:
         return False
+    
+    try:
+        open(log_file_path)
+    except:
+        return False
 
     if not git_token:
         # logger.error("GITHUB_TOKEN environment variable is not set.")
