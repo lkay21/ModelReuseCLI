@@ -91,29 +91,11 @@ class TestMetricsSeparate(BaseCLITestCase):
         id = "freeCodeCamp/freeCodeCamp"
         
         # Call the function and capture the result
-        result = bus_factor(id)
+        result = bus_factor(id, "github")
         self.logger.debug(f"Bus Factor for {id}: {result}")
 
-        # # Case 2: Small open source repo (us)
-        # owner = "ECE461ProjTeam"
-        # repo = "ModelReuseCLI"
-        # result2 = bus_factor(owner, repo)
-        # self.logger.debug(f"Bus Factor for {owner}/{repo}: {result2}")
-
-        # # Case 3: Repo with 2 contributors
-        # owner = "octocat"
-        # repo = "Hello-World"
-        # result3 = bus_factor(owner, repo)
-        # self.logger.debug(f"Bus Factor for {owner}/{repo}: {result3}")
-        
-        # # Case 4: Repo with one contributor
-        # owner = "vdudhaiy"
-        # repo = "llmrec-570-copy"
-        # result4 = bus_factor(owner, repo)
-        # self.logger.debug(f"Bus Factor for {owner}/{repo}: {result4}")
-
         # Validate the result
-        print(f"Bus factor result: {result}")
+        self.logger.debug(f"Bus factor result: {result}")
         self.assertIsInstance(result, (int, float))
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
@@ -146,7 +128,7 @@ class TestMetricsSeparate(BaseCLITestCase):
     def test_code_quality(self):
         """Test code_quality function."""
         code_url = "https://github.com/google-research/bert"
-        result = code_quality(code_url)
+        result = code_quality(code_url, "github")
 
         self.logger.debug(f"Code quality result: {result}")
 
