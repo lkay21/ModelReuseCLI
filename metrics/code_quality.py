@@ -131,6 +131,7 @@ def _maybe_purdue_genai_naming(repo_dir: Path) -> float | None:
         f"Variables (sample): {var_names}\n\nJust the number:"
     )
     txt = (prompt_purdue_genai(prompt, key) or "").strip()
+    logger.debug(f"Purdue GENAI prompt result: {txt}")
     for tok in txt.replace(",", " ").split():
         try:
             val = float(tok)
