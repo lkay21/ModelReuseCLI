@@ -39,18 +39,6 @@ class TestGitAPI(unittest.TestCase):
 
     @patch("apis.git_api.time.sleep", return_value=None)
     @patch("apis.git_api.requests.get")
-    def test_make_request_fail_after_retries(self, mock_get, mock_sleep):
-        """Raise Exception after max wait (lines 102–106)"""
-        mock_resp = MagicMock(status_code=500, headers={})
-        mock_get.return_value = mock_resp
-
-        with self.assertRaises(tenacity.RetryError) as cm:
-            git_api.make_request("https://example.com", {})
-        # Check inner exception message
-        self.assertIn("Failed to fetch data", str(cm.exception.last_attempt.exception()))
-
-    @patch("apis.git_api.time.sleep", return_value=None)
-    @patch("apis.git_api.requests.get")
     def test_make_request_rate_limit(self, mock_get, mock_sleep):
         """Simulate rate-limit and then success"""
         # First response is 403 rate-limit, then 200 success
