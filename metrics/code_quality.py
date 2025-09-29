@@ -168,27 +168,4 @@ def code_quality(target: str, code_type: str) -> float:
         return 2 * lint01
 
     return max(0.0, min(1.0, lint01 + naming05))
-<<<<<<< HEAD
-=======
 
-
-
-# if __name__ == "__main__":
-#     test_repos = [
-#         "https://github.com/pallets/click.git",
-#         "https://github.com/psf/requests.git", 
-#         # "https://github.com/huggingface/transformers",
-#         # "https://github.com/pytorch/pytorch",
-#         # "https://github.com/scikit-learn/scikit-learn",
-#         # "https://github.com/tensorflow/tensorflow",
-#         # "https://github.com/pallets/flask",
-#         "https://github.com/google-research/bert",
-#     ]
-    
-#     for repo in test_repos:
-#         try:
-#             score = code_quality(repo)
-#             print(f"{repo}: {score:.3f}")
-#         except Exception as e:
-#             print(f"{repo}: ERROR - {e}")
->>>>>>> 0ab54f1 (commented out main blocks)
