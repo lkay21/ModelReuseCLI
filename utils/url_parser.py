@@ -56,7 +56,7 @@ def classify_url(url: str) -> str:
     return 'check'
 
 
-def extract_name_from_url(url: str) -> str:
+def extract_name_from_url(url: str) -> Tuple[str, str]:
     """
     Extract a name from a URL
     
@@ -68,21 +68,21 @@ def extract_name_from_url(url: str) -> str:
     """
     logger.debug(f"Extracting name from URL: {url}")
     if not url:
-        return ""
+        return "", ""
     
     # code pattern: github/gitlab/hfspace
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
     if github_match:
         owner, repo = github_match.groups()
-        return repo.replace('.git', '')
+        return owner, repo.replace('.git', '')
 
     gitlab_match = re.search(r'(?:git@|https?://)gitlab\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$', url, re.IGNORECASE)
     if gitlab_match:
-        return gitlab_match.group('repo')
+        return gitlab_match.group('owner'), gitlab_match.group('repo')
 
     hfcode_match = re.search(r'^https?://(?:www\.)?huggingface\.co/spaces/(?P<owner>[^/]+)/(?P<space>[^/]+)(?:/.*)?$', url, re.IGNORECASE)
     if hfcode_match:
-        return hfcode_match.group('space')
+        return hfcode_match.group('owner'), hfcode_match.group('space')
 
     # HuggingFace pattern: extract model/dataset name
     hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
@@ -90,7 +90,7 @@ def extract_name_from_url(url: str) -> str:
         namespace, name = hf_match.groups()
         return namespace, name
     
-    return ""
+    return "", ""
 
 
 def populate_code_info(code: Code, code_type: str) -> None:
@@ -101,7 +101,8 @@ def populate_code_info(code: Code, code_type: str) -> None:
         code (Code): Code object to populate
     """
     # Extract name from URL
-    code._name = extract_name_from_url(code._url)
+    # extract_name_from_url returns a tuple (owner, name)
+    _, code._name = extract_name_from_url(code._url)
     code.type = code_type
     # TODO: Add GitHub API calls to populate metadata
     # Example implementation for metrics teams:
