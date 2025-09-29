@@ -202,5 +202,5 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertLessEqual(result, 1)
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

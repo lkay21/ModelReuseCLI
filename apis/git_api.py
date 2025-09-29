@@ -97,13 +97,13 @@ def get_contributors(id: str) -> List[Dict[str, Any]]:
     return response.json()
 
 
-if __name__ == "__main__":
-    # Sample Output
-    id = "google-research/bert"
-    contributers = get_contributors(id)
-    print("Contributors:")
-    for contributor in contributers:
-        print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
+# if __name__ == "__main__":
+#     # Sample Output
+#     id = "google-research/bert"
+#     contributers = get_contributors(id)
+#     print("Contributors:")
+#     for contributor in contributers:
+#         print(f"Contributor: {contributor['login']} - Contributions: {contributor['contributions']}")
     # commits = get_commit_history(owner, repo)
     # print("\nCommits:")
     # for commit in commits:

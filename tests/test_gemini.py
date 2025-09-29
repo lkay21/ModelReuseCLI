@@ -35,5 +35,5 @@ class TestGeminiAPI(unittest.TestCase):
         self.assertEqual(result, "Hello")
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

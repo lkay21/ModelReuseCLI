@@ -80,5 +80,5 @@ class TestMetricsIntegration(BaseCLITestCase):
         self.assertEqual(ramp1, ramp2, "ramp_up_time should be consistent across calls")
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

@@ -72,5 +72,5 @@ class TestGitAPI(unittest.TestCase):
         self.assertEqual(contributors[0]["contributions"], 10)
         mock_request.assert_called_once()
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

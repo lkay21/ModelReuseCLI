@@ -111,5 +111,5 @@ class TestEnvironment(BaseCLITestCase):
             self.assertFalse(check_environment())
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

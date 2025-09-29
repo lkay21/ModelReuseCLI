@@ -69,5 +69,5 @@ class TestMainCLI(unittest.TestCase):
             self.assertEqual(cm.exception.code, 1)
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

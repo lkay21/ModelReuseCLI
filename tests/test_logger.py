@@ -69,5 +69,5 @@ class TestSetupLogger(unittest.TestCase):
     #         self.assertTrue(file_handlers)
     #         self.assertTrue(console_handlers)
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()

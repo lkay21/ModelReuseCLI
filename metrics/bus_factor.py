@@ -42,11 +42,11 @@ def bus_factor(id: str, code_type: str) -> float:
     return bus_factor
 
 
-if __name__ == "__main__":
-    # Case 1: Major open source repo
-    owner = "google-bert"
-    repo = "bert-base-uncased"
-    print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
+# if __name__ == "__main__":
+#     # Case 1: Major open source repo
+#     owner = "google-bert"
+#     repo = "bert-base-uncased"
+#     print(f"Bus Factor for {owner}/{repo}: {bus_factor(owner, repo)}")
 
     # # Case 2: Small open source repo (us)
     # owner = "ECE461ProjTeam"
