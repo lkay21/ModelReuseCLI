@@ -68,7 +68,7 @@ DO NOT deviate from the format."""
         num_retries += 1
     else:
         logger.error("Could not parse the dataset quality score from the response.")
-        raise ValueError("Could not parse the dataset quality score from the response.")
+        # raise ValueError("Could not parse the dataset quality score from the response.")
     return score
 
 # if __name__ == "__main__":

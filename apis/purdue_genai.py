@@ -70,7 +70,7 @@ def prompt_purdue_genai(prompt: str, api_key: str) -> Optional[str]:
         return(data["choices"][0]["message"]["content"])
     else:
         logger.error(f"Error: {response.status_code}, {response.text}")
-        raise Exception(f"Error: {response.status_code}, {response.text}")
+        # raise Exception(f"Error: {response.status_code}, {response.text}")
     
 # if __name__ == "__main__":
 #     # Example usage

@@ -48,6 +48,7 @@ def license_score(model_id: str) -> float:
 
     num_retries = 0
     max_retries = 3
+    score = 0
 
     while num_retries < max_retries:
         license_compatibility = prompt_function(license_compatibility_prompt, api_key_value)
@@ -60,7 +61,7 @@ def license_score(model_id: str) -> float:
         num_retries += 1
     else:
         logger.error("Could not parse the license score from the response.")
-        raise ValueError("Could not parse the license score from the response.")
+        # raise ValueError("Could not parse the license score from the response.")
     return score
 
 
