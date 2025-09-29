@@ -18,8 +18,9 @@ class URLFileIntegrationTests(BaseCLITestCase):
             f.write(
                 """https://github.com/google-research/bert, https://huggingface.co/datasets/bookcorpus/bookcorpus, https://huggingface.co/google-bert/bert-base-uncased
                 ,,https://huggingface.co/parvk11/audience_classifier_model
-                ,,https://huggingface.co/openai/whisper-tiny
-                ,,https://huggingface.co/google-bert/bert-base-uncased"""            )
+                https://gitlab.com/google-research/bert,,https://huggingface.co/openai/whisper-tiny
+                ,,https://huggingface.co/google-bert/bert-base-uncased
+                ,https://www.image-net.org/,https://huggingface.co/google-bert/bert-base-uncased"""            )
             
     def tearDown(self):
         # Clean up the sample input file after the test
@@ -35,7 +36,7 @@ class URLFileIntegrationTests(BaseCLITestCase):
         url_parser.print_model_summary(models, dataset_registry)
 
         # Validate the parsed models
-        self.assertEqual(len(models), 4)  # Ensure two models are parsed
+        self.assertEqual(len(models), 5)  # Ensure two models are parsed
 
         # Run the pipeline for each model
         for model in models:

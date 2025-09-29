@@ -87,7 +87,7 @@ def _lint_score(errors: int, num_files: int) -> float:
 
 
 
-# Gemini naming subscore ([0, 0.5]) using AST variable names
+# Purdue GenAI naming subscore ([0, 0.5]) using AST variable names
 def _collect_var_names(repo_dir: Path, max_files: int = 10) -> list[str]:
     names: list[str] = []
     for f in list(repo_dir.rglob("*.py"))[:max_files]:
@@ -110,15 +110,15 @@ def _collect_var_names(repo_dir: Path, max_files: int = 10) -> list[str]:
     return names[:200]
 
 
-def _maybe_gemini_naming(repo_dir: Path) -> float | None:
+def _maybe_purdue_genai_naming(repo_dir: Path) -> float | None:
     try:
-        from apis.gemini import get_gemini_key, prompt_gemini
-        key = get_gemini_key() or os.getenv("GEMINI_API_KEY")
+        from apis.purdue_genai import get_purdue_genai_key, prompt_purdue_genai
+        key = get_purdue_genai_key()
     except Exception:
-        key = os.getenv("GEMINI_API_KEY")
-        prompt_gemini = None  
+        key = None
+        prompt_purdue_genai = None  
 
-    if not (key and prompt_gemini):
+    if not (key and prompt_purdue_genai):
         return None
 
     var_names = _collect_var_names(repo_dir)
@@ -130,7 +130,7 @@ def _maybe_gemini_naming(repo_dir: Path) -> float | None:
         "avoiding cryptic names). Return ONLY a float in [0,0.5].\n\n"
         f"Variables (sample): {var_names}\n\nJust the number:"
     )
-    txt = (prompt_gemini(prompt, key) or "").strip()
+    txt = (prompt_purdue_genai(prompt, key) or "").strip()
     for tok in txt.replace(",", " ").split():
         try:
             val = float(tok)
@@ -143,7 +143,7 @@ def code_quality(target: str, code_type: str) -> float:
     """
     Returns float in [0,1].
       - Lint score from flake8 maps to [0,1].
-      - If Gemini key is present, blend variable-naming subscore ([0,0.5]):
+      - If Purdue GenAI key is present, blend variable-naming subscore ([0,0.5]):
             score = 0.5 * lint + naming
         Else, return lint-only (offline-friendly).
     """
@@ -161,30 +161,9 @@ def code_quality(target: str, code_type: str) -> float:
     num_errors, files_checked = _simple_lint_check(repo_dir)
     logger.debug(f"  Found {num_errors} linting errors in {files_checked} files for {target}")
     lint01 = _lint_score(num_errors, files_checked)
-    naming05 = _maybe_gemini_naming(repo_dir)
+    naming05 = _maybe_purdue_genai_naming(repo_dir)
     if naming05 is None:
         logger.debug(f"  Using lint-only score: {lint01:.3f}")
         return 2 * lint01
 
     return max(0.0, min(1.0, lint01 + naming05))
-
-
-
-if __name__ == "__main__":
-    test_repos = [
-        "https://github.com/pallets/click.git",
-        "https://github.com/psf/requests.git", 
-        # "https://github.com/huggingface/transformers",
-        # "https://github.com/pytorch/pytorch",
-        # "https://github.com/scikit-learn/scikit-learn",
-        # "https://github.com/tensorflow/tensorflow",
-        # "https://github.com/pallets/flask",
-        "https://github.com/google-research/bert",
-    ]
-    
-    for repo in test_repos:
-        try:
-            score = code_quality(repo)
-            print(f"{repo}: {score:.3f}")
-        except Exception as e:
-            print(f"{repo}: ERROR - {e}")
