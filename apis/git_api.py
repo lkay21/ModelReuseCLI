@@ -3,6 +3,8 @@ import requests
 import time
 from typing import List, Dict, Any, Optional
 import logging
+import json
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_result
 
 
 logger = logging.getLogger('cli_logger')
@@ -25,6 +27,14 @@ def check_git_token() -> Optional[str]:
     return token
 
 
+@retry(
+    retry=(
+        retry_if_exception_type((requests.exceptions.RequestException, json.JSONDecodeError, Exception)) |
+        retry_if_result(lambda result: result is None)
+    ),
+    wait=wait_exponential(multiplier=1, max=10),
+    stop=stop_after_attempt(3)
+)
 def make_request(url: str, headers: Dict[str, str], max_time: int = 60) -> requests.Response:
     '''
     Make a GET request to the specified URL with the provided headers, handling rate limiting and retries
