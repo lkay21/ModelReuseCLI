@@ -300,34 +300,34 @@ def print_model_summary(models: List[Model], dataset_registry: Dict[str, Dataset
         logger.debug(f"  {name}: {dataset._url}")
 
 
-if __name__ == "__main__":
-    # Test the URL parser
-    # Note: Run this from the project root directory: python3 -m utils.url_parser
-    # print(is_dataset_url_llm(" https://www.image-net.org/"))
+# if __name__ == "__main__":
+#     # Test the URL parser
+#     # Note: Run this from the project root directory: python3 -m utils.url_parser
+#     # print(is_dataset_url_llm(" https://www.image-net.org/"))
 
-    import os
-    content = """https://github.com/google-research/bert, https://huggingface.co/datasets/bookcorpus/bookcorpus, https://huggingface.co/google-bert/bert-base-uncased
-    ,,https://huggingface.co/parvk11/audience_classifier_model
-    ,,https://huggingface.co/openai/whisper-tiny/tree/main
-    ,https://www.image-net.org/,https://huggingface.co/google-bert/bert-base-uncased
-    """
+#     import os
+#     content = """https://github.com/google-research/bert, https://huggingface.co/datasets/bookcorpus/bookcorpus, https://huggingface.co/google-bert/bert-base-uncased
+#     ,,https://huggingface.co/parvk11/audience_classifier_model
+#     ,,https://huggingface.co/openai/whisper-tiny/tree/main
+#     ,https://www.image-net.org/,https://huggingface.co/google-bert/bert-base-uncased
+#     """
 
-    temp_path = "temp_test.txt"
+#     temp_path = "temp_test.txt"
 
-    try:
-        print(f"--- Creating temporary file: {temp_path} ---")
-        with open(temp_path, "w") as f:
-            f.write(content.strip())
-        models, dataset_registry = parse_URL_file(temp_path)
+#     try:
+#         print(f"--- Creating temporary file: {temp_path} ---")
+#         with open(temp_path, "w") as f:
+#             f.write(content.strip())
+#         models, dataset_registry = parse_URL_file(temp_path)
 
-        for i, model in enumerate(models, 1):
-            code_name = model.code._name if model.code else 'None'
-            dataset_name = model.dataset._name if model.dataset else 'None'
-            print(f"  Model {i}: {model.id} (Code: {code_name}, Dataset: {dataset_name})")
+#         for i, model in enumerate(models, 1):
+#             code_name = model.code._name if model.code else 'None'
+#             dataset_name = model.dataset._name if model.dataset else 'None'
+#             print(f"  Model {i}: {model.id} (Code: {code_name}, Dataset: {dataset_name})")
         
-        print(f"\nFound {len(dataset_registry)} unique datasets in the registry.")
+#         print(f"\nFound {len(dataset_registry)} unique datasets in the registry.")
 
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-            print(f"\n--- Cleaned up temporary file: {temp_path} ---")
+#     finally:
+#         if os.path.exists(temp_path):
+#             os.remove(temp_path)
+#             print(f"\n--- Cleaned up temporary file: {temp_path} ---")
