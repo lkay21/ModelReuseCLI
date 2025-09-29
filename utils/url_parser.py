@@ -223,7 +223,6 @@ def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
                     if code_type == 'github' or code_type == 'gitlab' or code_type == 'hfspace':
                         code = Code(code_link)
                         populate_code_info(code, code_type)
-                        populate_code_info(code, code_type)
                     else:
                         logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
                 
