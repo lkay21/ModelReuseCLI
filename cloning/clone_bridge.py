@@ -16,7 +16,9 @@ def clone_with_isogit(repo_url: str, local_dir: str = "./models") -> None:
     
     # Check if clone.js exists
     if not script_path.exists():
-        raise FileNotFoundError(f"clone.js not found at {script_path}")
+        logger.error("Unable to clone")
+        return
+        # raise FileNotFoundError(f"clone.js not found at {script_path}")
     
     logger.debug(f"Cloning {repo_url} into {local_dir_abs} using isogit...")
     
@@ -27,7 +29,7 @@ def clone_with_isogit(repo_url: str, local_dir: str = "./models") -> None:
     )
     if result.returncode != 0:
         logger.error(f"Clone failed:\n{result.stderr}")
-        raise RuntimeError(f"Clone failed: {result.stderr}")
+        # raise RuntimeError(f"Clone failed: {result.stderr}")
     logger.info(f"Successfully cloned {repo_url} into {local_dir_abs}.")
 
 

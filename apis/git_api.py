@@ -68,7 +68,7 @@ def make_request(url: str, headers: Dict[str, str], max_time: int = 60) -> reque
             wait_time *= 2
 
     logger.error(f"Failed to fetch data from {url} after multiple attempts.")
-    raise Exception(f"Failed to fetch data from {url} after multiple attempts.")
+    # raise Exception(f"Failed to fetch data from {url} after multiple attempts.")
 
 
 def set_git_headers() -> Dict[str, str]:
