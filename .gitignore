@@ -12,4 +12,5 @@ models/
 *.log
 .coverage
 models/
+*.zip
 #remove run from ignore list when ready to ship
