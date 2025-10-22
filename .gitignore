@@ -13,4 +13,5 @@ models/
 .coverage
 models/
 *.zip
+*.aws
 #remove run from ignore list when ready to ship
