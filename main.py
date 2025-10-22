@@ -5,6 +5,7 @@ import os
 from typing import Dict
 import json
 import logging
+import zipfile
 
 from utils.url_parser import parse_URL_file, print_model_summary
 from utils.logger import setup_logger
@@ -42,11 +43,19 @@ def main():
         logger.error(f"Error: File '{url_file}' not found.")
         sys.exit(1)
 
+    # Check if file is zip file
+    if zipfile.is_zipfile(url_file):
+        is_zipped = True
+        logger.info(f"File '{url_file}' is a zip file.")
+    else:
+        is_zipped = False
+        logger.warning(f"File '{url_file}' is not a zip file.")
+
     # Ensure LLM tokens are present by attempting to get the keys
     get_prompt_key()
     
     # Parse the URL file and create Model objects
-    models, dataset_registry = parse_URL_file(url_file)
+    models, dataset_registry = parse_URL_file(url_file, is_zipped)
     
     if not models:
         logger.error("No models found in the file.")
