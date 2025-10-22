@@ -9,6 +9,10 @@ from model import Model, Code, Dataset
 import logging
 from apis.purdue_genai import prompt_purdue_genai
 from utils.prompt_key import get_prompt_key
+import logging
+import boto3
+from botocore.exceptions import ClientError
+import os
 
 
 logger = logging.getLogger('cli_logger')
@@ -186,6 +190,31 @@ def is_dataset_url_llm(url: str) -> Tuple[bool, str]:
 
     return False, None
 
+
+
+
+def upload_file(file_name, bucket, object_name=None):
+    """Upload a file to an S3 bucket
+
+    :param file_name: File to upload
+    :param bucket: Bucket to upload to
+    :param object_name: S3 object name. If not specified then file_name is used
+    :return: True if file was uploaded, else False
+    """
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = os.path.basename(file_name)
+
+    # Upload the file
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
+
 def parse_URL_file(file_path: str, is_zipped: bool) -> Tuple[List[Model], Dict[str, Dataset]]:
     """
     Parse a URL file and create Model objects with linked Code and Dataset objects.
@@ -280,6 +309,7 @@ def parse_URL_file(file_path: str, is_zipped: bool) -> Tuple[List[Model], Dict[s
     else:
         models = []
         dataset_registry = {}
+        upload_file(file_name=file_path, bucket='model-pipeline-storage-bucket', object_name=None)
         print("Zipped file parsing not yet implemented.")
     
     return models, dataset_registry
