@@ -165,7 +165,7 @@ def code_quality(target: str, code_type: str) -> float:
     naming05 = _maybe_purdue_genai_naming(repo_dir)
     if naming05 is None:
         logger.debug(f"  Using lint-only score: {lint01:.3f}")
-        return 2 * lint01
+        return lint01
 
     return max(0.0, min(1.0, lint01 + naming05))
 

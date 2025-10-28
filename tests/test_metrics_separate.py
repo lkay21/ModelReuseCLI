@@ -68,14 +68,19 @@ class TestMetricsSeparate(BaseCLITestCase):
         for platform, score in result.items():
             self.assertEqual(score, 0)
 
+    @patch("metrics.ramp_up_time.get_prompt_key")
     @patch("metrics.ramp_up_time.HFClient")
-    def test_ramp_up_time_with_readme(self, MockHFClient):
+    def test_ramp_up_time_with_readme(self, MockHFClient, MockGetPromptKey):
         """Test ramp_up_time with a model that has a README."""
         mock_client = MockHFClient.return_value
         mock_client.model_info.return_value = {
             "cardData": {"library_name": "transformers"},
             "readme": "This is a test README with model information."
         }
+        mock_client.model_card_text.return_value = "This is a test README with model information."
+        
+        # Mock get_prompt_key to return None (so LLM blend is skipped)
+        MockGetPromptKey.return_value = {}
 
         model_id = "test-model"
         result = ramp_up_time(model_id)
@@ -136,8 +141,12 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
 
-    def test_dataset_quality(self):
+    @patch("metrics.dataset_quality.get_prompt_key")
+    def test_dataset_quality(self, MockGetPromptKey):
         """Test dataset_quality function."""
+        # Mock get_prompt_key to return None (function will return 0.0)
+        MockGetPromptKey.return_value = None
+        
         model_id = "test-model"
         result = compute_dataset_quality(model_id)
         
@@ -147,15 +156,20 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
 
+    @patch("metrics.performance_claims.get_prompt_key")
     @patch("metrics.performance_claims.prompt_purdue_genai")
     @patch("metrics.performance_claims.HFClient")
-    def test_performance_claims_mocked(self, MockHFClient, MockPrompt):
+    def test_performance_claims_mocked(self, MockHFClient, MockPrompt, MockGetPromptKey):
         """Test performance_claims with mocked dependencies."""
         # Mock HFClient
         mock_client = MockHFClient.return_value
         mock_client.model_info.return_value = {
             "readme": "This model achieves state-of-the-art performance."
         }
+        mock_client.model_card_text.return_value = "This model achieves state-of-the-art performance."
+        
+        # Mock get_prompt_key to return purdue_genai
+        MockGetPromptKey.return_value = {'purdue_genai': 'fake-key'}
         
         # Mock the prompt function
         MockPrompt.return_value = "0.8"  # Mock response indicating good performance claims

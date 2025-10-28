@@ -57,7 +57,8 @@ class TestEnvironment(BaseCLITestCase):
 
     def test_with_log_level_0(self):
         """Test code with log level 0. Ensure logger level is set to CRITICAL"""
-        with patch.dict(os.environ, {"LOG_LEVEL": "0"}):
+        tmp_log_file = os.path.join(self.tmpdir.name, "test.log")
+        with patch.dict(os.environ, {"LOG_LEVEL": "0", "LOG_FILE": tmp_log_file}):
             setup_logger()
             logger = logging.getLogger('cli_logger')
             for level_name, level_value in [
@@ -73,7 +74,8 @@ class TestEnvironment(BaseCLITestCase):
 
     def test_with_log_level_1(self):
         """Test code with log level 1. Ensure logger level is set to INFO"""
-        with patch.dict(os.environ, {"LOG_LEVEL": "1"}):
+        tmp_log_file = os.path.join(self.tmpdir.name, "test.log")
+        with patch.dict(os.environ, {"LOG_LEVEL": "1", "LOG_FILE": tmp_log_file}):
             setup_logger()
             logger = logging.getLogger('cli_logger')
             self.assertFalse(logger.disabled)
@@ -81,7 +83,8 @@ class TestEnvironment(BaseCLITestCase):
 
     def test_with_log_level_2(self):
         """Test code with log level 2. Ensure logger level is set to DEBUG"""
-        with patch.dict(os.environ, {"LOG_LEVEL": "2"}):
+        tmp_log_file = os.path.join(self.tmpdir.name, "test.log")
+        with patch.dict(os.environ, {"LOG_LEVEL": "2", "LOG_FILE": tmp_log_file}):
             setup_logger()
             logger = logging.getLogger('cli_logger')
             self.assertFalse(logger.disabled)

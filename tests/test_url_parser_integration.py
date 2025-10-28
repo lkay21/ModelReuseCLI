@@ -4,6 +4,7 @@ import os
 from utils import url_parser
 # from utils.url_parser import parse_url_file
 from tests.base import BaseCLITestCase
+from unittest.mock import patch
 
 import logging
 logger = logging.getLogger('cli_logger')
@@ -27,12 +28,16 @@ class URLFileIntegrationTests(BaseCLITestCase):
         if os.path.exists(self.sample_input_path):
             os.remove(self.sample_input_path)
 
-    def test_parse_url_file_integration(self):
+    @patch("utils.url_parser.get_prompt_key")
+    def test_parse_url_file_integration(self, MockGetPromptKey):
         """
         Test the parse_url_file function with a sample input file.
         """
+        # Mock get_prompt_key to return purdue_genai key
+        MockGetPromptKey.return_value = {'purdue_genai': 'fake-key'}
+        
         # Parse the input file
-        models, dataset_registry = url_parser.parse_URL_file(self.sample_input_path)
+        models, dataset_registry = url_parser.parse_URL_file(self.sample_input_path, is_zipped=False)
         url_parser.print_model_summary(models, dataset_registry)
 
         # Validate the parsed models

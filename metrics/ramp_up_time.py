@@ -46,6 +46,9 @@ def ramp_up_time(model_id: str) -> float:
     # LLM blend (70% heuristics, 30% Gemini) 
     # lazy import; prefer get_gemini_key() from apis.gemini if available
     prompt_key = get_prompt_key()
+    api_key = None
+    prompt_function = None
+    
     if 'purdue_genai' in prompt_key:
         prompt_function = prompt_purdue_genai
         api_key = get_purdue_genai_key()
