@@ -1,31 +1,31 @@
-name: CD - Deploy to AWS
+# name: CD - Deploy to AWS
 
-on:
-  push:
-    branches: [ main ]
+# on:
+#   push:
+#     branches: [ main ]
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-1
 
-      - name: Build Docker image
-        run: docker build -t trustworthy-registry:latest .
+#       - name: Build Docker image
+#         run: docker build -t trustworthy-registry:latest .
 
-      - name: Push image to ECR
-        run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
-          docker tag trustworthy-registry:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
-          docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
+#       - name: Push image to ECR
+#         run: |
+#           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+#           docker tag trustworthy-registry:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
+#           docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
 
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
+#       - name: Deploy to ECS
+#         run: |
+#           aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment

@@ -1,61 +1,61 @@
-name: CI - Build, Lint, and Test
+# name: CI - Build, Lint, and Test
 
-on:
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Lint (flake8)
-        run: |
-          flake8 . --max-line-length=128 --exit-zero
-
-      - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
-
-# name: Code Quality Check + Full Build
-
-# on: [push]
+# on:
+#   pull_request:
+#     branches: [ main ]
 
 # jobs:
 #   build:
 #     runs-on: ubuntu-latest
-
 #     steps:
 #       - uses: actions/checkout@v4
-
-#       # ---------- Python Setup ----------
 #       - name: Set up Python 3.11
 #         uses: actions/setup-python@v5
 #         with:
 #           python-version: '3.11'
 #           cache: 'pip'
 
-#       - name: Install Python dependencies
+#       - name: Install dependencies
 #         run: |
 #           python -m pip install --upgrade pip
 #           pip install flake8 pytest pytest-cov
 #           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-#       # ---------- flake8 Linting ----------
-#       - name: Run flake8 checks
+#       - name: Lint (flake8)
 #         run: |
-#           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
-#           flake8 . --count --max-complexity=10 --max-line-length=128 --statistics --exit-zero
+#           flake8 . --max-line-length=128 --exit-zero
+
+#       - name: Run tests
+#         run: |
+#           pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
+
+name: Code Quality Check + Full Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- Python Setup ----------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # ---------- flake8 Linting ----------
+      - name: Run flake8 checks
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
+          flake8 . --count --max-complexity=10 --max-line-length=128 --statistics --exit-zero
       
