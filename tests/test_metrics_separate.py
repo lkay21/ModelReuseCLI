@@ -91,8 +91,18 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
 
-    def test_bus_factor(self):
+    @patch("metrics.bus_factor.git_api.get_contributors")
+    def test_bus_factor(self, mock_get_contributors):
         """Test bus_factor function."""
+        # Mock the GitHub API response
+        mock_get_contributors.return_value = [
+            {"login": "user1", "contributions": 100},
+            {"login": "user2", "contributions": 50},
+            {"login": "user3", "contributions": 25},
+            {"login": "user4", "contributions": 10},
+            {"login": "user5", "contributions": 5},
+        ]
+        
         id = "freeCodeCamp/freeCodeCamp"
         
         # Call the function and capture the result
