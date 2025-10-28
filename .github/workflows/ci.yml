@@ -1,71 +1,116 @@
-# name: CI - Install, Lint, and Test
+name: CI/CD Pipeline – Build, Lint, Test, Deploy
 
-# on:
-#   pull_request:
-#     branches: [ main ]
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       # Checkout repository
-#       - uses: actions/checkout@v4
-
-#       # Set up Python 3.11
-#       - name: Set up Python 3.11
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: '3.11'
-#           cache: 'pip'
-
-#       # Set up Node.js (for npm install)
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: '18'
-
-#       # Make script executable
-#       - name: Ensure run script is executable
-#         run: chmod +x run
-
-#       # Install dependencies
-#       - name: Install dependencies
-#         run: ./run install
-
-#       # Run tests
-#       - name: Run project tests
-#         run: ./run test
-
-
-
-name: Code Quality Check + Full Build
-
-on: [push]
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
+  # ---------- Continuous Integration ----------
   build:
+    name: Code Quality Check + Test
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repo
       - uses: actions/checkout@v4
 
-      # ---------- Python Setup ----------
+      # 2️⃣ Set up Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Python dependencies
+      # 3️⃣ Set up Node.js (optional, used by your run install)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 4️⃣ Ensure run script is executable
+      - name: Ensure run script is executable
+        run: chmod +x run
+
+      # 5️⃣ Install dependencies (same as your original file)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
+          pip install flake8
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          npm install --silent || true
 
-      # ---------- flake8 Linting ----------
+      # 6️⃣ Run flake8 lint checks (from your original CI)
       - name: Run flake8 checks
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
           flake8 . --count --max-complexity=10 --max-line-length=128 --statistics --exit-zero
+
+      # 7️⃣ Run project tests (custom test harness)
+      - name: Run project tests
+        run: ./run test
+
+  # ---------- Continuous Deployment ----------
+  deploy:
+    name: Deploy to AWS
+    needs: build   # Only runs if CI job passes
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build Docker image
+        run: docker build -t trustworthy-registry:latest .
+
+      - name: Push image to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+          docker tag trustworthy-registry:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
+          docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/trustworthy-registry:latest
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
+
+
+
+
+# name: Code Quality Check + Full Build
+
+# on: [push]
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       # ---------- Python Setup ----------
+#       - name: Set up Python 3.11
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
+#           cache: 'pip'
+
+#       - name: Install Python dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install flake8 pytest pytest-cov
+#           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+#       # ---------- flake8 Linting ----------
+#       - name: Run flake8 checks
+#         run: |
+#           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exit-zero
+#           flake8 . --count --max-complexity=10 --max-line-length=128 --statistics --exit-zero
       
