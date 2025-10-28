@@ -39,3 +39,5 @@ Note: I just used the sample_input.txt from Piazza
 - Jake Scherer
 
 Test CI trigger
+
+test merge with a failing pytest case
