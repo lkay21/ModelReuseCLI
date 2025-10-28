@@ -30,6 +30,9 @@ jobs:
           echo "GEN_AI_STUDIO_API_KEY=${{ secrets.GEN_AI_STUDIO_API_KEY }}" >> .env
           echo "LOG_LEVEL=0" >> .env
           echo "LOG_FILE=log.log" >> .env
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
 
       # ---------- Install Dependencies ----------
       - name: Install dependencies
@@ -44,4 +47,7 @@ jobs:
       # ---------- Run Tests ----------
       - name: Run tests
         run: ./run test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
       
