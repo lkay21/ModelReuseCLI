@@ -8,7 +8,7 @@ __pycache__/
 *.txt
 !requirements.txt
 node_modules
-models/
+models/bert/
 *.log
 .coverage
 models/
