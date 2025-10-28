@@ -26,5 +26,4 @@ jobs:
           flake8 . --max-line-length=128 --exit-zero
 
       - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings --cov=. --cov-report=xml
+        run: pytest -v
