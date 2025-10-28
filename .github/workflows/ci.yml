@@ -49,7 +49,9 @@ jobs:
 
       # 7️⃣ Run project tests (custom test harness)
       - name: Run project tests
+        working-directory: ./
         run: ./run test
+
 
   # ---------- Continuous Deployment ----------
   deploy:
