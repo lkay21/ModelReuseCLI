@@ -55,19 +55,11 @@ def main():
         logger.error(f"Error: File '{url_file}' not found.")
         sys.exit(1)
 
-    # Check if file is zip file
-    if zipfile.is_zipfile(url_file):
-        is_zipped = True
-        logger.info(f"File '{url_file}' is a zip file.")
-    else:
-        is_zipped = False
-        logger.warning(f"File '{url_file}' is not a zip file.")
-
     # Ensure LLM tokens are present by attempting to get the keys
     get_prompt_key()
     
     # Parse the URL file and create Model objects
-    models, dataset_registry = parse_URL_file(url_file, is_zipped)
+    models, dataset_registry = parse_URL_file(url_file)
     
     if not models:
         logger.error("No models found in the file.")

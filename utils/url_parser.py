@@ -215,7 +215,7 @@ def upload_file(file_name, bucket, object_name=None):
         return False
     return True
 
-def parse_URL_file(file_path: str, is_zipped: bool) -> Tuple[List[Model], Dict[str, Dataset]]:
+def parse_URL_file(file_path: str) -> Tuple[List[Model], Dict[str, Dataset]]:
     """
     Parse a URL file and create Model objects with linked Code and Dataset objects.
     Also return a registry of all datasets encountered.
@@ -227,90 +227,85 @@ def parse_URL_file(file_path: str, is_zipped: bool) -> Tuple[List[Model], Dict[s
         Tuple[List[Model], Dict[str, Dataset]]: List of Model objects and dataset registry
     """
 
-    if(not is_zipped):
-        models = []
-        dataset_registry = {}  # Track all datasets by name
+    
+    models = []
+    dataset_registry = {}  # Track all datasets by name    
         
-        try:
-            logger.info(f"Parsing URL file: {file_path}")
-            with open(file_path, 'r', encoding='utf-8') as file:
-                for line_num, line in enumerate(file, 1):
-                    line = line.strip()
+    try:
+        logger.info(f"Parsing URL file: {file_path}")
+        with open(file_path, 'r', encoding='utf-8') as file:
+            for line_num, line in enumerate(file, 1):
+                line = line.strip()
 
-                    # Parse the CSV line
-                    parts = [part.strip() for part in line.split(',')]
-                    
-                    # Ensure we have exactly 3 parts
-                    if len(parts) != 3:
-                        logger.warning(f"Warning: Line {line_num} does not have exactly 3 columns: {line}")
-                        continue
-                    
-                    code_link, dataset_link, model_link = parts
-                    
-                    # Create Code object only if URL exists
-                    code = None
-                    if code_link:
-                        code_type = classify_url(code_link)
-                        # print(code_type)
-                        if code_type == 'github' or code_type == 'gitlab' or code_type == 'hfspace':
-                            code = Code(code_link)
-                            populate_code_info(code, code_type)
-                        else:
-                            logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
-                    
-                    # Create Dataset object only if URL exists
-                    dataset = None
-                    if dataset_link:
-                        dataset_type = classify_url(dataset_link)
-                        if dataset_type == 'dataset':
+                # Parse the CSV line
+                parts = [part.strip() for part in line.split(',')]
+                
+                # Ensure we have exactly 3 parts
+                if len(parts) != 3:
+                    logger.warning(f"Warning: Line {line_num} does not have exactly 3 columns: {line}")
+                    continue
+                
+                code_link, dataset_link, model_link = parts
+                
+                # Create Code object only if URL exists
+                code = None
+                if code_link:
+                    code_type = classify_url(code_link)
+                    # print(code_type)
+                    if code_type == 'github' or code_type == 'gitlab' or code_type == 'hfspace':
+                        code = Code(code_link)
+                        populate_code_info(code, code_type)
+                    else:
+                        logger.warning(f"Warning: Code link on line {line_num} is not a GitHub URL: {code_link}")
+                
+                # Create Dataset object only if URL exists
+                dataset = None
+                if dataset_link:
+                    dataset_type = classify_url(dataset_link)
+                    if dataset_type == 'dataset':
+                        dataset = Dataset(dataset_link)
+                        populate_dataset_info(dataset)
+                        dataset_registry[dataset._name] = dataset  # Add to registry
+                    elif dataset_type == 'check':
+                        is_dataset, dataset_name = is_dataset_url_llm(dataset_link)
+                        if is_dataset:
                             dataset = Dataset(dataset_link)
-                            populate_dataset_info(dataset)
+                            dataset._name = dataset_name
                             dataset_registry[dataset._name] = dataset  # Add to registry
-                        elif dataset_type == 'check':
-                            is_dataset, dataset_name = is_dataset_url_llm(dataset_link)
-                            if is_dataset:
-                                dataset = Dataset(dataset_link)
-                                dataset._name = dataset_name
-                                dataset_registry[dataset._name] = dataset  # Add to registry
-                            else:
-                                logger.warning(f"Warning: Dataset link on line {line_num} is not a dataset according to LLM: {dataset_link}")
                         else:
-                            logger.warning(f"Warning: Dataset link on line {line_num} is not valid: {dataset_link}")
-                    
-                    # Create Model object (always required)
-                    if not model_link:
-                        logger.warning(f"Warning: Model link is missing on line {line_num}")
-                        continue
-                    
-                    model_type = classify_url(model_link)
-                    if model_type != 'model':
-                        logger.warning(f"Warning: Model link on line {line_num} is not a HuggingFace model URL: {model_link}")
-                        continue
-                    
-                    # Create and populate Model object
-                    model = Model(model_link)
-                    populate_model_info(model)
-                    
-                    # Link Code and Dataset to Model (can be None/void)
-                    if code:
-                        model.linkCode(code)
-                    
-                    if dataset:
-                        model.linkDataset(dataset)
-                    
-                    models.append(model)
-                    
-        except FileNotFoundError:
-            logger.error(f"Error: File {file_path} not found")
-            return [], {}
-        except Exception as e:
-            logger.error(f"Error reading file {file_path}: {e}")
-            return [], {}
-    else:
-        models = []
-        dataset_registry = {}
-        upload_file(file_name=file_path, bucket='model-pipeline-storage-bucket', object_name=None)
-        print("Zipped file parsing not yet implemented.")
+                            logger.warning(f"Warning: Dataset link on line {line_num} is not a dataset according to LLM: {dataset_link}")
+                    else:
+                        logger.warning(f"Warning: Dataset link on line {line_num} is not valid: {dataset_link}")
+                
+                # Create Model object (always required)
+                if not model_link:
+                    logger.warning(f"Warning: Model link is missing on line {line_num}")
+                    continue
+                
+                model_type = classify_url(model_link)
+                if model_type != 'model':
+                    logger.warning(f"Warning: Model link on line {line_num} is not a HuggingFace model URL: {model_link}")
+                    continue
+                
+                # Create and populate Model object
+                model = Model(model_link)
+                populate_model_info(model)
+                
+                # Link Code and Dataset to Model (can be None/void)
+                if code:
+                    model.linkCode(code)
+                
+                if dataset:
+                    model.linkDataset(dataset)
+                
+                models.append(model)
+                
+    except FileNotFoundError:
+        logger.error(f"Error: File {file_path} not found")
+        return [], {}
+    except Exception as e:
+        logger.error(f"Error reading file {file_path}: {e}")
+        return [], {}
     
     return models, dataset_registry
 
