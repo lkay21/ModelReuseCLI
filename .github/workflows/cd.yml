@@ -114,7 +114,31 @@ jobs:
           asset_name: ModelReuseCLI-${{ steps.version.outputs.version }}.zip
           asset_content_type: application/zip
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-2
+
+      - name: Deploy to AWS S3
+        run: |
+          echo "📦 Deploying to AWS S3..."
+          
+          # Upload deployment packages to S3
+          aws s3 cp ModelReuseCLI-${{ steps.version.outputs.version }}.tar.gz s3://model-pipeline-storage-bucket/releases/
+          aws s3 cp ModelReuseCLI-${{ steps.version.outputs.version }}.zip s3://model-pipeline-storage-bucket/releases/
+          
+          # Upload latest version marker
+          echo "${{ steps.version.outputs.version }}" > latest_version.txt
+          aws s3 cp latest_version.txt s3://model-pipeline-storage-bucket/releases/
+          
+          echo "✅ Successfully deployed to S3!"
+          echo "S3 Location: s3://model-pipeline-storage-bucket/releases/"
+
       - name: Deployment successful
         run: |
           echo "✅ Deployment completed successfully!"
           echo "Release: ${{ steps.create_release.outputs.html_url }}"
+          echo "AWS S3: s3://model-pipeline-storage-bucket/releases/"
