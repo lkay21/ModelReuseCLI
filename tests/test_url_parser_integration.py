@@ -32,7 +32,7 @@ class URLFileIntegrationTests(BaseCLITestCase):
         Test the parse_url_file function with a sample input file.
         """
         # Parse the input file
-        models, dataset_registry = url_parser.parse_URL_file(self.sample_input_path, is_zipped=False)
+        models, dataset_registry = url_parser.parse_URL_file(self.sample_input_path)
         url_parser.print_model_summary(models, dataset_registry)
 
         # Validate the parsed models
