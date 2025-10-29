@@ -48,7 +48,16 @@ jobs:
 
       # ---------- Run Tests ----------
       - name: Run tests
-        run: ./run test
+        run: |
+          echo "Environment check:"
+          echo "GITHUB_TOKEN is set: $([[ -n "$GITHUB_TOKEN" ]] && echo "yes" || echo "no")"
+          echo "GEN_AI_STUDIO_API_KEY is set: $([[ -n "$GEN_AI_STUDIO_API_KEY" ]] && echo "yes" || echo "no")"
+          echo "LOG_FILE: $LOG_FILE"
+          echo "LOG_LEVEL: $LOG_LEVEL"
+          echo "Contents of .env:"
+          cat .env || echo "No .env file"
+          echo "Running test command..."
+          ./run test
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
