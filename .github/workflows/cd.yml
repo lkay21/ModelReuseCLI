@@ -1,0 +1,142 @@
+name: Continuous Deployment to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for tags
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          npm install
+
+      - name: Get version from commit
+        id: version
+        run: |
+          # Use commit SHA as version for now
+          VERSION="v$(date +%Y.%m.%d)-${GITHUB_SHA::7}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deployment
+          
+          # Copy necessary files
+          cp -r apis deployment/
+          cp -r metrics deployment/
+          cp -r utils deployment/
+          cp -r cloning deployment/
+          cp -r models deployment/
+          cp main.py deployment/
+          cp model.py deployment/
+          cp run deployment/
+          cp requirements.txt deployment/
+          cp package.json deployment/
+          cp README.md deployment/
+          
+          # Create tarball
+          cd deployment
+          tar -czf ../ModelReuseCLI-${{ steps.version.outputs.version }}.tar.gz *
+          cd ..
+          
+          # Create zip
+          cd deployment
+          zip -r ../ModelReuseCLI-${{ steps.version.outputs.version }}.zip *
+          cd ..
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## ModelReuseCLI Release ${{ steps.version.outputs.version }}
+            
+            Automated release from commit: ${{ github.sha }}
+            
+            ### Installation
+            Download and extract the tarball or zip file, then run:
+            ```bash
+            ./run install
+            ```
+            
+            ### Usage
+            ```bash
+            ./run your_input_file.txt
+            ```
+            
+            See README.md for more details.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (tar.gz)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ModelReuseCLI-${{ steps.version.outputs.version }}.tar.gz
+          asset_name: ModelReuseCLI-${{ steps.version.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset (zip)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ModelReuseCLI-${{ steps.version.outputs.version }}.zip
+          asset_name: ModelReuseCLI-${{ steps.version.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      - name: Deploy to AWS S3
+        run: |
+          echo "📦 Deploying application to AWS S3..."
+          
+          # Upload deployment packages to S3
+          aws s3 cp ModelReuseCLI-${{ steps.version.outputs.version }}.tar.gz s3://model-pipeline-storage-bucket/releases/
+          aws s3 cp ModelReuseCLI-${{ steps.version.outputs.version }}.zip s3://model-pipeline-storage-bucket/releases/
+          
+          # Upload latest version marker
+          echo "${{ steps.version.outputs.version }}" > latest_version.txt
+          aws s3 cp latest_version.txt s3://model-pipeline-storage-bucket/releases/
+          
+          echo "✅ Successfully deployed to S3!"
+
+      - name: Deployment successful
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "Release: ${{ steps.create_release.outputs.html_url }}"
+          echo "AWS S3: s3://model-pipeline-storage-bucket/releases/"
