@@ -14,4 +14,6 @@ models/
 models/
 *.zip
 *.aws
+*.db
+*.sqlite3
 #remove run from ignore list when ready to ship
