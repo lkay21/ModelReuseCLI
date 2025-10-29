@@ -2,9 +2,10 @@ import string
 from fastapi import FastAPI
 import sqlite3
 import secrets
-import PyJWT as jwt
+import jwt
 import math as m
 import string
+import time
 
 database_dir = "./database.db"
 
@@ -12,7 +13,7 @@ def create_authentication_token(user_id, database_dir=database_dir):
 
     secret_key = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
 
-    now = m.floor(m.time() / 1000) 
+    now = m.floor(time.time() / 1000) 
     expiration = now + (10 * 60 * 60)
 
     jwt_header = {
