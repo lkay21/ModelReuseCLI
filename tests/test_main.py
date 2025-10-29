@@ -14,7 +14,7 @@ class TestMainCLI(unittest.TestCase):
     @patch("main.parse_URL_file")
     @patch("main.print_model_summary")
     @patch("os.path.exists", return_value=True)
-    @patch("main.json.dumps", side_effect=lambda x: str(x))
+    @patch("main.json.dumps", side_effect=lambda x, **kwargs: str(x))
     def test_main_success(
         self, mock_json, mock_exists, mock_print_summary,
         mock_parse, mock_get_key, mock_logger, mock_env, mock_requests_get
