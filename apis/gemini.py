@@ -9,6 +9,12 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 logger = logging.getLogger('cli_logger')
 
 
+# For Testing: Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()  # reads .env file into environment variables
+# REMOVE ABOVE LINES IN PRODUCTION
+
+
 def get_gemini_key() -> Optional[str]:
     """Retrieve the Gemini API key from a local file or environment variable."""
     try:
