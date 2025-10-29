@@ -46,16 +46,10 @@ jobs:
 
       # ---------- Run Tests ----------
       - name: Run tests
-        run: python3 -m coverage run -m pytest tests/ -v
+        run: python3 -m pytest tests/ -v
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
           LOG_LEVEL: 0
           LOG_FILE: log.log
-      
-      - name: Generate coverage report
-        run: |
-          coverage_percent=$(python3 -m coverage report | tail -1 | awk '{print $NF}' | sed 's/%//')
-          passed=$(grep -o "[0-9]\+ passed" pytest.log 2>/dev/null | cut -d' ' -f1 || echo "0")
-          echo "Tests completed with ${coverage_percent}% coverage"
       
