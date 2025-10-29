@@ -2,7 +2,7 @@ import string
 from fastapi import FastAPI
 import sqlite3
 import secrets
-import jwt
+import PyJWT as jwt
 import math as m
 import string
 
