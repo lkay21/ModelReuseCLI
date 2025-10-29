@@ -7,6 +7,7 @@ import main
 
 class TestMainCLI(unittest.TestCase):
 
+    @patch("main.requests.get")  # Mock the FastAPI request
     @patch("main.check_environment", return_value=True)
     @patch("main.setup_logger")
     @patch("main.get_prompt_key")
@@ -16,7 +17,7 @@ class TestMainCLI(unittest.TestCase):
     @patch("main.json.dumps", side_effect=lambda x: str(x))
     def test_main_success(
         self, mock_json, mock_exists, mock_print_summary,
-        mock_parse, mock_get_key, mock_logger, mock_env
+        mock_parse, mock_get_key, mock_logger, mock_env, mock_requests_get
     ):
         """
         Test the normal successful execution of main():
@@ -25,6 +26,12 @@ class TestMainCLI(unittest.TestCase):
         - parse_URL_file returns one mock model and a dataset registry
         - model.evaluate() is called and output is printed
         """
+        # Mock the FastAPI request to avoid connection errors
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"message": "test"}
+        mock_requests_get.return_value = mock_response
+        
         # Mock a model returned by parse_URL_file
         mock_model = MagicMock()
         mock_model.evaluate.return_value = {"metric": 0.9}
@@ -53,15 +60,22 @@ class TestMainCLI(unittest.TestCase):
                 main.main()
             self.assertEqual(cm.exception.code, 1)
 
+    @patch("main.requests.get")  # Mock the FastAPI request
     @patch("main.check_environment", return_value=True)
     @patch("os.path.exists", return_value=False)
-    def test_main_file_not_found(self, mock_exists, mock_env):
+    def test_main_file_not_found(self, mock_exists, mock_env, mock_requests_get):
         """
         Test behavior when the specified URL file does not exist:
         - Environment check passes
         - os.path.exists() returns False
         - main() should exit with code 1
         """
+        # Mock the FastAPI request to avoid connection errors
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"message": "test"}
+        mock_requests_get.return_value = mock_response
+        
         test_args = ["main.py", "missing_file.txt"]
         with patch.object(sys, "argv", test_args):
             with self.assertRaises(SystemExit) as cm:
