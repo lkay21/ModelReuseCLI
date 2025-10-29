@@ -33,6 +33,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
+          LOG_LEVEL: 0
+          LOG_FILE: log.log
 
       # ---------- Install Dependencies ----------
       - name: Install dependencies
@@ -50,4 +52,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
+          LOG_LEVEL: 0
+          LOG_FILE: log.log
       
