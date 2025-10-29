@@ -6,6 +6,7 @@ from typing import Dict
 import json
 import logging
 import zipfile
+import requests
 
 from utils.url_parser import parse_URL_file, print_model_summary
 from utils.logger import setup_logger
@@ -15,6 +16,7 @@ from typing import Dict
 from apis.gemini import *
 from apis.purdue_genai import *
 from apis.hf_client import resolve_hf_token
+from apis.fast_api import *
 
 # For Testing: Load environment variables from .env file
 from dotenv import load_dotenv
@@ -26,6 +28,14 @@ load_dotenv()  # reads .env file into environment variables
 def main():
     if not check_environment():
         sys.exit(1)
+
+    response = requests.get("http://127.0.0.1:8000/")
+    if response.status_code == 200:
+        artifacts = response.json()
+        print("Artifacts retrieved successfully:")
+        print(json.dumps(artifacts, indent=2))
+    else:
+        print(f"Error retrieving artifacts: {response.status_code}")
 
     setup_logger()  # configure logging once
     logger = logging.getLogger('cli_logger')
@@ -70,7 +80,6 @@ def main():
     logger.info("Objects ready for metric calculation teams.")
     for model in models:
         print(json.dumps(model.evaluate()))
-
 
 if __name__ == "__main__":
     main()
