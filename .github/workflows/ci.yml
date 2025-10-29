@@ -49,15 +49,11 @@ jobs:
       # ---------- Run Tests ----------
       - name: Run tests
         run: |
-          echo "Environment check:"
-          echo "GITHUB_TOKEN is set: $([[ -n "$GITHUB_TOKEN" ]] && echo "yes" || echo "no")"
-          echo "GEN_AI_STUDIO_API_KEY is set: $([[ -n "$GEN_AI_STUDIO_API_KEY" ]] && echo "yes" || echo "no")"
-          echo "LOG_FILE: $LOG_FILE"
-          echo "LOG_LEVEL: $LOG_LEVEL"
-          echo "Contents of .env:"
-          cat .env || echo "No .env file"
-          echo "Running test command..."
-          ./run test
+          echo "Testing pytest directly..."
+          python3 -m pytest tests/ -v --tb=short || echo "Pytest failed with exit code $?"
+          echo "---"
+          echo "Now running ./run test..."
+          ./run test || echo "./run test failed with exit code $?"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GEN_AI_STUDIO_API_KEY: ${{ secrets.GEN_AI_STUDIO_API_KEY }}
