@@ -155,7 +155,7 @@ jobs:
           echo "✅ Code downloaded to ./backend"
         
       - name: Build Docker image
-        run: docker build -t fastapi-backend ./apis
+        run: docker build -f apis/Dockerfile -t fastapi-backend .
 
       - name: Tag Docker image
         run: |
