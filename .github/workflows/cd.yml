@@ -5,6 +5,12 @@ on:
     branches:
       - main
 
+env:
+  AWS_REGION: us-east-1                 # your AWS region
+  ECS_CLUSTER: fastapi-cluster          # your ECS cluster name
+  ECS_SERVICE: fastapi-task-service-bctbjfrk          # your ECS service name
+  ECR_PUBLIC_REPO: public.ecr.aws/myalias/fastapi/backend
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -141,3 +147,29 @@ jobs:
           echo "✅ Deployment completed successfully!"
           echo "Release: ${{ steps.create_release.outputs.html_url }}"
           echo "AWS S3: s3://model-pipeline-storage-bucket/releases/"
+        
+      - name: Download code from S3 for Docker build
+        run: |
+          echo "📥 Pulling code from S3..."
+          aws s3 sync s3://model-pipeline-storage-bucket/releases/ ./backend
+          echo "✅ Code downloaded to ./backend"
+        
+      - name: Build Docker image
+        run: docker build -t fastapi-backend ./apis
+
+      - name: Tag Docker image
+        run: |
+          docker tag fastapi-backend:latest $ECR_PUBLIC_REPO:latest
+          echo "✅ Docker image tagged as $ECR_PUBLIC_REPO:latest"
+
+      - name: Push Docker image to ECR
+        run: docker push $ECR_PUBLIC_REPO:latest
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment
+
+
