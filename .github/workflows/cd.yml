@@ -148,11 +148,10 @@ jobs:
           echo "Release: ${{ steps.create_release.outputs.html_url }}"
           echo "AWS S3: s3://model-pipeline-storage-bucket/releases/"
         
-      - name: Download code from S3 for Docker build
+      - name: Login to Public ECR
         run: |
-          echo "📥 Pulling code from S3..."
-          aws s3 sync s3://model-pipeline-storage-bucket/releases/ ./backend
-          echo "✅ Code downloaded to ./backend"
+          aws ecr-public get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin public.ecr.aws
         
       - name: Build Docker image
         run: docker build -f apis/Dockerfile -t fastapi-backend .
