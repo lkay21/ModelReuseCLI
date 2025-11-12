@@ -6,10 +6,11 @@ on:
       - main
 
 env:
-  AWS_REGION: us-east-2                # your AWS region
+  AWS_REGION: us-east-2             # your AWS region
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}  # your AWS account ID
+  ECR_REPO: fastapi/backend         # your ECR repository name
   ECS_CLUSTER: fastapi-cluster          # your ECS cluster name
   ECS_SERVICE: fastapi-task-service-bctbjfrk          # your ECS service name
-  ECR_PUBLIC_REPO: public.ecr.aws/myalias/fastapi/backend
 
 jobs:
   deploy:
@@ -148,21 +149,21 @@ jobs:
           echo "Release: ${{ steps.create_release.outputs.html_url }}"
           echo "AWS S3: s3://model-pipeline-storage-bucket/releases/"
         
-      - name: Login to Public ECR
+      - name: Login to Private ECR
         run: |
-          aws ecr-public get-login-password --region $AWS_REGION | \
-          docker login --username AWS --password-stdin public.ecr.aws
-        
+          aws ecr get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
       - name: Build Docker image
         run: docker build -f apis/Dockerfile -t fastapi-backend .
 
       - name: Tag Docker image
         run: |
-          docker tag fastapi-backend:latest $ECR_PUBLIC_REPO:latest
-          echo "✅ Docker image tagged as $ECR_PUBLIC_REPO:latest"
+          docker tag fastapi-backend:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
+          echo "✅ Docker image tagged as $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest"
 
       - name: Push Docker image to ECR
-        run: docker push $ECR_PUBLIC_REPO:latest
+        run: docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
 
       - name: Update ECS service
         run: |
