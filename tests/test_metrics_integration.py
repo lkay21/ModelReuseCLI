@@ -72,12 +72,19 @@ class TestMetricsIntegration(BaseCLITestCase):
         
         self.assertEqual(result1, result2, "size_score should be consistent across calls")
         
-        # Test ramp_up_time consistency
+        # Test ramp_up_time consistency (allow for LLM variance)
         ramp1 = ramp_up_time(self.small_model)
         time.sleep(1)
         ramp2 = ramp_up_time(self.small_model)
         
-        self.assertEqual(ramp1, ramp2, "ramp_up_time should be consistent across calls")
+        # Allow for small variance due to LLM non-determinism (30% of score can vary)
+        # Check if values are within 10% of each other
+        variance_threshold = 0.1
+        diff = abs(ramp1 - ramp2)
+        max_expected_diff = max(ramp1, ramp2) * variance_threshold
+        
+        self.assertLessEqual(diff, max_expected_diff, 
+            f"ramp_up_time variance too high: {ramp1} vs {ramp2} (diff: {diff:.3f}, threshold: {max_expected_diff:.3f})")
 
 
 # if __name__ == "__main__":
