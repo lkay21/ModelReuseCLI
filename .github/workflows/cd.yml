@@ -143,7 +143,7 @@ jobs:
           echo "✅ Successfully deployed to S3!"
           echo "S3 Location: s3://model-pipeline-storage-bucket/releases/"
 
-      - name: Deployment Successful
+      - name: Deployment successful
         run: |
           echo "✅ Deployment completed successfully!"
           echo "Release: ${{ steps.create_release.outputs.html_url }}"
