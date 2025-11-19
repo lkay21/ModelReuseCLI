@@ -31,6 +31,10 @@ class ModelArtifact(BaseModel):
     metadata: Dict[str, Any] = {}
     tags: List[str] = []
 
+class ModelIngestRequest(BaseModel):
+    model_id: str
+    url: str
+
 
 def create_authentication_token(user_id, database_dir=database_dir):
     now = m.floor(time.time() / 1000) 
@@ -187,20 +191,15 @@ async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depend
     return {"artifact_type": artifact_type, "id": id, "cost": 100}
 
 @app.post("/models")
-async def ingest_model(model: ModelArtifact, user_auth: int = Depends(verify_token)):
+async def ingest_model(payload: ModelIngestRequest):
     """
     Renegotiated ingest: single-model only, backed by DynamoDB.
-    Writes to the 'models' table using 'model_id' as the partition key.
+    Stores only model_id and url in the 'models' table.
     """
     item = {
-        "model_id": model.id,          # matches DynamoDB partition key
-        "name": model.name,
-        "provider": model.provider,
-        "task": model.task or "unknown",
-        "metadata": model.metadata,
-        "tags": model.tags,
+        "model_id": payload.model_id,   # DynamoDB partition key
+        "url": payload.url,
         "created_at": int(time.time()),
-        "created_by_user_id": user_auth,
     }
 
     try:
@@ -208,7 +207,9 @@ async def ingest_model(model: ModelArtifact, user_auth: int = Depends(verify_tok
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to store model: {e}")
 
-    return {"status": "ok", "model_id": model.id}
+    return {"status": "ok", "model_id": payload.model_id}
+
+
 
 
 # Add database creation (Logan started on it)
