@@ -211,7 +211,7 @@ async def get_artifact_by_regex(pattern: str, user_auth: int = Depends(verify_to
 
 @app.get("/tracks")
 async def get_tracks():
-    return {"plannedTracks": ["Access Control Track"]}
+    return {"plannedTracks": ["Access control track"]}
 
 @app.on_event("startup")
 def startup_event():
