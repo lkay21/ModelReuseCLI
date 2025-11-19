@@ -173,18 +173,6 @@ jobs:
             --cluster $ECS_CLUSTER \
             --service $ECS_SERVICE \
             --force-new-deployment
-            --cli-input-json '{
-              "containerOverrides": [
-                {
-                  "name": "fastapi-backend",
-                  "environment": [
-                    {
-                      "name": "SECRET_KEY",
-                      "value": "'${{ secrets.SECRET_KEY }}'"
-                    }
-                  ]
-                }
-              ]
-            }'
+            --cli-input-json "{\"containerOverrides\": [{\"name\": \"fastapi-backend\", \"environment\": [{\"name\": \"SECRET_KEY\", \"value\": \"${{ secrets.SECRET_KEY }}\"}]}]}"
 
 
