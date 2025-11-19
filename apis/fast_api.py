@@ -9,10 +9,28 @@ import time
 import bcrypt
 import os
 from dotenv import load_dotenv
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel
+import boto3
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 database_dir = "./databases/database.db"
+
+AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models"
+
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+model_table = dynamodb.Table(MODEL_TABLE_NAME)  # this will point to the "models" table
+
+class ModelArtifact(BaseModel):
+    id: str                      # will map to "model_id" in DynamoDB
+    name: str
+    provider: str = "custom"     # e.g. "huggingface"
+    task: Optional[str] = None
+    metadata: Dict[str, Any] = {}
+    tags: List[str] = []
+
 
 def create_authentication_token(user_id, database_dir=database_dir):
     now = m.floor(time.time() / 1000) 
@@ -140,13 +158,58 @@ async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(
 async def register_artifact(artifact_type: str, artifact: dict, user_auth: int = Depends(verify_token)):
     return {"artifact_type": artifact_type, "artifact": artifact}
 
-@app.get("/artifact/model/{id}/rate")
+@app.post("/artifact/model/{id}/rate")
 async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
+    if rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+
+    try:
+        model_table.update_item(
+            Key={"model_id": id},  # uses the partition key
+            UpdateExpression="SET rating = :r, rated_at = :t, rated_by_user_id = :u",
+            ExpressionAttributeValues={
+                ":r": rating,
+                ":t": int(time.time()),
+                ":u": user_auth,
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update rating: {e}")
+
     return {"model_id": id, "rating": rating}
+
+# @app.get("/artifact/model/{id}/rate")
+# async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
+#     return {"model_id": id, "rating": rating}
 
 @app.get("/artifact/{artifact_type}/{id}/cost")
 async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
     return {"artifact_type": artifact_type, "id": id, "cost": 100}
+
+@app.post("/models")
+async def ingest_model(model: ModelArtifact, user_auth: int = Depends(verify_token)):
+    """
+    Renegotiated ingest: single-model only, backed by DynamoDB.
+    Writes to the 'models' table using 'model_id' as the partition key.
+    """
+    item = {
+        "model_id": model.id,          # matches DynamoDB partition key
+        "name": model.name,
+        "provider": model.provider,
+        "task": model.task or "unknown",
+        "metadata": model.metadata,
+        "tags": model.tags,
+        "created_at": int(time.time()),
+        "created_by_user_id": user_auth,
+    }
+
+    try:
+        model_table.put_item(Item=item)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to store model: {e}")
+
+    return {"status": "ok", "model_id": model.id}
+
 
 # Add database creation (Logan started on it)
 @app.put("/authenticate")
