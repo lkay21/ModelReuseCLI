@@ -6,20 +6,17 @@ import jwt
 import math as m
 import string
 import time
+import bcrypt
+import os
+from dotenv import load_dotenv
 
-database_dir = "./database.db"
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+database_dir = "./databases/database.db"
 
 def create_authentication_token(user_id, database_dir=database_dir):
-
-    secret_key = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
-
     now = m.floor(time.time() / 1000) 
     expiration = now + (10 * 60 * 60)
-
-    jwt_header = {
-        "alg": "HS256",
-        "typ": "JWT"
-    }
 
     jwt_payload = {
         "iat": now,
@@ -28,7 +25,7 @@ def create_authentication_token(user_id, database_dir=database_dir):
         "role": "admin"
     }
 
-    token = jwt.encode(jwt_payload, secret_key, algorithm="HS256", headers=jwt_header)
+    token = jwt.encode(jwt_payload, SECRET_KEY, algorithm="HS256")
 
     conn = sqlite3.connect(database_dir)
     cursor = conn.cursor()
@@ -43,6 +40,7 @@ def create_users_table():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
+            password TEXT NOT NULL,
             secret_key TEXT NOT NULL,
             num_interactions INTEGER DEFAULT 0,
             api_time DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -51,10 +49,30 @@ def create_users_table():
     conn.commit()
     conn.close()
 
-def generate_user_secret_key():
-    key = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
-    return key
+def token_from_secret_key(secret_key):
+    try:
+        payload = jwt.decode(secret_key, SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:   
+        return None
 
+def add_user(username, password, secret_key):
+    password = hash_password(password)
+    conn = sqlite3.connect(database_dir)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO users (username, password, secret_key) VALUES (?, ?, ?)", (username, password, secret_key))
+    conn.commit()
+    conn.close()
+    
+def hash_password(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+def check_password(password: str, hashed_password: str):
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 app = FastAPI()
 
@@ -73,7 +91,7 @@ def verify_token(x_authorization: str = Header(None)) -> int:
         raise HTTPException(status_code=403, detail="Invalid token")
 
     id, secret_key, num_interactions, api_time = row
-    if api_time > 60000 or num_interactions > 1000:
+    if api_time - time.time() > 60000 or num_interactions > 1000:
         raise HTTPException(status_code=403, detail="Token expired")
     else:
         num_interactions += 1
@@ -133,7 +151,43 @@ async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depend
 # Add database creation (Logan started on it)
 @app.put("/authenticate")
 async def authenticate_user(credentials: dict):
-    return {"authenticated": True}
+
+    if "user" not in credentials or ("name" not in credentials["user"] or "is_admin" not in credentials["user"]):
+        raise HTTPException(status_code=400, detail="Invalid credentials format")
+    elif "secret" not in credentials or "password" not in credentials["secret"]:
+        raise HTTPException(status_code=400, detail="Invalid credentials format")
+    
+    # Gather User Credentials via Input JSON
+    username = credentials["user"]["name"]
+    is_admin = credentials["user"]["is_admin"]
+    password = credentials["secret"]["password"]
+
+    conn = sqlite3.connect(database_dir)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, password, secret_key FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+
+    # If User Exists, Check Password Generate Token
+    if row:
+        user_id, stored_hashed_password, stored_token = row
+        if not check_password(password, stored_hashed_password):
+            raise HTTPException(status_code=401, detail="The user or password is invalid.")
+        else:
+            create_authentication_token(user_id)
+            cursor.execute("SELECT secret_key FROM users WHERE id = ?", (user_id,))
+            stored_token = token_from_secret_key(cursor.fetchone()[0])
+            conn.close()
+            return f"\"\\\"bearer {stored_token}\\\"\""
+    # If User Does Not Exist, Create User and Generate Token
+    else:
+        add_user(username, password, "")
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user_id = cursor.fetchone()[0]
+        create_authentication_token(user_id)
+        cursor.execute("SELECT secret_key FROM users WHERE id = ?", (user_id,))
+        stored_token = token_from_secret_key(cursor.fetchone()[0])
+        conn.close()
+        return f"\"\\\"bearer {stored_token}\\\"\""
 
 @app.get("/artifact/byName/{name}")
 async def get_artifact_by_name(name: str, user_auth: int = Depends(verify_token)):
@@ -156,5 +210,15 @@ async def get_artifact_by_regex(pattern: str, user_auth: int = Depends(verify_to
     return {"pattern": pattern, "artifacts": ["artifact1", "artifact2"]}
 
 @app.get("/tracks")
-async def get_tracks(user_auth: int = Depends(verify_token)):
+async def get_tracks():
     return {"plannedTracks": ["Access Control Track"]}
+
+@app.on_event("startup")
+def startup_event():
+    # Ensure the database directory exists
+    db_dir = os.path.dirname(database_dir)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+
+    # Initialize the database and create the users table
+    create_users_table()
