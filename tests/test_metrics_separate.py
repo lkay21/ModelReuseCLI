@@ -68,14 +68,21 @@ class TestMetricsSeparate(BaseCLITestCase):
         for platform, score in result.items():
             self.assertEqual(score, 0)
 
+    @patch("metrics.ramp_up_time.get_purdue_genai_key")  # Mock API key function to return None
+    @patch("metrics.ramp_up_time.get_prompt_key")  # Mock to prevent LLM calls
     @patch("metrics.ramp_up_time.HFClient")
-    def test_ramp_up_time_with_readme(self, MockHFClient):
+    def test_ramp_up_time_with_readme(self, MockHFClient, MockGetPromptKey, MockGetApiKey):
         """Test ramp_up_time with a model that has a README."""
         mock_client = MockHFClient.return_value
         mock_client.model_info.return_value = {
             "cardData": {"library_name": "transformers"},
             "readme": "This is a test README with model information."
         }
+        mock_client.model_card_text.return_value = "Getting started: pip install transformers\nfrom transformers import pipeline"
+        
+        # Mock to return purdue_genai key but API key function returns None (no actual LLM call)
+        MockGetPromptKey.return_value = {'purdue_genai': 'fake'}
+        MockGetApiKey.return_value = None  # This prevents the actual LLM call
 
         model_id = "test-model"
         result = ramp_up_time(model_id)
@@ -136,8 +143,16 @@ class TestMetricsSeparate(BaseCLITestCase):
         self.assertGreaterEqual(result, 0)
         self.assertLessEqual(result, 1)
 
-    def test_dataset_quality(self):
+    @patch("metrics.dataset_quality.prompt_purdue_genai")
+    @patch("metrics.dataset_quality.get_prompt_key")
+    def test_dataset_quality(self, MockGetPromptKey, MockPromptPurdue):
         """Test dataset_quality function."""
+        # Mock the prompt key to trigger LLM path
+        MockGetPromptKey.return_value = {'purdue_genai': 'fake-key'}
+        
+        # Mock the LLM response with proper format
+        MockPromptPurdue.return_value = "0.85: Dataset has good documentation (0.35/0.4), large size (0.18/0.2), proper splits (0.2/0.2), clear license (0.12/0.2)"
+        
         model_id = "test-model"
         result = compute_dataset_quality(model_id)
         
