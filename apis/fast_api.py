@@ -190,26 +190,50 @@ async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token
 async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
     return {"artifact_type": artifact_type, "id": id, "cost": 100}
 
-@app.post("/models")
-async def ingest_model(payload: ModelIngestRequest):
+@app.post("/artifact/{artifact_type}")
+async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     """
-    Renegotiated ingest: single-model only, backed by DynamoDB.
-    Stores only model_id and url in the 'models' table.
+    Renegotiated ingest: register a *model* artifact.
+
+    - Path must be /artifact/model
+    - Body: {"model_id": "...", "url": "..."}
+    - Saves only model_id + url into DynamoDB 'models' table.
     """
+    # Only support model artifacts here
+    if artifact_type != "model":
+        raise HTTPException(
+            status_code=400,
+            detail="Only artifact_type 'model' is supported for ingestion.",
+        )
+
+    if not payload.model_id or not payload.url:
+        # Match the 400 description text from the spec
+        raise HTTPException(
+            status_code=400,
+            detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
+        )
+
     item = {
-        "model_id": payload.model_id,   # DynamoDB partition key
+        "model_id": payload.model_id,    # DynamoDB partition key
         "url": payload.url,
         "created_at": int(time.time()),
+        "created_by_user_id": user_auth,
     }
 
     try:
         model_table.put_item(Item=item)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to store model: {e}")
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to store model artifact.",
+        )
 
-    return {"status": "ok", "model_id": payload.model_id}
-
-
+    # Shape the response like an artifact summary:
+    return {
+        "name": payload.model_id,
+        "id": payload.model_id,
+        "type": "model",
+    }
 
 
 # Add database creation (Logan started on it)
