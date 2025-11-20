@@ -158,9 +158,9 @@ async def update_artifact(artifact_type: str, id: str, artifact: dict, user_auth
 async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
     return {"message": f"Artifact {id} of type {artifact_type} has been deleted"}
 
-@app.post("/artifact/{artifact_type}")
-async def register_artifact(artifact_type: str, artifact: dict, user_auth: int = Depends(verify_token)):
-    return {"artifact_type": artifact_type, "artifact": artifact}
+# @app.post("/artifact/{artifact_type}")
+# async def register_artifact(artifact_type: str, artifact: dict, user_auth: int = Depends(verify_token)):
+#     return {"artifact_type": artifact_type, "artifact": artifact}
 
 @app.post("/artifact/model/{id}/rate")
 async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
