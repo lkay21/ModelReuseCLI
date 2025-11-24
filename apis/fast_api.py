@@ -213,7 +213,7 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
         #     except Exception as e:
         #         raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
             
-        return "multiple queries not supported yet"
+        return "multiple queries commented out"
     
     return artifacts
 
@@ -228,6 +228,8 @@ async def delete_artifacts(x_authorization: str = Header(None)):
                         'model_id': each['model_id']
                     }
                 )
+
+        
 
     # 401 for no permission, 403 for failed auth
     except Exception as e:
