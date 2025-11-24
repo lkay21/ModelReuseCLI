@@ -1,4 +1,3 @@
-from distro import name
 from fastapi import Depends, Header, FastAPI, HTTPException, Body
 from fastapi.responses import JSONResponse
 from utils.url_parser import extract_name_from_url
@@ -192,7 +191,7 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
                             "type": item.get("type")
                         }
                         artifacts.append(artifact)
-                        
+
             except Exception as e:
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
             
