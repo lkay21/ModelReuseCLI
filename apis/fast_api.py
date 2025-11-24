@@ -142,7 +142,21 @@ async def create_artifact(artifact: dict, user_auth: int = Depends(verify_token)
     return {"artifact": artifact}
 
 @app.delete("/reset")
-async def delete_artifacts(user_auth: int = Depends(verify_token)):
+async def delete_artifacts(x_authorization: str = Header(None)):
+    try:
+        scan = model_table.scan()
+        with model_table.batch_writer() as batch:
+            for each in scan['Items']:
+                batch.delete_item(
+                    Key={
+                        'model_id': each['model_id']
+                    }
+                )
+
+    # 401 for no permission, 403 for failed auth
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Failed to delete artifacts: {e}")
+    
     return {"message": "All artifacts have been deleted"}
 
 @app.get("/artifacts/{artifact_type}/{id}")
