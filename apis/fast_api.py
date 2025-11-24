@@ -170,48 +170,48 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
             raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
 
     else:
-        for query in queries:
-            name = query.name
-            if name == "*":
-                try:
-                    scan = model_table.scan()
+        # for query in queries:
+        #     name = query.name
+        #     if name == "*":
+        #         try:
+        #             scan = model_table.scan()
 
-                    for item in scan['Items']:
+        #             for item in scan['Items']:
 
-                        artifact = {
-                            "name": item.get("name"),
-                            "id": item.get("model_id"),
-                            "type": item.get("type")
-                        }
+        #                 artifact = {
+        #                     "name": item.get("name"),
+        #                     "id": item.get("model_id"),
+        #                     "type": item.get("type")
+        #                 }
 
-                        if item.get("type") in query.types:
-                            artifacts.append(artifact)
+        #                 if item.get("type") in query.types:
+        #                     artifacts.append(artifact)
 
-                except Exception as e:
-                    raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
-            try: 
-                response = model_table.query(
-                    IndexName = "name",
-                    KeyConditionExpression="name = :nameValue",
-                    ExpressionAttributeValues={
-                        ":nameValue": {"S": name} 
-                    }
-                )
+        #         except Exception as e:
+        #             raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+        #     try: 
+        #         response = model_table.query(
+        #             IndexName = "name",
+        #             KeyConditionExpression="name = :nameValue",
+        #             ExpressionAttributeValues={
+        #                 ":nameValue": {"S": name} 
+        #             }
+        #         )
 
-                items = response.get('Items', [])
-                for item in items:
-                    if item.get("type") not in query.types and query.types is not None:
-                        continue
-                    else:
-                        artifact = {
-                            "name": item.get("name"),
-                            "id": item.get("model_id"),
-                            "type": item.get("type")
-                        }
-                        artifacts.append(artifact)
+        #         items = response.get('Items', [])
+        #         for item in items:
+        #             if item.get("type") not in query.types and query.types is not None:
+        #                 continue
+        #             else:
+        #                 artifact = {
+        #                     "name": item.get("name"),
+        #                     "id": item.get("model_id"),
+        #                     "type": item.get("type")
+        #                 }
+        #                 artifacts.append(artifact)
 
-            except Exception as e:
-                raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+        #     except Exception as e:
+        #         raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
             
         return "multiple queries not supported yet"
     
