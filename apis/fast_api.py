@@ -32,7 +32,6 @@ class ModelArtifact(BaseModel):
     tags: List[str] = []
 
 class ModelIngestRequest(BaseModel):
-    model_id: str
     url: str
 
 
