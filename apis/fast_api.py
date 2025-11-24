@@ -152,7 +152,7 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
     if not queries or any(not query.name for query in queries):
         raise HTTPException(status_code=400, detail="error in request body")
 
-    if len(queries) == 1 and queries[0].name == "*" and queries[0].types is None:
+    if len(queries) == 1 and queries[0].name == "*":
         try:
             scan = model_table.scan()
 
