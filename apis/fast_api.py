@@ -142,13 +142,13 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
-async def find_artifacts(x_authorization: str = Header(None), payload: ArtifactQuery = Body(...)):
+async def find_artifacts(x_authorization: str = Header(None), queries: List[ArtifactQuery] = Body(...)):
     artifacts = []
 
-    if not payload.name:
-        raise HTTPException(status_code=400, detail="The 'name' field is required in the request body.")
-    
-    if payload.name == "*":
+    if not queries or any(not query.name for query in queries):
+        raise HTTPException(status_code=400, detail="error in request body")
+
+    if len(queries) == 1 and queries[0].name == "*":
         try:
             scan = model_table.scan()
 
@@ -164,6 +164,8 @@ async def find_artifacts(x_authorization: str = Header(None), payload: ArtifactQ
 
         except Exception as e:
             raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+    else:
+        return "multiple queries not supported yet"
     
     return artifacts
 
