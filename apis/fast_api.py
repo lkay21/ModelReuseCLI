@@ -23,6 +23,8 @@ MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 model_table = dynamodb.Table(MODEL_TABLE_NAME)  # this will point to the "models" table
 
+last_time = 0   
+
 class ModelArtifact(BaseModel):
     id: str                      # will map to "model_id" in DynamoDB
     name: str
@@ -241,7 +243,8 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     - Saves only model_id + url into DynamoDB 'models' table.
     """
     # Only support model artifacts here
-    if artifact_type != "model":
+    supported_types = ["model", "dataset", "code"]
+    if artifact_type not in supported_types:
         raise HTTPException(
             status_code=400,
             detail="Only artifact_type 'model' is supported for ingestion.",
@@ -254,9 +257,14 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
         )
 
+    unique_id = int(time.time() * 1000);
+    if( unique_id == last_time ):
+        unique_id += 1
+    last_time = unique_id
+    
     # Need to add naming logic call form phase 1
     item = {
-        "model_id": 67,    # DynamoDB partition key
+        "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
         "type": artifact_type
     }
