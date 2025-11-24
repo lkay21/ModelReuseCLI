@@ -138,9 +138,10 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
-async def find_artifacts(request: dict = Body(...), x_authorization: str = Header(None)):
+async def find_artifacts(request: Optional[dict] = Body(None), x_authorization: str = Header(None)):
     artifacts = []
     print(f"Request Body: {request}")
+
     try:
         scan = model_table.scan()
 
@@ -153,8 +154,10 @@ async def find_artifacts(request: dict = Body(...), x_authorization: str = Heade
             }
 
             artifacts.append(artifact)
+
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+    
     return artifacts
 
 @app.delete("/reset")
