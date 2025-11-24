@@ -1,5 +1,7 @@
+from distro import name
 from fastapi import Depends, Header, FastAPI, HTTPException, Body
 from fastapi.responses import JSONResponse
+from utils.url_parser import extract_name_from_url
 import string
 import sqlite3
 import secrets
@@ -168,6 +170,32 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
         except Exception as e:
             raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
     else:
+        for query in queries:
+            name = query.name
+            try: 
+                response = model_table.query(
+                    IndexName = "name",
+                    KeyConditionExpression="name = :nameValue",
+                    ExpressionAttributeValues={
+                        ":nameValue": {"S": name} 
+                    }
+                )
+
+                items = response.get('Items', [])
+                for item in items:
+                    if item.get("type") not in query.types:
+                        continue
+                    else:
+                        artifact = {
+                            "name": item.get("url"),
+                            "id": item.get("model_id"),
+                            "type": item.get("type")
+                        }
+                        artifacts.append(artifact)
+                        
+            except Exception as e:
+                raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+            
         return "multiple queries not supported yet"
     
     return artifacts
@@ -262,13 +290,16 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     unique_id = int(time.time() * 1000);
     if( unique_id == last_time ):
         unique_id += 1
-    last_time = unique_id
+    last_time = unique_id    
+
+    name = extract_name_from_url(payload.url)[1]
 
     # Need to add naming logic call form phase 1
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
-        "type": artifact_type
+        "type": artifact_type,
+        "name": name
     }
 
     try:
@@ -278,7 +309,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             status_code=201, 
             content={
                 "metadata": {
-                    "name": None, 
+                    "name": name, 
                     "id": unique_id, 
                     "type": artifact_type
                 },
@@ -288,7 +319,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
                 }
             }
         )
-        
+
         return response
     
     except Exception:
