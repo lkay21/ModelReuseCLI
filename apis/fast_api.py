@@ -34,6 +34,10 @@ class ModelArtifact(BaseModel):
 class ModelIngestRequest(BaseModel):
     url: str
 
+class ArtifactQuery(BaseModel):
+    name: str
+    types: Optional[List[str]] = None
+
 
 def create_authentication_token(user_id, database_dir=database_dir):
     now = m.floor(time.time() / 1000) 
@@ -126,7 +130,7 @@ def verify_token(x_authorization: str = Header(None)) -> int:
 
 
 @app.get("/")
-async def read_root(user_auth: int = Depends(verify_token)):
+async def read_root(x_authorization: str = Header(None)):
     return {"message": "Welcome to the ModelReuseCLI API"}
 
 @app.get("/health")
@@ -138,25 +142,28 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
-async def find_artifacts(request: Optional[dict] = Body(None), x_authorization: str = Header(None)):
+async def find_artifacts(x_authorization: str = Header(None), payload: ArtifactQuery = Body(...)):
     artifacts = []
-    print(f"Request Body: {request}")
 
-    try:
-        scan = model_table.scan()
+    if not payload.name:
+        raise HTTPException(status_code=400, detail="The 'name' field is required in the request body.")
+    
+    if payload.name == "*":
+        try:
+            scan = model_table.scan()
 
-        for item in scan['Items']:
+            for item in scan['Items']:
 
-            artifact = {
-                "name": item.get("url"),
-                "id": item.get("model_id"),
-                "type": item.get("type")
-            }
+                artifact = {
+                    "name": item.get("url"),
+                    "id": item.get("model_id"),
+                    "type": item.get("type")
+                }
 
-            artifacts.append(artifact)
+                artifacts.append(artifact)
 
-    except Exception as e:
-        raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+        except Exception as e:
+            raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
     
     return artifacts
 
