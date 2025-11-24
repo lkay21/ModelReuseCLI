@@ -152,14 +152,14 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
     if not queries or any(not query.name for query in queries):
         raise HTTPException(status_code=400, detail="error in request body")
 
-    if len(queries) == 1 and queries[0].name == "*":
+    if len(queries) == 1 and queries[0].name == "*" and queries[0].types is None:
         try:
             scan = model_table.scan()
 
             for item in scan['Items']:
 
                 artifact = {
-                    "name": item.get("url"),
+                    "name": item.get("name"),
                     "id": item.get("model_id"),
                     "type": item.get("type")
                 }
@@ -168,9 +168,27 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
 
         except Exception as e:
             raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+
     else:
         for query in queries:
             name = query.name
+            if name == "*":
+                try:
+                    scan = model_table.scan()
+
+                    for item in scan['Items']:
+
+                        artifact = {
+                            "name": item.get("name"),
+                            "id": item.get("model_id"),
+                            "type": item.get("type")
+                        }
+
+                        if item.get("type") in query.types:
+                            artifacts.append(artifact)
+
+                except Exception as e:
+                    raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
             try: 
                 response = model_table.query(
                     IndexName = "name",
@@ -182,11 +200,11 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
 
                 items = response.get('Items', [])
                 for item in items:
-                    if item.get("type") not in query.types:
+                    if item.get("type") not in query.types and query.types is not None:
                         continue
                     else:
                         artifact = {
-                            "name": item.get("url"),
+                            "name": item.get("name"),
                             "id": item.get("model_id"),
                             "type": item.get("type")
                         }
