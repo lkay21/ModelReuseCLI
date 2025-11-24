@@ -1,4 +1,5 @@
 from fastapi import Depends, Header, FastAPI, HTTPException, Body
+from fastapi.responses import JSONResponse
 import string
 import sqlite3
 import secrets
@@ -272,18 +273,34 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
 
     try:
         model_table.put_item(Item=item)
+
+        response = JSONResponse(
+            status_code=201, 
+            content={
+                "metadata": {
+                    "name": None, 
+                    "id": unique_id, 
+                    "type": artifact_type
+                },
+                "data": {
+                    "url": payload.url,
+                    "download_url": None
+                }
+            }
+        )
+        
+        return response
+    
     except Exception:
         raise HTTPException(
             status_code=500,
             detail="Failed to store model artifact.",
         )
+    
+
 
     # Shape the response like an artifact summary:
-    return {
-        "name": 8,
-        "id": 4,
-        "type": "model",
-    }
+    return
 
 
 # Add database creation (Logan started on it)
