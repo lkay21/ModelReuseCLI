@@ -235,6 +235,7 @@ async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depend
 
 @app.post("/artifact/{artifact_type}")
 async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
+    global last_time
     """
     Renegotiated ingest: register a *model* artifact.
 
@@ -261,7 +262,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     if( unique_id == last_time ):
         unique_id += 1
     last_time = unique_id
-    
+
     # Need to add naming logic call form phase 1
     item = {
         "model_id": unique_id,    # DynamoDB partition key
