@@ -1,4 +1,4 @@
-from fastapi import Depends, Header, FastAPI, HTTPException
+from fastapi import Depends, Header, FastAPI, HTTPException, Body
 import string
 import sqlite3
 import secrets
@@ -138,8 +138,24 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
-async def create_artifact(artifact: dict, user_auth: int = Depends(verify_token)):
-    return {"artifact": artifact}
+async def find_artifacts(request: dict = Body(...), x_authorization: str = Header(None)):
+    artifacts = []
+    print(f"Request Body: {request}")
+    try:
+        scan = model_table.scan()
+
+        for item in scan['Items']:
+
+            artifact = {
+                "name": item.get("url"),
+                "id": item.get("model_id"),
+                "type": item.get("type")
+            }
+
+            artifacts.append(artifact)
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
+    return artifacts
 
 @app.delete("/reset")
 async def delete_artifacts(x_authorization: str = Header(None)):
@@ -226,10 +242,11 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
         )
 
+    # Need to add naming logic call form phase 1
     item = {
         "model_id": 67,    # DynamoDB partition key
         "url": payload.url,
-        "created_at": int(time.time()),
+        "type": artifact_type
     }
 
     try:
