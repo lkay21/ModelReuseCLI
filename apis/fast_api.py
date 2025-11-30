@@ -1,6 +1,6 @@
 from urllib import response
 
-from flask import json
+import json
 from fastapi import Depends, Header, FastAPI, HTTPException, Body, Query
 from fastapi.responses import JSONResponse
 from utils.url_parser import extract_name_from_url
