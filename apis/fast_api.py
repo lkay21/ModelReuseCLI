@@ -1,5 +1,5 @@
 from urllib import response
-from fastapi import Depends, Header, FastAPI, HTTPException, Body
+from fastapi import Depends, Header, FastAPI, HTTPException, Body, Query
 from fastapi.responses import JSONResponse
 from utils.url_parser import extract_name_from_url
 import string
@@ -150,7 +150,7 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
-async def find_artifacts(x_authorization: str = Header(None), queries: List[ArtifactQuery] = Body(...)):
+async def find_artifacts(x_authorization: str = Header(None), queries: List[ArtifactQuery] = Body(...), offset: int = Query(0)):
     artifacts = []
 
     if not queries or any(not query.name for query in queries):
@@ -228,16 +228,13 @@ async def delete_artifacts(x_authorization: str = Header(None)):
 async def read_artifact(artifact_type: str, id: str, x_authorization: str = Header(None)):
     try: 
         query = model_table.get_item(
-            Key={
-                'model_id': int(id)
-            }
+            Key={'model_id': int(id)}
         )
         item = query.get('Item')
         if not item:
             raise HTTPException(status_code=404, detail="Artifact DNE")
 
         name = item.get("name")
-        unique_id = item.get("model_id")
         url = item.get("url")
 
         response = JSONResponse(
@@ -245,7 +242,7 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
             content={
                 "metadata": {
                     "name": name, 
-                    "id": unique_id, 
+                    "id": int(id), 
                     "type": artifact_type
                 },
                 "data": {
