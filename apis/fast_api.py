@@ -179,30 +179,20 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
         else:     
             try: 
-                response = model_table.query(
-                    IndexName="name",
-                    KeyConditionExpression=Key("name").eq(name)
-                )
+                scan = model_table.scan()
 
-                items = response.get('Items', [])
-
-
-                if not items and id is not None:
-                    item = model_table.get_item(Key={"model_id": id}).get("Item")
-                    if item:
-                        items = [item]
-
-                if items:
-                    for item in items:
-                        if (item.get("type") not in query.types and query.types.isEmpty() == False):
-                            continue
-                        else:
-                            artifact = {
-                                "name": item.get("name"),
-                                "id": item.get("model_id"),
-                                "type": item.get("type")
-                            }
-                            artifacts.append(artifact)
+                for item in scan['Items']:
+                    if (item.get("name") != query.name):
+                        continue
+                    if (item.get("type") not in query.types and query.types.isEmpty() == False):
+                        continue
+                    else:
+                        artifact = {
+                            "name": item.get("name"),
+                            "id": item.get("model_id"),
+                            "type": item.get("type")
+                        }
+                        artifacts.append(artifact)
 
             except Exception as e:
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
@@ -288,7 +278,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     if artifact_type not in supported_types:
         raise HTTPException(
             status_code=400,
-            detail="Only artifact_type 'model' is supported for ingestion.",
+            detail="Only artifact_types 'model', 'dataset', and 'code' are supported for ingestion.",
         )
 
     if not payload.url:
