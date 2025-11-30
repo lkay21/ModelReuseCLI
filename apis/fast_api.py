@@ -229,7 +229,7 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
     try: 
         query = model_table.get_item(
             Key={
-                'model_id': id
+                'model_id': int(id)
             }
         )
         item = query.get('Item')
