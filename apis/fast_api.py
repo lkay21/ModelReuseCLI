@@ -381,8 +381,24 @@ async def authenticate_user(credentials: dict):
         return f"\"\\\"bearer {stored_token}\\\"\""
 
 @app.get("/artifact/byName/{name}")
-async def get_artifact_by_name(name: str, user_auth: int = Depends(verify_token)):
-    return {"name": name}
+async def get_artifact_by_name(name: str, x_authorization: str = Header(None)):
+    artifacts = []
+
+    scan = model_table.scan()
+
+    for item in scan['Items']:
+        item_name = item.get("name")
+
+        if item_name == name:
+            artifact = {
+                "name": item.get("name"),
+                "id": item.get("model_id"),
+                "type": item.get("type")
+            }
+
+            artifacts.append(artifact)
+
+    return artifacts
 
 @app.get("/artifact/{artifact_type}/{id}/audit")
 async def get_artifact_audit(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
