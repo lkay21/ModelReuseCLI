@@ -1,3 +1,4 @@
+from urllib import response
 from fastapi import Depends, Header, FastAPI, HTTPException, Body
 from fastapi.responses import JSONResponse
 from utils.url_parser import extract_name_from_url
@@ -225,7 +226,37 @@ async def delete_artifacts(x_authorization: str = Header(None)):
 
 @app.get("/artifacts/{artifact_type}/{id}")
 async def read_artifact(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
-    return {"artifact_type": artifact_type, "id": id}
+    try: 
+        query = model_table.get_item(
+            Key={
+                'model_id': id
+            }
+        )
+        item = query.get('Item')
+        if not item:
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        name = item.get("name")
+        unique_id = item.get("model_id")
+        url = item.get("url")
+
+        response = JSONResponse(
+            status_code=200, 
+            content={
+                "metadata": {
+                    "name": name, 
+                    "id": unique_id, 
+                    "type": artifact_type
+                },
+                "data": {
+                    "url": url,
+                }
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to retrieve artifact: {e}")
+    
+    return response
 
 @app.put("/artifacts/{artifact_type}/{id}")
 async def update_artifact(artifact_type: str, id: str, artifact: dict, user_auth: int = Depends(verify_token)):
