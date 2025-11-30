@@ -273,7 +273,7 @@ async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(
 #     return {"artifact_type": artifact_type, "artifact": artifact}
 
 @app.get("/artifact/model/{id}/rate")
-async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
+async def rate_model(id: str, rating: int, x_authorization: str = Header(None)):
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
