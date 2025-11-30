@@ -225,7 +225,7 @@ async def delete_artifacts(x_authorization: str = Header(None)):
     return {"message": "All artifacts have been deleted"}
 
 @app.get("/artifacts/{artifact_type}/{id}")
-async def read_artifact(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
+async def read_artifact(artifact_type: str, id: str, x_authorization: str = Header(None)):
     try: 
         query = model_table.get_item(
             Key={
