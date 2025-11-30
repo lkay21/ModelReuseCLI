@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 import boto3
+from boto3.dynamodb.conditions import Key
+
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -40,6 +42,7 @@ class ModelIngestRequest(BaseModel):
 
 class ArtifactQuery(BaseModel):
     name: str
+    id: Optional[str] = None
     types: Optional[List[str]] = None
 
 
@@ -153,9 +156,11 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
         raise HTTPException(status_code=400, detail="error in request body")
 
 
-    for query in queries:
+    for index, query in enumerate(queries):
+        # first query is a star, indicating all artifacts
         name = query.name
-        if name == "*":
+        id = query.id
+        if(index == 0 and name == "*"):
             try:
                 scan = model_table.scan()
 
@@ -175,25 +180,29 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
         else:     
             try: 
                 response = model_table.query(
-                    IndexName = "name",
-                    KeyConditionExpression="name = :nameValue",
-                    ExpressionAttributeValues={
-                        ":nameValue": {"S": name} 
-                    }
+                    IndexName="name",
+                    KeyConditionExpression=Key("name").eq(name)
                 )
 
                 items = response.get('Items', [])
 
-                for item in items:
-                    if item.get("type") not in query.types and query.types is not None:
-                        continue
-                    else:
-                        artifact = {
-                            "name": item.get("name"),
-                            "id": item.get("model_id"),
-                            "type": item.get("type")
-                        }
-                        artifacts.append(artifact)
+
+                if not items and id is not None:
+                    item = model_table.get_item(Key={"model_id": id}).get("Item")
+                    if item:
+                        items = [item]
+
+                if items:
+                    for item in items:
+                        if (item.get("type") not in query.types and query.types.isEmpty() == False):
+                            continue
+                        else:
+                            artifact = {
+                                "name": item.get("name"),
+                                "id": item.get("model_id"),
+                                "type": item.get("type")
+                            }
+                            artifacts.append(artifact)
 
             except Exception as e:
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
