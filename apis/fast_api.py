@@ -182,17 +182,21 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
                 scan = model_table.scan()
 
                 for item in scan['Items']:
-                    if (item.get("name") != query.name):
-                        continue
-                    if (item.get("type") not in query.types and query.types.isEmpty() == False):
-                        continue
-                    else:
-                        artifact = {
+                    matched = False
+
+                    if query.id is not None and item.get("model_id") == query.id:
+                        matched = True
+                    elif item.get("name") == query.name:
+                        if query.types is None or item.get("type") in query.types:
+                            matched = True
+
+                    if matched:
+                        artifacts.append({
                             "name": item.get("name"),
                             "id": item.get("model_id"),
                             "type": item.get("type")
-                        }
-                        artifacts.append(artifact)
+                        })
+
 
             except Exception as e:
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
