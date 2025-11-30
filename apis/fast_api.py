@@ -1,4 +1,6 @@
 from urllib import response
+
+from flask import json
 from fastapi import Depends, Header, FastAPI, HTTPException, Body, Query
 from fastapi.responses import JSONResponse
 from utils.url_parser import extract_name_from_url
@@ -16,7 +18,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 import boto3
 from boto3.dynamodb.conditions import Key
-
+from model import Code, Dataset, Model
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -226,6 +228,9 @@ async def delete_artifacts(x_authorization: str = Header(None)):
 
 @app.get("/artifacts/{artifact_type}/{id}")
 async def read_artifact(artifact_type: str, id: str, x_authorization: str = Header(None)):
+    if not int(id):
+        raise HTTPException(status_code=400, detail="Invalid artifact ID")
+    
     try: 
         query = model_table.get_item(
             Key={'model_id': int(id)}
@@ -267,23 +272,29 @@ async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(
 # async def register_artifact(artifact_type: str, artifact: dict, user_auth: int = Depends(verify_token)):
 #     return {"artifact_type": artifact_type, "artifact": artifact}
 
-@app.post("/artifact/model/{id}/rate")
+@app.get("/artifact/model/{id}/rate")
 async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
-    if rating < 1 or rating > 5:
-        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
-
-    try:
-        model_table.update_item(
-            Key={"model_id": id},  # uses the partition key
-            UpdateExpression="SET rating = :r, rated_at = :t, rated_by_user_id = :u",
-            ExpressionAttributeValues={
-                ":r": rating,
-                ":t": int(time.time()),
-                ":u": user_auth,
-            },
+    if not int(id):
+        raise HTTPException(status_code=400, detail="Invalid artifact ID")
+    
+    try: 
+        query = model_table.get_item(
+            Key={'model_id': int(id)}
         )
+
+        item = query.get('Item')
+        if not item:
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        url = item.get("url")
+
+        model_obj = Model(url=url, id=id)
+        rating = model_obj.evaluate()
+
+        return json.dumps(rating)
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update rating: {e}")
+        raise HTTPException(status_code=500, detail=f"The artifact rating system encountered an error while computing at least one metric.")
 
     return {"model_id": id, "rating": rating}
 
