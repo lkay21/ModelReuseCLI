@@ -19,6 +19,14 @@ from pydantic import BaseModel
 import boto3
 from boto3.dynamodb.conditions import Key
 from model import Code, Dataset, Model
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger("api")
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -141,6 +149,7 @@ def verify_token(x_authorization: str = Header(None)) -> int:
 
 @app.get("/")
 async def read_root(x_authorization: str = Header(None)):
+    logger.info("GET / called x_authorization=%s", x_authorization)
     return {"message": "Welcome to the ModelReuseCLI API"}
 
 @app.get("/health")
@@ -153,6 +162,7 @@ async def read_health_components(user_auth: int = Depends(verify_token)):
 
 @app.post("/artifacts")
 async def find_artifacts(x_authorization: str = Header(None), queries: List[ArtifactQuery] = Body(...), offset: int = Query(0)):
+    logger.info(f"POST /artifacts called, x_authorization={x_authorization}, queries={queries}, offset={offset}")
     artifacts = []
 
     if not queries or any(not query.name for query in queries):
@@ -228,6 +238,7 @@ async def delete_artifacts(x_authorization: str = Header(None)):
 
 @app.get("/artifacts/{artifact_type}/{id}")
 async def read_artifact(artifact_type: str, id: str, x_authorization: str = Header(None)):
+    logger.info(f"GET /artifacts/{artifact_type}/{id} called, x_authorization={x_authorization}")
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
@@ -273,7 +284,8 @@ async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(
 #     return {"artifact_type": artifact_type, "artifact": artifact}
 
 @app.get("/artifact/model/{id}/rate")
-async def rate_model(id: str, rating: int, x_authorization: str = Header(None)):
+async def rate_model(id: str, x_authorization: str = Header(None)):
+    logger.info(f"GET /artifact/model/{id}/rate called, x_authorization={x_authorization}")
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
@@ -308,6 +320,7 @@ async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depend
 
 @app.post("/artifact/{artifact_type}")
 async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
+    logger.info(f"POST /artifact/{artifact_type} ingest called with payload={payload.dict()}")
     global last_time
     """
     Renegotiated ingest: register a *model* artifact.
