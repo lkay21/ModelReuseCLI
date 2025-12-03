@@ -35,6 +35,12 @@ database_dir = "./databases/database.db"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models"
 
+api_key = os.getenv("GEN_AI_STUDIO_API_KEY")
+if api_key:
+    logger.info("API key loaded successfully")
+else:
+    logger.warning("API key not found")
+
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 model_table = dynamodb.Table(MODEL_TABLE_NAME)  # this will point to the "models" table
 
