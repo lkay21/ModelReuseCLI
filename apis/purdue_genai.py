@@ -17,10 +17,20 @@ load_dotenv()  # reads .env file into environment variables
 
 def get_purdue_genai_key() -> Optional[str]:
     """
-    Retrieve the Purdue GenAI Studio API key from a local file or environment variable.
+    Retrieve the Purdue GenAI Studio API key from AWS Secrets Manager, environment variable, or local file.
     Returns:
         api_key (str): The API key if found, else None
     """
+    # First try to get from AWS Secrets Manager
+    try:
+        from apis.fast_api import get_secret
+        secrets = get_secret()
+        if isinstance(secrets, dict) and secrets.get("PURDUE_GENAI_KEY"):
+            return secrets["PURDUE_GENAI_KEY"]
+    except Exception as e:
+        logger.warning(f"Could not retrieve Purdue GenAI key from AWS Secrets Manager: {e}")
+    
+    # Fallback to environment variable or file
     try:
         genai_token = os.getenv("GEN_AI_STUDIO_API_KEY")
         if genai_token:

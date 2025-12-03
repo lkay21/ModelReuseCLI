@@ -21,6 +21,10 @@ from boto3.dynamodb.conditions import Key
 from model import Code, Dataset, Model
 import logging
 
+import boto3
+from botocore.exceptions import ClientError
+import json as json_module
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -28,8 +32,53 @@ logging.basicConfig(
 
 logger = logging.getLogger("api")
 
+def get_secret(secret_name=None, region_name=None):
+    """
+    Retrieve secret from AWS Secrets Manager
+    """
+    secret_name = secret_name or os.getenv("SECRET_NAME", "SWEproject/purdue-genai-key")
+    region_name = region_name or os.getenv("AWS_REGION", "us-east-2")
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        logger.error(f"Error retrieving secret {secret_name}: {e}")
+        raise e
+
+    secret_string = get_secret_value_response['SecretString']
+    
+    # Parse JSON if it's a JSON secret, otherwise return as string
+    try:
+        secret = json_module.loads(secret_string)
+        return secret
+    except json_module.JSONDecodeError:
+        return secret_string
+
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
+
+# Try to get SECRET_KEY from Secrets Manager, fallback to environment variable
+try:
+    secrets = get_secret()
+    if isinstance(secrets, dict):
+        SECRET_KEY = secrets.get("SECRET_KEY") or secrets.get("jwt_secret") 
+    else:
+        SECRET_KEY = secrets
+except Exception as e:
+    logger.warning(f"Failed to retrieve secret from AWS Secrets Manager: {e}")
+    SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY not found in AWS Secrets Manager or environment variables")
+
 database_dir = "./databases/database.db"
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
