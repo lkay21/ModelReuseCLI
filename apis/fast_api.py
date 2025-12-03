@@ -178,7 +178,7 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
                 scan = model_table.scan()
 
 
-                if len(query.types) == 0:
+                if len(query.types) != 0:
                     for item in scan['Items']:
                         if item.get("type") in query.types:
                             artifact = {
