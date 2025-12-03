@@ -376,6 +376,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     last_time = unique_id    
 
     name = extract_name_from_url(payload.url)[1]
+    logger.info(f"Extracted name '{name}' from URL '{payload.url}'")
 
     # Need to add naming logic call form phase 1
     item = {
