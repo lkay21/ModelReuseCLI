@@ -177,15 +177,26 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
             try:
                 scan = model_table.scan()
 
-                for item in scan['Items']:
 
-                    artifact = {
-                        "name": item.get("name"),
-                        "id": item.get("model_id"),
-                        "type": item.get("type")
-                    }
+                if query.types is not None:
+                    for item in scan['Items']:
+                        if item.get("type") in query.types:
+                            artifact = {
+                                "name": item.get("name"),
+                                "id": item.get("model_id"),
+                                "type": item.get("type")
+                            }
 
-                    artifacts.append(artifact)
+                            artifacts.append(artifact)
+                else:
+                    for item in scan['Items']:
+                            artifact = {
+                                "name": item.get("name"),
+                                "id": item.get("model_id"),
+                                "type": item.get("type")
+                            }
+
+                            artifacts.append(artifact)
                 
                 break
             except Exception as e:
