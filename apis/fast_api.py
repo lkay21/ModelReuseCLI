@@ -172,7 +172,6 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
     for index, query in enumerate(queries):
         # first query is a star, indicating all artifacts
         name = query.name
-        id = query.id
         if(index == 0 and name == "*"):
             try:
                 scan = model_table.scan()
