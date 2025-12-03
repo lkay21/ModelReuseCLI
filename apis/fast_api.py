@@ -463,52 +463,73 @@ async def authenticate_user(credentials: dict):
 
 from typing import Optional
 
+from fastapi import Query, Header, HTTPException
+from typing import List, Dict
+
 @app.get("/artifact/byName/{name}")
 async def get_artifact_by_name(
     name: str,
-    artifact_type: Optional[str] = Query(None, alias="type"),
-    x_authorization: str = Header(None),
+    x_authorization: str = Header(None, alias="X-Authorization"),
 ):
     """
-    Look up artifacts by name, optionally filtered by type via ?type=model|dataset|code.
+    Return metadata for each artifact matching this name.
 
-    Returns:
-      
-200 + list of matching artifacts when matches exist
-404 when no artifacts match the given name (and type, if provided)"""
+    - Requires X-Authorization header.
+    - 200: list of {name, id, type}
+    - 400: invalid or malformed artifact_name
+    - 403: invalid or missing AuthenticationToken
+    - 404: No such artifact.
+    """
+
+    # --- Auth per spec ---
+    if not x_authorization:
+        # 403 when header missing/invalid
+        raise HTTPException(
+            status_code=403,
+            detail="Authentication failed due to invalid or missing AuthenticationToken.",
+        )
+
+    # --- Basic name validation for 400 ---
+    # Treat wildcard or empty/whitespace-only names as invalid.
+    if not name or name.strip() == "" or "*" in name:
+        raise HTTPException(
+            status_code=400,
+            detail="There is missing field(s) in the artifact_name or it is formed improperly, or is invalid.",
+        )
+
+    # --- Look up artifacts ---
     try:
         scan = model_table.scan()
+        items = scan.get("Items", [])
     except Exception as e:
+        # Internal error talking to DynamoDB
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieve artifacts: {e}",)
+            detail=f"Failed to retrieve artifacts: {e}",
+        )
 
-    artifacts = []
+    artifacts: List[Dict] = []
 
-    for item in scan.get("Items", []):
+    for item in items:
         item_name = item.get("name")
-        item_type = item.get("type")
-
         if item_name != name:
-            continue
-
-        # If caller specified a type, enforce it
-        if artifact_type is not None and item_type != artifact_type:
             continue
 
         artifacts.append(
             {
                 "name": item_name,
                 "id": item.get("model_id"),
-                "type": item_type,
+                "type": item.get("type"),
             }
         )
 
+    # --- 404 if nothing found ---
     if not artifacts:
-        # Name (or name+type) not found
-        raise HTTPException(status_code=404, detail="Artifact DNE")
+        raise HTTPException(status_code=404, detail="No such artifact.")
 
+    # --- 200 OK, list of entries ---
     return artifacts
+
 
 @app.get("/artifact/{artifact_type}/{id}/audit")
 async def get_artifact_audit(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
