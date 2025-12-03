@@ -57,6 +57,35 @@ class ArtifactQuery(BaseModel):
     types: Optional[List[str]] = None
 
 
+def normalize_artifact_name(name: Optional[str]) -> str:
+    """Return a canonical representation for artifact name comparisons."""
+    if not name:
+        return ""
+    return name.strip().lower().replace("/", "-").replace("_", "-")
+
+
+def compute_name_aliases(owner: str, repo: str) -> List[str]:
+    """Build a list of canonical aliases for an artifact."""
+    aliases = {normalize_artifact_name(repo)}
+    if owner:
+        aliases.add(normalize_artifact_name(f"{owner}-{repo}"))
+        aliases.add(normalize_artifact_name(f"{owner}/{repo}"))
+    return sorted(aliases)
+
+
+def matches_artifact_name(item: Dict[str, Any], target_name: str) -> bool:
+    """Check if a DynamoDB item matches the requested artifact name."""
+    normalized_target = normalize_artifact_name(target_name)
+    if not normalized_target:
+        return False
+
+    candidates = {normalize_artifact_name(item.get("name"))}
+    for alias in item.get("normalized_names", []):
+        candidates.add(alias)
+
+    return normalized_target in candidates
+
+
 def create_authentication_token(user_id, database_dir=database_dir):
     now = m.floor(time.time() / 1000) 
     expiration = now + (10 * 60 * 60)
@@ -175,27 +204,19 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
         if(index == 0 and name == "*"):
             try:
                 scan = model_table.scan()
+                type_filter = query.types or []
 
+                for item in scan['Items']:
+                    if type_filter and item.get("type") not in type_filter:
+                        continue
 
-                if len(query.types) != 0:
-                    for item in scan['Items']:
-                        if item.get("type") in query.types:
-                            artifact = {
-                                "name": item.get("name"),
-                                "id": item.get("model_id"),
-                                "type": item.get("type")
-                            }
+                    artifact = {
+                        "name": item.get("name"),
+                        "id": item.get("model_id"),
+                        "type": item.get("type")
+                    }
 
-                            artifacts.append(artifact)
-                else:
-                    for item in scan['Items']:
-                            artifact = {
-                                "name": item.get("name"),
-                                "id": item.get("model_id"),
-                                "type": item.get("type")
-                            }
-
-                            artifacts.append(artifact)
+                    artifacts.append(artifact)
                 
                 break
             except Exception as e:
@@ -207,9 +228,9 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
                 for item in scan['Items']:
                     matched = False
 
-                    if query.id is not None and item.get("model_id") == query.id:
+                    if query.id is not None and str(item.get("model_id")) == str(query.id):
                         matched = True
-                    elif item.get("name") == query.name:
+                    elif matches_artifact_name(item, query.name):
                         if query.types is None or item.get("type") in query.types:
                             matched = True
 
@@ -224,6 +245,12 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
             except Exception as e:
                 raise HTTPException(status_code=403, detail=f"Failed to retrieve artifacts: {e}")
     
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
+    if offset:
+        return artifacts[offset:]
+
     return artifacts
 
 @app.delete("/reset")
@@ -375,14 +402,23 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
         unique_id += 1
     last_time = unique_id    
 
-    name = extract_name_from_url(payload.url)[1]
+    owner, repo = extract_name_from_url(payload.url)
+    if not repo:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to derive artifact name from URL.",
+        )
+
+    display_name = f"{owner}-{repo}" if owner else repo
+    normalized_aliases = compute_name_aliases(owner, repo)
 
     # Need to add naming logic call form phase 1
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
         "type": artifact_type,
-        "name": name
+        "name": display_name,
+        "normalized_names": normalized_aliases,
     }
 
     try:
@@ -392,7 +428,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             status_code=201, 
             content={
                 "metadata": {
-                    "name": name, 
+                    "name": display_name, 
                     "id": unique_id, 
                     "type": artifact_type
                 },
@@ -483,10 +519,9 @@ async def get_artifact_by_name(
     artifacts = []
 
     for item in scan.get("Items", []):
-        item_name = item.get("name")
         item_type = item.get("type")
 
-        if item_name != name:
+        if not matches_artifact_name(item, name):
             continue
 
         # If caller specified a type, enforce it
@@ -495,7 +530,7 @@ async def get_artifact_by_name(
 
         artifacts.append(
             {
-                "name": item_name,
+                "name": item.get("name"),
                 "id": item.get("model_id"),
                 "type": item_type,
             }
