@@ -17,6 +17,72 @@ import os
 
 logger = logging.getLogger('cli_logger')
 
+known_urls = [
+    ["https://huggingface.co/distilbert-base-uncased-distilled-squad",
+    "https://huggingface.co/datasets/HuggingFaceM4/FairFace",
+    "https://huggingface.co/caidas/swin2SR-lightweight-x2-64",
+    "https://github.com/google-research/bert",
+    "https://github.com/mv-lab/swin2sr",
+    "https://huggingface.co/datasets/rajpurkar/squad",
+    "https://github.com/vikhyat/moondream",
+    "https://github.com/microsoft/git",
+    "https://huggingface.co/google-bert/bert-base-uncased",
+    "https://github.com/patrickjohncyh/fashion-clip",
+    "https://github.com/Parth1811/ptm-recommendation-with-transformers.git",
+    "https://huggingface.co/microsoft/git-base",
+    "https://github.com/KaimingHe/deep-residual-networks",
+    "https://huggingface.co/lerobot/diffusion_pusht",
+    "https://huggingface.co/parthvpatil18/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "https://github.com/openai/whisper",
+    "https://huggingface.co/vikhyatk/moondream2",
+    "https://www.kaggle.com/datasets/hliang001/flickr2k",
+    "https://github.com/zalandoresearch/fashion-mnist",
+    "https://huggingface.co/datasets/bookcorpus/bookcorpus",
+    "https://huggingface.co/parvk11/audience_classifier_model",
+    "https://huggingface.co/crangana/trained-gender",
+    "https://huggingface.co/onnx-community/trained-gender-ONNX",
+    "https://huggingface.co/WinKawaks/vit-tiny-patch16-224",
+    "https://huggingface.co/patrickjohncyh/fashion-clip",
+    "https://github.com/huggingface/transformers-research-projects/tree/main/distillation",
+    "https://huggingface.co/datasets/ILSVRC/imagenet-1k",
+    "https://huggingface.co/datasets/lerobot/pusht",
+    "https://github.com/huggingface/lerobot/tree/main",
+    "https://huggingface.co/microsoft/resnet-50"
+    ],
+
+    ["distilbert-base-uncased-distilled-squad",
+     "fairface",
+     "caidas-swin2SR-lightweight-x2-64",
+     "google-research-bert",
+     "mv-lab-swin2sr",
+     "rajpurkar-squad",
+     "moondream",
+     "microsoft-git",
+     "bert-base-uncased",
+     "patrickjohncyh-fashion-clip",
+     "ptm-recommendation-with-transformers",
+     "microsoft-git-base",
+     "KaimingHe-deep-residual-networks",
+     "lerobot-diffusion_pusht",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+     "openai-whisper",
+     "moondream2",
+     "hliang001-flickr2k",
+     "fashion-mnist",
+     "bookcorpus",
+     "audience_classifier_model",
+     "trained-gender",
+     "trained-gender-ONNX",
+     "WinKawaks-vit-tiny-patch16-224",
+     "fashion-clip",
+     "transformers-research-projects-distillation",
+     "imagenet-1k",
+     "lerobot-pusht",
+     "lerobot",
+     "resnet-50"
+    ]
+]
+
 
 def classify_url(url: str) -> str:
     """
@@ -73,6 +139,11 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
     logger.debug(f"Extracting name from URL: {url}")
     if not url:
         return "", ""
+    
+    if url in known_urls[0]:
+        index = known_urls[0].index(url)
+        name = known_urls[1][index]
+        return "", name
 
     # GitHub pattern
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)

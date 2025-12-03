@@ -403,6 +403,8 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             }
         )
 
+        # Feed url to LLM if dataset/code mathces model based on url
+
         return response
     
     except Exception:
