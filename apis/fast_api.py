@@ -163,7 +163,7 @@ async def read_health():
     return {"status": "healthy"}
 
 @app.get("/health/components")
-async def read_health_components(user_auth: int = Depends(verify_token)):
+async def read_health_components(x_authorization: str = Header(None, alias="X-Authorization")):
     return {"components": ["component1", "component2"]}
 
 @app.post("/artifacts")
@@ -305,11 +305,11 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
         )
 
 @app.put("/artifacts/{artifact_type}/{id}")
-async def update_artifact(artifact_type: str, id: str, artifact: dict, user_auth: int = Depends(verify_token)):
+async def update_artifact(artifact_type: str, id: str, artifact: dict, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"artifact_type": artifact_type, "id": id, "updated_artifact": artifact}
 
 @app.delete("/artifacts/{artifact_type}/{id}")
-async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
+async def delete_artifact(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"message": f"Artifact {id} of type {artifact_type} has been deleted"}
 
 # @app.post("/artifact/{artifact_type}")
@@ -347,7 +347,7 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
 #     return {"model_id": id, "rating": rating}
 
 @app.get("/artifact/{artifact_type}/{id}/cost")
-async def get_artifact_cost(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
+async def get_artifact_cost(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"artifact_type": artifact_type, "id": id, "cost": 100}
 
 @app.post("/artifact/{artifact_type}")
@@ -517,19 +517,19 @@ async def get_artifact_by_name(
     return artifacts
 
 @app.get("/artifact/{artifact_type}/{id}/audit")
-async def get_artifact_audit(artifact_type: str, id: str, user_auth: int = Depends(verify_token)):
+async def get_artifact_audit(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"artifact_type": artifact_type, "id": id, "audit": "audit_info"}
 
 @app.get("/artifact/model/{id}/lineage")
-async def get_artifact_lineage(id: str, user_auth: int = Depends(verify_token)):
+async def get_artifact_lineage(id: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"model_id": id, "lineage": ["layer1", "layer2"]}
 
 @app.post("/artifact/model/{id}/license-check")
-async def check_model_license(id: str, license_info: dict, user_auth: int = Depends(verify_token)):
+async def check_model_license(id: str, license_info: dict, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"model_id": id, "license_info": license_info}
 
 @app.post("/artifact/byRegEx")
-async def get_artifact_by_regex(pattern: str, user_auth: int = Depends(verify_token)):
+async def get_artifact_by_regex(pattern: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"pattern": pattern, "artifacts": ["artifact1", "artifact2"]}
 
 @app.get("/tracks")
