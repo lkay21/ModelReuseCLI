@@ -249,37 +249,54 @@ async def delete_artifacts(x_authorization: str = Header(None)):
 @app.get("/artifacts/{artifact_type}/{id}")
 async def read_artifact(artifact_type: str, id: str, x_authorization: str = Header(None)):
     logger.info(f"GET /artifacts/{artifact_type}/{id} called, x_authorization={x_authorization}")
-    if not int(id):
+
+    # 1) Validate ID is an integer
+    try:
+        model_id = int(id)
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
-    
-    try: 
-        query = model_table.get_item(
-            Key={'model_id': int(id)}
-        )
-        item = query.get('Item')
+
+    try:
+        # 2) Look up item by model_id
+        query = model_table.get_item(Key={"model_id": model_id})
+        item = query.get("Item")
+
+        # 3) Not found → 404
         if not item:
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        # 4) Type mismatch → also 404 (ID exists but wrong artifact_type)
+        if item.get("type") != artifact_type:
             raise HTTPException(status_code=404, detail="Artifact DNE")
 
         name = item.get("name")
         url = item.get("url")
 
-        response = JSONResponse(
-            status_code=200, 
+        # 5) Response shape consistent with ingest_model
+        return JSONResponse(
+            status_code=200,
             content={
                 "metadata": {
-                    "name": name, 
-                    "id": int(id), 
-                    "type": artifact_type
+                    "name": name,
+                    "id": model_id,
+                    "type": artifact_type,
                 },
                 "data": {
                     "url": url,
-                }
-            }
+                    "download_url": None,
+                },
+            },
         )
+
+    except HTTPException:
+        # Let explicit HTTPExceptions propagate unchanged
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to retrieve artifact: {e}")
-    
-    return response
+        # Unexpected backend failures → 500
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve artifact: {e}",
+        )
 
 @app.put("/artifacts/{artifact_type}/{id}")
 async def update_artifact(artifact_type: str, id: str, artifact: dict, user_auth: int = Depends(verify_token)):
@@ -441,23 +458,52 @@ async def authenticate_user(credentials: dict):
         conn.close()
         return f"\"\\\"bearer {stored_token}\\\"\""
 
+from typing import Optional
+
 @app.get("/artifact/byName/{name}")
-async def get_artifact_by_name(name: str, x_authorization: str = Header(None)):
+async def get_artifact_by_name(
+    name: str,
+    artifact_type: Optional[str] = Query(None, alias="type"),
+    x_authorization: str = Header(None),
+):
+    """
+    Look up artifacts by name, optionally filtered by type via ?type=model|dataset|code.
+
+    Returns:
+      
+200 + list of matching artifacts when matches exist
+404 when no artifacts match the given name (and type, if provided)"""
+    try:
+        scan = model_table.scan()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve artifacts: {e}",)
+
     artifacts = []
 
-    scan = model_table.scan()
-
-    for item in scan['Items']:
+    for item in scan.get("Items", []):
         item_name = item.get("name")
+        item_type = item.get("type")
 
-        if item_name == name:
-            artifact = {
-                "name": item.get("name"),
+        if item_name != name:
+            continue
+
+        # If caller specified a type, enforce it
+        if artifact_type is not None and item_type != artifact_type:
+            continue
+
+        artifacts.append(
+            {
+                "name": item_name,
                 "id": item.get("model_id"),
-                "type": item.get("type")
+                "type": item_type,
             }
+        )
 
-            artifacts.append(artifact)
+    if not artifacts:
+        # Name (or name+type) not found
+        raise HTTPException(status_code=404, detail="Artifact DNE")
 
     return artifacts
 
