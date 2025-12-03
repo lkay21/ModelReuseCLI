@@ -284,8 +284,9 @@ async def delete_artifact(artifact_type: str, id: str, user_auth: int = Depends(
 #     return {"artifact_type": artifact_type, "artifact": artifact}
 
 @app.get("/artifact/model/{id}/rate")
-async def rate_model(id: str, x_authorization: str = Header(None)):
-    logger.info(f"GET /artifact/model/{id}/rate called, x_authorization={x_authorization}")
+async def rate_model(id: str, authorization: str = Header(None, alias="Authorization"), x_authorization: str = Header(None, alias="X-Authorization")):
+    token_header = authorization or x_authorization
+    logger.info(f"GET /artifact/model/{id}/rate called, x_authorization={token_header}")
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
@@ -303,12 +304,10 @@ async def rate_model(id: str, x_authorization: str = Header(None)):
         model_obj = Model(url=url, id=id)
         rating = model_obj.evaluate()
 
-        return json.dumps(rating)
+        return rating
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"The artifact rating system encountered an error while computing at least one metric.")
-
-    return {"model_id": id, "rating": rating}
 
 # @app.get("/artifact/model/{id}/rate")
 # async def rate_model(id: str, rating: int, user_auth: int = Depends(verify_token)):
