@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger("api")
 
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key-change-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
 database_dir = "./databases/database.db"
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
@@ -58,8 +58,7 @@ class ArtifactQuery(BaseModel):
 
 
 def create_authentication_token(user_id, database_dir=database_dir):
-    # Use seconds for iat/exp to be consistent with JWT expectations
-    now = int(time.time())
+    now = m.floor(time.time() / 1000) 
     expiration = now + (10 * 60 * 60)
 
     jwt_payload = {
@@ -76,8 +75,6 @@ def create_authentication_token(user_id, database_dir=database_dir):
     cursor.execute("UPDATE users SET secret_key = ? WHERE id = ?", (token, user_id))
     conn.commit()
     conn.close()
-
-    return token
 
 def create_users_table():
     conn = sqlite3.connect(database_dir)
@@ -101,7 +98,7 @@ def token_from_secret_key(secret_key):
         return payload
     except jwt.ExpiredSignatureError:
         return None
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError:   
         return None
 
 def add_user(username, password, secret_key):
@@ -123,38 +120,29 @@ def check_password(password: str, hashed_password: str):
 app = FastAPI()
 
 # Edit to match actual database schema and logic (Including num interations, token expiry, etc.)
-def verify_token(authorization: str = Header(None, alias="Authorization"), x_authorization: str = Header(None, alias="X-Authorization")) -> int:
-    # Accept either standard Authorization header or X-Authorization
-    token_header = authorization or x_authorization
-    if not token_header:
-        raise HTTPException(status_code=403, detail="Missing Authorization header")
-
-    # Strip possible "Bearer " prefix and surrounding quotes
-    token = token_header
-    if isinstance(token, str) and token.lower().startswith("bearer "):
-        token = token.split(" ", 1)[1]
-    token = token.strip('"')
-
-    # Verify JWT validity (signature + expiry)
-    payload = token_from_secret_key(token)
-    if not payload:
-        raise HTTPException(status_code=403, detail="Invalid or expired token")
-
-    user_id = payload.get("sub")
+def verify_token(x_authorization: str = Header(None)) -> int:
+    if not x_authorization:
+        raise HTTPException(status_code=403, detail="Missing X-Authorization header")
 
     con = sqlite3.connect(database_dir)
     cur = con.cursor()
-    cur.execute("SELECT id, num_interactions FROM users WHERE id = ? AND secret_key = ?", (user_id, token))
+    cur.execute("SELECT id, secret_key, num_interactions, api_time FROM users WHERE secret_key = ?", (x_authorization,))
     row = cur.fetchone()
+    con.close()
+
     if not row:
-        con.close()
         raise HTTPException(status_code=403, detail="Invalid token")
 
-    id, num_interactions = row
-    num_interactions = (num_interactions or 0) + 1
-    cur.execute("UPDATE users SET num_interactions = ? WHERE id = ?", (num_interactions, id))
-    con.commit()
-    con.close()
+    id, secret_key, num_interactions, api_time = row
+    if api_time - time.time() > 60000 or num_interactions > 1000:
+        raise HTTPException(status_code=403, detail="Token expired")
+    else:
+        num_interactions += 1
+        con = sqlite3.connect(database_dir)
+        cur = con.cursor()
+        cur.execute("UPDATE users SET num_interactions = ? WHERE id = ?", (num_interactions, id))
+        con.commit()
+        con.close()
 
     return id
 
@@ -404,7 +392,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
 
 
 # Add database creation (Logan started on it)
-@app.post("/authenticate")
+@app.put("/authenticate")
 async def authenticate_user(credentials: dict):
 
     if "user" not in credentials or ("name" not in credentials["user"] or "is_admin" not in credentials["user"]):
@@ -428,17 +416,21 @@ async def authenticate_user(credentials: dict):
         if not check_password(password, stored_hashed_password):
             raise HTTPException(status_code=401, detail="The user or password is invalid.")
         else:
-            token = create_authentication_token(user_id)
+            create_authentication_token(user_id)
+            cursor.execute("SELECT secret_key FROM users WHERE id = ?", (user_id,))
+            stored_token = token_from_secret_key(cursor.fetchone()[0])
             conn.close()
-            return JSONResponse(status_code=200, content={"token": f"bearer {token}"})
+            return f"\"\\\"bearer {stored_token}\\\"\""
     # If User Does Not Exist, Create User and Generate Token
     else:
         add_user(username, password, "")
         cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user_id = cursor.fetchone()[0]
-        token = create_authentication_token(user_id)
+        create_authentication_token(user_id)
+        cursor.execute("SELECT secret_key FROM users WHERE id = ?", (user_id,))
+        stored_token = token_from_secret_key(cursor.fetchone()[0])
         conn.close()
-        return JSONResponse(status_code=201, content={"token": f"bearer {token}"})
+        return f"\"\\\"bearer {stored_token}\\\"\""
 
 @app.get("/artifact/byName/{name}")
 async def get_artifact_by_name(name: str, x_authorization: str = Header(None)):
