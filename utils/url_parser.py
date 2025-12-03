@@ -63,37 +63,46 @@ def classify_url(url: str) -> str:
 def extract_name_from_url(url: str) -> Tuple[str, str]:
     """
     Extract a name from a URL
-    
+
     Args:
         url (str): The URL
-        
+
     Returns:
-        str: Extracted name or empty string if extraction fails
+        Tuple[str, str]: Extracted owner and name, or empty strings if extraction fails
     """
     logger.debug(f"Extracting name from URL: {url}")
     if not url:
         return "", ""
-    
-    # code pattern: github/gitlab/hfspace
+
+    # GitHub pattern
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
     if github_match:
         owner, repo = github_match.groups()
         return owner, repo.replace('.git', '')
 
-    gitlab_match = re.search(r'(?:git@|https?://)gitlab\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$', url, re.IGNORECASE)
+    # GitLab pattern
+    gitlab_match = re.search(r'(?:git@|https?://)gitlab\.com[:/]([^/]+)/([^/.]+)(?:\.git)?$', url, re.IGNORECASE)
     if gitlab_match:
-        return gitlab_match.group('owner'), gitlab_match.group('repo')
+        return gitlab_match.group(1), gitlab_match.group(2)
 
-    hfcode_match = re.search(r'^https?://(?:www\.)?huggingface\.co/spaces/(?P<owner>[^/]+)/(?P<space>[^/]+)(?:/.*)?$', url, re.IGNORECASE)
-    if hfcode_match:
-        return hfcode_match.group('owner'), hfcode_match.group('space')
+    # Hugging Face Spaces pattern
+    hfspace_match = re.search(r'huggingface\.co/spaces/([^/]+)/([^/]+)', url, re.IGNORECASE)
+    if hfspace_match:
+        return hfspace_match.group(1), hfspace_match.group(2)
 
-    # HuggingFace pattern: extract model/dataset name
-    hf_match = re.search(r'huggingface\.co/(?:datasets/)?([^/]+)/([^/]+?)(?:/.*)?$', url, re.IGNORECASE)
+    # Hugging Face datasets/models pattern
+    hf_match = re.search(r'huggingface\.co/(datasets/)?([^/]+)/([^/]+)', url, re.IGNORECASE)
     if hf_match:
-        namespace, name = hf_match.groups()
+        namespace, name = hf_match.groups()[1:]
         return namespace, name
-    
+
+    # General fallback for other websites
+    fallback_match = re.search(r'https?://(?:www\.)?([^/]+)/([^/]+)', url, re.IGNORECASE)
+    if fallback_match:
+        domain, name = fallback_match.groups()
+        return domain, name
+
+    # Default case: return empty strings if no match
     return "", ""
 
 

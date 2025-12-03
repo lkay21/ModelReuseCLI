@@ -209,7 +209,7 @@ async def find_artifacts(x_authorization: str = Header(None), queries: List[Arti
 
                     if query.id is not None and item.get("model_id") == query.id:
                         matched = True
-                    elif item.get("name") in query.name:
+                    elif item.get("name") == query.name:
                         if len(query.types) == 0 or item.get("type") in query.types:
                             matched = True
 
