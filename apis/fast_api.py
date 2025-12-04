@@ -106,7 +106,7 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         body = {
             "model": "llama3.1:latest",  # Correct model name for Purdue GenAI
             "messages": [
-                {"role": "system", "content": "You are a rating system. You must respond with ONLY a single decimal number between 0.0 and 1.0. Do not include any explanations, text, or formatting. Just the number."},
+                {"role": "system", "content": "You are a rating system. You must respond with ONLY a single decimal number between 0.00 and 1.00 with exactly two decimal places (e.g., 0.85, 0.23, 1.00). Do not include any explanations, text, or formatting. Just the number to the hundredth place."},
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0,
@@ -133,8 +133,8 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         
         # Extract just the number from the response
         import re
-        # Look for decimal numbers between 0.0 and 1.0
-        number_match = re.search(r'\b(0\.\d+|1\.0+|0\.0+|1)\b', text)
+        # Look for decimal numbers between 0.00 and 1.00 (including more precise decimals)
+        number_match = re.search(r'\b(0\.\d+|1\.0+|1)\b', text)
         if number_match:
             extracted_number = number_match.group(1)
             # Ensure it's a valid float between 0.0 and 1.0
@@ -643,7 +643,9 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
         "type": artifact_type,
-        "name": name
+        "name": name,
+        "dataset_id": None,
+        "code_id": None
     }
 
     try:
