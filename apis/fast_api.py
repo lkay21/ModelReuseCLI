@@ -381,10 +381,9 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
         model_id = int(id)
         if model_id <= 0:
             # raise ValueError()
-            raise HTTPException(status_code=404, detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.")
+            raise HTTPException(status_code=404, detail="No such artifact.")
     except ValueError:
-        raise HTTPException(status_code=400, detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.")
-
+        raise HTTPException(status_code=404, detail="No such artifact.")
     try:
         # 2) Look up item by model_id
         query = model_table.get_item(Key={"model_id": model_id})
@@ -392,11 +391,11 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
 
         # 3) Not found → 404
         if not item:
-            raise HTTPException(status_code=404, detail="Artifact DNE")
+            raise HTTPException(status_code=404, detail="No such artifact.")
 
         # 4) Type mismatch → also 404 (ID exists but wrong artifact_type)
         if item.get("type") != artifact_type:
-            raise HTTPException(status_code=404, detail="Artifact DNE")
+            raise HTTPException(status_code=404, detail="No such artifact.")
 
         name = item.get("name")
         url = item.get("url")
