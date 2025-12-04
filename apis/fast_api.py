@@ -42,7 +42,7 @@ MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models
 
 api_key = os.getenv("GEN_AI_STUDIO_API_KEY")
 if api_key:
-    logger.info(f"API key loaded successfully {api_key[:4]}****")
+    logger.info(f"API key loaded successfully {api_key}")
 else:
     logger.warning("API key not found")
 
