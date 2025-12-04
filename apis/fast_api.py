@@ -76,30 +76,52 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
     """
     context_prompt = f"context_prompt: Below you are given a TEST_URL. The TEST_URL will either point to a dataset or code repository. In the inputValuePromt, you will find this TEST_URL and will be told whether or not the TEST_URL is a dataset or code repository from boolean values. Once given this information your task is simple. Rate the likelihood that the given TEST_URL will match a model artifact in our system. To do so, your first priority will always be to extract information from a README file from the MODEL_URL, not the TEST_URL, if it exists. If no README file exists, you may try to match other relvant information of the TEST_URL to any of the input context you are given in the input_val_promt section of this promt.Your output should be a single rating 0.0 to 1.0, with 1.0 being a perfect match and 0.0 being no match at all.\n"
     input_val_promt = f"input_val_prompt: Here is the TEST_URL you will evaluate: {url}\nHere is whether or not the TEST_URL is a dataset: {dataset_bool}\nHere is whether or not the TEST_URL is code repository: {code_bool}\nHere is the MODEL_URL: {model_url}\n"
-    prompt = context_prompt + input_val_promt
+    prompt = "Give me a decimal number between 0.0 and 1.0"
 
     if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
         return None
+    
+    # Clean the API key of any whitespace
+    api_key = GEN_AI_STUDIO_API_KEY.strip()
+    
+    logger.info(f"Making GenAI request with model: llama3.1")
+    logger.info(f"API Key length: {len(api_key)}")
+    logger.info(f"Request URL: {PURDUE_GENAI_URL}")
+    
     try:
         headers = {
-            "Authorization": f"Bearer {GEN_AI_STUDIO_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
         body = {
-            "model": "llama3.1:latest",
+            "model": "llama3.1",  # Try without ":latest"
             "messages": [
                 {"role": "system", "content": "Reply with exactly the rating you calculate from the successive prompts. Range 0.0 to 1.0."},
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0,
         }
+        
+        logger.info(f"Sending request to: {PURDUE_GENAI_URL}")
+        logger.info(f"Request body: {body}")
+        
         resp = requests.post(
             PURDUE_GENAI_URL, headers=headers, json=body, timeout=15)
+            
+        logger.info(f"Response status: {resp.status_code}")
+        logger.info(f"Response headers: {dict(resp.headers)}")
+        
+        # Check for specific error responses before raising
+        if resp.status_code == 401:
+            logger.error(f"401 Unauthorized - Response text: {resp.text}")
+            logger.error(f"Request headers sent: {headers}")
+        
         resp.raise_for_status()
         data = resp.json()
         text: str = data["choices"][0]["message"]["content"].strip()
         logger.info(f"GenAI response: {data}")
+        return text  # This was missing!
     except Exception as e:
         logger.warning(f"GenAI call failed: {e}")
         return None
