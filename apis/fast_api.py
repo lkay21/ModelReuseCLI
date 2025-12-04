@@ -23,9 +23,6 @@ import logging
 import requests
 import re
 
-PURDUE_GENAI_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
-PURDUE_GENAI_URL = "https://genai.rcac.purdue.edu/api/chat/completions"
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -40,11 +37,14 @@ database_dir = "./databases/database.db"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models"
 
-api_key = os.getenv("GEN_AI_STUDIO_API_KEY")
-if api_key:
-    logger.info(f"API key loaded successfully {api_key}")
+PURDUE_GENAI_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
+if PURDUE_GENAI_API_KEY:
+    logger.info(f"API key loaded successfully {PURDUE_GENAI_API_KEY}")
 else:
     logger.warning("API key not found")
+
+PURDUE_GENAI_URL = "https://genai.rcac.purdue.edu/api/chat/completions"
+
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 model_table = dynamodb.Table(MODEL_TABLE_NAME)  # this will point to the "models" table
