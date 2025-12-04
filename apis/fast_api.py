@@ -42,7 +42,7 @@ MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models
 
 api_key = os.getenv("GEN_AI_STUDIO_API_KEY")
 if api_key:
-    logger.info("API key loaded successfully")
+    logger.info(f"API key loaded successfully {api_key[:4]}****")
 else:
     logger.warning("API key not found")
 
@@ -71,7 +71,7 @@ class ArtifactQuery(BaseModel):
 
 def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[str]:
     """
-    Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
+    Call Purdue GenAI Studio with a constrained prompt that should return a single number.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
     """
     context_prompt = f"context_prompt: Below you are given a TEST_URL. The TEST_URL will either point to a dataset or code repository. In the inputValuePromt, you will find this TEST_URL and will be told whether or not the TEST_URL is a dataset or code repository from boolean values. Once given this information your task is simple. Rate the likelihood that the given TEST_URL will match a model artifact in our system. To do so, your first priority will always be to extract information from a README file from the MODEL_URL, not the TEST_URL, if it exists. If no README file exists, you may try to match other relvant information of the TEST_URL to any of the input context you are given in the input_val_promt section of this promt.Your output should be a single rating 0.0 to 1.0, with 1.0 being a perfect match and 0.0 being no match at all.\n"
