@@ -362,7 +362,8 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
     try:
         model_id = int(id)
         if model_id <= 0:
-            raise ValueError()
+            # raise ValueError()
+            raise HTTPException(status_code=404, detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.")
     except ValueError:
         raise HTTPException(status_code=400, detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.")
 
