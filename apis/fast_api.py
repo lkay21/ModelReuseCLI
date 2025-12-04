@@ -351,7 +351,6 @@ async def delete_artifacts(x_authorization: str = Header(None)):
                 )
 
         
-
     # 401 for no permission, 403 for failed auth
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Failed to delete artifacts: {e}")
@@ -365,6 +364,8 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
     # 1) Validate ID is an integer
     try:
         model_id = int(id)
+        if model_id <= 0:
+            raise ValueError()
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
 
