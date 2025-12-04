@@ -99,8 +99,7 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         resp.raise_for_status()
         data = resp.json()
         text: str = data["choices"][0]["message"]["content"].strip()
-        m = re.search(r"https?://\S+", text)
-        return m.group(0) if m else None
+        logger.info(f"GenAI response: {data}")
     except Exception as e:
         logger.warning(f"GenAI call failed: {e}")
         return None
