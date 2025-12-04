@@ -97,8 +97,6 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
     api_key = GEN_AI_STUDIO_API_KEY.strip()
     
     logger.info(f"Making GenAI request with model: llama3.1")
-    logger.info(f"API Key length: {len(api_key)}")
-    logger.info(f"Request URL: {PURDUE_GENAI_URL}")
     
     try:
         headers = {
@@ -106,7 +104,7 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
             "Content-Type": "application/json",
         }
         body = {
-            "model": "llama3.1.1:latest",  # Correct model name for Purdue GenAI
+            "model": "llama3.1:latest",  # Correct model name for Purdue GenAI
             "messages": [
                 {"role": "system", "content": "Reply with exactly the rating you calculate from the successive prompts. Range 0.0 to 1.0."},
                 {"role": "user", "content": prompt},
@@ -115,13 +113,9 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         }
         
         logger.info(f"Sending request to: {PURDUE_GENAI_URL}")
-        logger.info(f"Request body: {body}")
         
         resp = requests.post(
-            PURDUE_GENAI_URL, headers=headers, json=body, timeout=15)
-            
-        logger.info(f"Response status: {resp.status_code}")
-        logger.info(f"Response headers: {dict(resp.headers)}")
+            PURDUE_GENAI_URL, headers=headers, json=body, timeout=15)            
         
         # Check for specific error responses before raising
         if resp.status_code == 401:
