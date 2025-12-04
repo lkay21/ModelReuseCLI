@@ -87,7 +87,7 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
     """
     context_prompt = f"context_prompt: Below you are given a TEST_URL. The TEST_URL will either point to a dataset or code repository. In the inputValuePromt, you will find this TEST_URL and will be told whether or not the TEST_URL is a dataset or code repository from boolean values. Once given this information your task is simple. Rate the likelihood that the given TEST_URL will match a model artifact in our system. To do so, your first priority will always be to extract information from a README file from the MODEL_URL, not the TEST_URL, if it exists. If no README file exists, you may try to match other relvant information of the TEST_URL to any of the input context you are given in the input_val_promt section of this promt.Your output should be a single rating 0.0 to 1.0, with 1.0 being a perfect match and 0.0 being no match at all.\n"
     input_val_promt = f"input_val_prompt: Here is the TEST_URL you will evaluate: {url}\nHere is whether or not the TEST_URL is a dataset: {dataset_bool}\nHere is whether or not the TEST_URL is code repository: {code_bool}\nHere is the MODEL_URL: {model_url}\n"
-    prompt = "Give me a decimal number between 0.0 and 1.0"
+    prompt = context_prompt + input_val_promt
 
     if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
@@ -106,7 +106,7 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
             "Content-Type": "application/json",
         }
         body = {
-            "model": "llama3.1",  # Try without ":latest"
+            "model": "llama3.1.1:latest",  # Correct model name for Purdue GenAI
             "messages": [
                 {"role": "system", "content": "Reply with exactly the rating you calculate from the successive prompts. Range 0.0 to 1.0."},
                 {"role": "user", "content": prompt},
@@ -127,6 +127,9 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         if resp.status_code == 401:
             logger.error(f"401 Unauthorized - Response text: {resp.text}")
             logger.error(f"Request headers sent: {headers}")
+        elif resp.status_code == 400:
+            logger.error(f"400 Bad Request - Response text: {resp.text}")
+            logger.error(f"Request body sent: {body}")
         
         resp.raise_for_status()
         data = resp.json()
