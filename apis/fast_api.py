@@ -72,6 +72,7 @@ class ModelArtifact(BaseModel):
 
 class ModelIngestRequest(BaseModel):
     url: str
+    name: Optional[str] = None
 
 class ArtifactQuery(BaseModel):
     name: str
@@ -629,23 +630,42 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
         )
 
-    unique_id = int(time.time() * 1000);
-    if( unique_id == last_time ):
+    unique_id = int(time.time() * 1000)
+    if unique_id == last_time:
         unique_id += 1
-    last_time = unique_id    
+    last_time = unique_id
 
-    name = extract_name_from_url(payload.url)[1]
-    logger.info(f"Extracted name '{name}' from URL '{payload.url}'")
+    # Prefer the client-provided name if present; otherwise fall back to URL-derived name
+    if hasattr(payload, "name") and payload.name is not None and payload.name.strip() != "":
+        name = payload.name
+        logger.info(f"Using client-provided name '{name}' for URL '{payload.url}'")
+    else:
+        name = extract_name_from_url(payload.url)[1]
+        logger.info(f"Extracted name '{name}' from URL '{payload.url}'")
 
-    # Need to add naming logic call form phase 1
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
         "type": artifact_type,
         "name": name,
         "dataset_id": None,
-        "code_id": None
+        "code_id": None,
     }
+
+    response = JSONResponse(
+        status_code=201,
+        content={
+            "metadata": {
+                "name": name,       # <-- uses the same name we stored
+                "id": unique_id,
+                "type": artifact_type,
+            },
+            "data": {
+                "url": payload.url,
+                "download_url": None,
+            },
+        },
+    )
 
     try:
         model_table.put_item(Item=item)
