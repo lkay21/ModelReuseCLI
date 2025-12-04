@@ -37,9 +37,9 @@ database_dir = "./databases/database.db"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models"
 
-PURDUE_GENAI_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
-if PURDUE_GENAI_API_KEY:
-    logger.info(f"API key loaded successfully {PURDUE_GENAI_API_KEY}")
+GEN_AI_STUDIO_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
+if GEN_AI_STUDIO_API_KEY:
+    logger.info(f"API key loaded successfully {GEN_AI_STUDIO_API_KEY}")
 else:
     logger.warning("API key not found")
 
@@ -78,12 +78,12 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
     input_val_promt = f"input_val_prompt: Here is the TEST_URL you will evaluate: {url}\nHere is whether or not the TEST_URL is a dataset: {dataset_bool}\nHere is whether or not the TEST_URL is code repository: {code_bool}\nHere is the MODEL_URL: {model_url}\n"
     prompt = context_prompt + input_val_promt
 
-    if not PURDUE_GENAI_API_KEY:
+    if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
         return None
     try:
         headers = {
-            "Authorization": f"Bearer {PURDUE_GENAI_API_KEY}",
+            "Authorization": f"Bearer {GEN_AI_STUDIO_API_KEY}",
             "Content-Type": "application/json",
         }
         body = {
