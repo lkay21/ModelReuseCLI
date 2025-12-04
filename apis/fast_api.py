@@ -680,6 +680,7 @@ async def authenticate_user(credentials: dict):
         return f"\"\\\"bearer {stored_token}\\\"\""
 
 from typing import Optional
+from fastapi import Query, Header, HTTPException
 
 @app.get("/artifact/byName/{name}")
 async def get_artifact_by_name(
@@ -691,15 +692,29 @@ async def get_artifact_by_name(
     Look up artifacts by name, optionally filtered by type via ?type=model|dataset|code.
 
     Returns:
-      
-200 + list of matching artifacts when matches exist
-404 when no artifacts match the given name (and type, if provided)"""
+      - 200 + list of matching artifacts when matches exist
+      - 404 when no artifacts match the given name (and type, if provided)
+      - 400 when the artifact_name is malformed/invalid
+    """
+
+    # --- Basic validation for invalid artifact_name (400) ---
+    if (not name) or (name.strip() == "") or ("*" in name) or (len(name) > 100):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "There is missing field(s) in the artifact_name or it is formed "
+                "improperly, or is invalid."
+            ),
+        )
+
+    # --- Normal scan + filter ---
     try:
         scan = model_table.scan()
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieve artifacts: {e}",)
+            detail=f"Failed to retrieve artifacts: {e}",
+        )
 
     artifacts = []
 
@@ -727,6 +742,7 @@ async def get_artifact_by_name(
         raise HTTPException(status_code=404, detail="Artifact DNE")
 
     return artifacts
+
 
 @app.get("/artifact/{artifact_type}/{id}/audit")
 async def get_artifact_audit(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
