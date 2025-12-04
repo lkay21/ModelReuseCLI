@@ -309,8 +309,56 @@ async def update_artifact(artifact_type: str, id: str, artifact: dict, x_authori
     return {"artifact_type": artifact_type, "id": id, "updated_artifact": artifact}
 
 @app.delete("/artifacts/{artifact_type}/{id}")
-async def delete_artifact(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
-    return {"message": f"Artifact {id} of type {artifact_type} has been deleted"}
+async def delete_artifact(
+    artifact_type: str,
+    id: str,
+    x_authorization: str = Header(None, alias="X-Authorization"),
+):
+    """
+    Delete a single artifact whose partition key is model_id.
+
+    - `id` is expected to be the DynamoDB model_id (Number).
+    """
+
+    # 1) Parse id into an int (model_id is stored as a Number)
+    try:
+        model_id = int(id)
+    except ValueError:
+        # Bad path param like "invalidId99999"
+        raise HTTPException(status_code=400, detail="Invalid artifact ID")
+
+    try:
+        # 2) Check if the item exists
+        resp = model_table.get_item(Key={"model_id": model_id})
+        item = resp.get("Item")
+
+        if not item:
+            # Nothing with this model_id in the table
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        # 3) Ensure type matches the URL path (model/dataset/code)
+        if item.get("type") != artifact_type:
+            # ID exists but under a different type
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        # 4) Actually delete the item
+        model_table.delete_item(Key={"model_id": model_id})
+
+        # 5) Return a simple success message
+        return {
+            "message": f"Artifact {model_id} of type {artifact_type} has been deleted"
+        }
+
+    except HTTPException:
+        # Re-raise our explicit HTTP errors unchanged
+        raise
+    except Exception as e:
+        # Any unexpected DynamoDB / other failure
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete artifact: {e}",
+        )
+
 
 # @app.post("/artifact/{artifact_type}")
 # async def register_artifact(artifact_type: str, artifact: dict, user_auth: int = Depends(verify_token)):
