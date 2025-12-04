@@ -643,7 +643,9 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
         "type": artifact_type,
-        "name": name
+        "name": name,
+        "dataset_id": None,
+        "code_id": None
     }
 
     try:
