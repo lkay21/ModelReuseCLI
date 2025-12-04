@@ -80,7 +80,7 @@ class ArtifactQuery(BaseModel):
 
 
 
-def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[str]:
+def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[float]:
     """
     Call Purdue GenAI Studio with a constrained prompt that should return a single number.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
@@ -106,10 +106,11 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         body = {
             "model": "llama3.1:latest",  # Correct model name for Purdue GenAI
             "messages": [
-                {"role": "system", "content": "Reply with exactly the rating you calculate from the successive prompts. Range 0.0 to 1.0."},
+                {"role": "system", "content": "You are a rating system. You must respond with ONLY a single decimal number between 0.0 and 1.0. Do not include any explanations, text, or formatting. Just the number."},
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0,
+            "max_tokens": 10,  # Limit response length
         }
         
         logger.info(f"Sending request to: {PURDUE_GENAI_URL}")
@@ -129,7 +130,24 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         data = resp.json()
         text: str = data["choices"][0]["message"]["content"].strip()
         logger.info(f"GenAI response: {data}")
-        return text  # This was missing!
+        
+        # Extract just the number from the response
+        import re
+        # Look for decimal numbers between 0.0 and 1.0
+        number_match = re.search(r'\b(0\.\d+|1\.0+|0\.0+|1)\b', text)
+        if number_match:
+            extracted_number = number_match.group(1)
+            # Ensure it's a valid float between 0.0 and 1.0
+            try:
+                float_value = float(extracted_number)
+                if 0.0 <= float_value <= 1.0:
+                    logger.info(f"Extracted rating: {float_value}")
+                    return float_value  # Return as float, not string
+            except ValueError:
+                pass
+        
+        logger.warning(f"Could not extract valid rating from: {text}")
+        return None
     except Exception as e:
         logger.warning(f"GenAI call failed: {e}")
         return None
