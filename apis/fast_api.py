@@ -364,11 +364,11 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
 
         # 3) Not found → 404
         if not item:
-            raise HTTPException(status_code=405, detail="Artifact DNE")
+            raise HTTPException(status_code=404, detail="Artifact DNE")
 
         # 4) Type mismatch → also 404 (ID exists but wrong artifact_type)
         if item.get("type") != artifact_type:
-            raise HTTPException(status_code=406, detail="Artifact DNE")
+            raise HTTPException(status_code=404, detail="Artifact DNE")
 
         name = item.get("name")
         url = item.get("url")
