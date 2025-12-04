@@ -38,8 +38,19 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 MODEL_TABLE_NAME = os.getenv("MODEL_TABLE_NAME", "models")  # default to "models"
 
 GEN_AI_STUDIO_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
+
+# Parse the API key if it's a JSON string from AWS Secrets Manager
 if GEN_AI_STUDIO_API_KEY:
-    logger.info(f"API key loaded successfully {GEN_AI_STUDIO_API_KEY}")
+    try:
+        # If it's a JSON string, extract the actual key
+        if GEN_AI_STUDIO_API_KEY.startswith("{"):
+            import json
+            parsed = json.loads(GEN_AI_STUDIO_API_KEY)
+            GEN_AI_STUDIO_API_KEY = parsed.get("GEN_AI_STUDIO_API_KEY", GEN_AI_STUDIO_API_KEY)
+        
+        logger.info(f"API key loaded successfully, length: {len(GEN_AI_STUDIO_API_KEY)}")
+    except (json.JSONDecodeError, AttributeError) as e:
+        logger.warning(f"Error parsing API key: {e}")
 else:
     logger.warning("API key not found")
 
