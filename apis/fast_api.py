@@ -404,6 +404,7 @@ async def update_artifact(
         resp = model_table.get_item(Key={"model_id": model_id})
         item = resp.get("Item")
     except Exception as e:
+        logger.error(f"Failed to read artifact {id} for update: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to read artifact: {e}")
 
     if not item:
@@ -420,15 +421,20 @@ async def update_artifact(
 
     update_parts = []
     expr_attr_values = {}
+    expr_attr_names = {}
     idx = 0
 
     for key, value in artifact.items():
         if key in ("id", "model_id"):  # don't let the client change the primary key
             continue
 
-        placeholder = f":val{idx}"
-        update_parts.append(f"{key} = {placeholder}")
-        expr_attr_values[placeholder] = value
+        # Use placeholder names to avoid reserved-word issues
+        name_placeholder = f"#attr{idx}"
+        value_placeholder = f":val{idx}"
+
+        update_parts.append(f"{name_placeholder} = {value_placeholder}")
+        expr_attr_names[name_placeholder] = key
+        expr_attr_values[value_placeholder] = value
         idx += 1
 
     if not update_parts:
@@ -441,11 +447,13 @@ async def update_artifact(
         update_resp = model_table.update_item(
             Key={"model_id": model_id},
             UpdateExpression=update_expression,
+            ExpressionAttributeNames=expr_attr_names,
             ExpressionAttributeValues=expr_attr_values,
             ReturnValues="ALL_NEW",  # return the updated item
         )
         updated_item = update_resp.get("Attributes", {})
     except Exception as e:
+        logger.error(f"Failed to update artifact {id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update artifact: {e}")
 
     # 5) Return the updated artifact (simple shape)
@@ -454,8 +462,7 @@ async def update_artifact(
         "id": updated_item.get("model_id"),
         "type": updated_item.get("type"),
         "url": updated_item.get("url"),
-        # include any extra fields you might have added
-        "raw": updated_item,
+        "raw": updated_item,  # helpful for debugging
     }
 
 @app.delete("/artifacts/{artifact_type}/{id}")
