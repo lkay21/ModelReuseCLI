@@ -20,6 +20,11 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from model import Code, Dataset, Model
 import logging
+import requests
+import re
+
+PURDUE_GENAI_API_KEY = os.getenv("GEN_AI_STUDIO_API_KEY")
+PURDUE_GENAI_URL = "https://genai.rcac.purdue.edu/api/chat/completions"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +66,75 @@ class ArtifactQuery(BaseModel):
     name: str
     id: Optional[str] = None
     types: Optional[List[str]] = None
+
+
+
+def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[str]:
+    """
+    Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
+    Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
+    """
+    context_prompt = f"context_prompt: Below you are given a TEST_URL. The TEST_URL will either point to a dataset or code repository. In the inputValuePromt, you will find this TEST_URL and will be told whether or not the TEST_URL is a dataset or code repository from boolean values. Once given this information your task is simple. Rate the likelihood that the given TEST_URL will match a model artifact in our system. To do so, your first priority will always be to extract information from a README file from the MODEL_URL, not the TEST_URL, if it exists. If no README file exists, you may try to match other relvant information of the TEST_URL to any of the input context you are given in the input_val_promt section of this promt.Your output should be a single rating 0.0 to 1.0, with 1.0 being a perfect match and 0.0 being no match at all.\n"
+    input_val_promt = f"input_val_prompt: Here is the TEST_URL you will evaluate: {url}\nHere is whether or not the TEST_URL is a dataset: {dataset_bool}\nHere is whether or not the TEST_URL is code repository: {code_bool}\nHere is the MODEL_URL: {model_url}\n"
+    prompt = context_prompt + input_val_promt
+
+    if not PURDUE_GENAI_API_KEY:
+        logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
+        return None
+    try:
+        headers = {
+            "Authorization": f"Bearer {PURDUE_GENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "model": "llama3.1:latest",
+            "messages": [
+                {"role": "system", "content": "Reply with exactly the rating you calculate from the successive prompts. Range 0.0 to 1.0."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0,
+        }
+        resp = requests.post(
+            PURDUE_GENAI_URL, headers=headers, json=body, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        text: str = data["choices"][0]["message"]["content"].strip()
+        m = re.search(r"https?://\S+", text)
+        return m.group(0) if m else None
+    except Exception as e:
+        logger.warning(f"GenAI call failed: {e}")
+        return None
+    
+
+def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
+    best_match_rating = 0.0
+    best_model_id = None
+
+
+    scan = model_table.scan()
+
+    for item in scan['Items']:
+        model_id = item.get("model_id")
+        model_url = item.get("url")
+
+        if dataset_url is not None:
+            curr_rating = _genai_single_url(dataset_bool=True, code_bool=False, url=dataset_url, model_url=model_url)
+        elif code_url is not None:
+            curr_rating = _genai_single_url(dataset_bool=False, code_bool=True, url=code_url, model_url=model_url)
+        else:
+            return None
+        
+        if curr_rating is not None:
+            try:
+                curr_rating_float = float(curr_rating)
+                if curr_rating_float > best_match_rating:
+                    best_match_rating = curr_rating_float
+                    best_model_id = model_id
+            except ValueError:
+                logger.warning(f"GenAI returned non-float rating: {curr_rating}")
+                continue
+            
+    return best_model_id
 
 
 def create_authentication_token(user_id, database_dir=database_dir):
@@ -443,6 +517,16 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     try:
         model_table.put_item(Item=item)
 
+        if artifact_type == "dataset" or artifact_type == "code":
+            matched_model_id = match_dataset_code_to_model(
+                dataset_url=payload.url if artifact_type == "dataset" else None,
+                code_url=payload.url if artifact_type == "code" else None
+            )
+            if matched_model_id is not None:
+                logger.info(f"Dataset/Code URL '{payload.url}' matched to model_id {matched_model_id}")
+            else:
+                logger.info(f"Dataset/Code URL '{payload.url}' did not match any existing model")
+
         response = JSONResponse(
             status_code=201, 
             content={
@@ -457,8 +541,6 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
                 }
             }
         )
-
-        # Feed url to LLM if dataset/code mathces model based on url
 
         return response
     
