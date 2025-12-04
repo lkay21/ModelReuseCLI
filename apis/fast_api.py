@@ -379,8 +379,84 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
         )
 
 @app.put("/artifacts/{artifact_type}/{id}")
-async def update_artifact(artifact_type: str, id: str, artifact: dict, x_authorization: str = Header(None, alias="X-Authorization")):
-    return {"artifact_type": artifact_type, "id": id, "updated_artifact": artifact}
+async def update_artifact(
+    artifact_type: str,
+    id: str,
+    artifact: dict,
+    x_authorization: str = Header(None, alias="X-Authorization"),
+):
+    """
+    Update an existing artifact in the DynamoDB 'models' table.
+
+    - `id` is the model_id (Number) in DynamoDB.
+    - `artifact` is a JSON body with the fields you want to update,
+      e.g. {"name": "new-name"} or {"url": "https://new-url"}.
+    """
+
+    # 1) Parse id -> int (since model_id is stored as a Number)
+    try:
+        model_id = int(id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid artifact ID")
+
+    # 2) Make sure the item exists and the type matches
+    try:
+        resp = model_table.get_item(Key={"model_id": model_id})
+        item = resp.get("Item")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read artifact: {e}")
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Artifact DNE")
+
+    if item.get("type") != artifact_type:
+        # ID exists, but under a different type (e.g., dataset vs model)
+        raise HTTPException(status_code=404, detail="Artifact DNE")
+
+    # 3) Build the DynamoDB update expression
+    # We'll update any fields provided in the body EXCEPT id/model_id
+    if not artifact:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
+
+    update_parts = []
+    expr_attr_values = {}
+    idx = 0
+
+    for key, value in artifact.items():
+        if key in ("id", "model_id"):  # don't let the client change the primary key
+            continue
+
+        placeholder = f":val{idx}"
+        update_parts.append(f"{key} = {placeholder}")
+        expr_attr_values[placeholder] = value
+        idx += 1
+
+    if not update_parts:
+        raise HTTPException(status_code=400, detail="No valid fields provided to update")
+
+    update_expression = "SET " + ", ".join(update_parts)
+
+    # 4) Perform the update
+    try:
+        update_resp = model_table.update_item(
+            Key={"model_id": model_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expr_attr_values,
+            ReturnValues="ALL_NEW",  # return the updated item
+        )
+        updated_item = update_resp.get("Attributes", {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update artifact: {e}")
+
+    # 5) Return the updated artifact (simple shape)
+    return {
+        "name": updated_item.get("name"),
+        "id": updated_item.get("model_id"),
+        "type": updated_item.get("type"),
+        "url": updated_item.get("url"),
+        # include any extra fields you might have added
+        "raw": updated_item,
+    }
 
 @app.delete("/artifacts/{artifact_type}/{id}")
 async def delete_artifact(
