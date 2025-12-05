@@ -710,6 +710,40 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             )
             if matched_model_id is not None:
                 logger.info(f"Dataset/Code URL '{payload.url}' matched to model_id {matched_model_id}")
+                
+                update_expression = "SET"
+                expression_attribute_values = {}
+                expression_attribute_names = {}
+
+                if artifact_type == "code":
+                    code_id = unique_id if artifact_type == "code" else None
+                    update_expression += "#code_id = :code_id"
+                    expression_attribute_values[":code_id"] = code_id
+                    expression_attribute_names["#code_id"] = "code_id"
+
+                elif artifact_type == "dataset":
+                    dataset_id = unique_id if artifact_type == "dataset" else None
+                    update_expression += "#dataset_id = :dataset_id"
+                    expression_attribute_values[":dataset_id"] = dataset_id
+                    expression_attribute_names["#dataset_id"] = "dataset_id"
+
+                try: 
+                    model_table.update_item(
+                        Key={"model_id": int(matched_model_id)},
+                        UpdateExpression=update_expression,
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expression_attribute_values,
+                    )
+                    
+                    logger.info(f"Updated model_id {matched_model_id} with new {artifact_type}_id {unique_id}")
+            
+                except Exception as e:
+                    logger.error(f"Failed to update model_id {matched_model_id}: {e}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to update model_id {matched_model_id}: {e}",
+                    )
+
             else:
                 logger.info(f"Dataset/Code URL '{payload.url}' did not match any existing model")
 
