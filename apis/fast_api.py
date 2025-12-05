@@ -512,19 +512,33 @@ async def update_artifact(
 
     # 3) Build the DynamoDB update expression
     # We'll update any fields provided in the body EXCEPT id/model_id
+        # 3) Build the DynamoDB update expression
     if not artifact:
         raise HTTPException(status_code=400, detail="No fields provided to update")
+
+    # Start with the fields the client gave us
+    fields_to_update: Dict[str, Any] = {}
+
+    for key, value in artifact.items():
+        # Don't let the client change the primary key
+        if key in ("id", "model_id"):
+            continue
+        fields_to_update[key] = value
+
+    # If the client updated `url` but did not specify `download_url`,
+    # keep download_url in sync with the new URL.
+    if "url" in fields_to_update and "download_url" not in fields_to_update:
+        fields_to_update["download_url"] = fields_to_update["url"]
+
+    if not fields_to_update:
+        raise HTTPException(status_code=400, detail="No valid fields provided to update")
 
     update_parts = []
     expr_attr_values = {}
     expr_attr_names = {}
     idx = 0
 
-    for key, value in artifact.items():
-        if key in ("id", "model_id"):  # don't let the client change the primary key
-            continue
-
-        # Use placeholder names to avoid reserved-word issues
+    for key, value in fields_to_update.items():
         name_placeholder = f"#attr{idx}"
         value_placeholder = f":val{idx}"
 
@@ -533,10 +547,8 @@ async def update_artifact(
         expr_attr_values[value_placeholder] = value
         idx += 1
 
-    if not update_parts:
-        raise HTTPException(status_code=400, detail="No valid fields provided to update")
-
     update_expression = "SET " + ", ".join(update_parts)
+
 
     # 4) Perform the update
     try:
