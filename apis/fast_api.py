@@ -688,6 +688,17 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         code_id = item.get("code_id")
         dataset_id = item.get("dataset_id")
 
+        logger.info(f"Model {id} has code_id={code_id}, dataset_id={dataset_id}")  # ADD THIS
+
+
+        if not code_id:
+                # llm get me a url please and thank you
+                pass
+        
+        if not dataset_id:
+                # llm get me a url please and thank you
+                pass
+        
         try: 
             code_query = model_table.get_item(
                 Key={'model_id': int(code_id)}
@@ -695,9 +706,6 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             code_item = code_query.get('Item')
             code_url = code_item.get("url") if code_item else None
 
-            if not code_url:
-                # llm get me a url please and thank you
-                pass
 
             dataset_query = model_table.get_item(
                 Key={'model_id': int(dataset_id)}
@@ -705,9 +713,6 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             dataset_item = dataset_query.get('Item')
             dataset_url = dataset_item.get("url") if dataset_item else None
 
-            if not dataset_url:
-                # llm get me a url please and thank you
-                pass
 
             if not code_url or not dataset_url:
                 raise HTTPException(status_code=404, detail="Associated code or dataset artifact DNE")
@@ -721,7 +726,11 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         model_obj.code = code_obj
         model_obj.dataset = dataset_obj
 
+
+        logger.info(f"About to evaluate model {id}")
+
         try:
+            
             rating = model_obj.evaluate()
             logger.info(f"Computed rating for model {id}: {rating}")
 
