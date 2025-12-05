@@ -66,7 +66,7 @@ class Dataset:
 class Model:
     def __init__(self, url: str = "", id: str = "") -> None:
         self.url = url
-        self.id = id
+        self.id = str(id)
         self.name = ""
         self.code = None  # instance of Code class
         self.dataset = None  # instance of Dataset class

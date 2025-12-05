@@ -19,6 +19,7 @@ from pydantic import BaseModel
 import boto3
 from boto3.dynamodb.conditions import Key
 from model import Code, Dataset, Model
+from utils.url_parser import populate_model_info, extract_name_from_url
 import logging
 import requests
 import re
@@ -724,7 +725,8 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to retrieve associated artifacts: {e}")
 
-        model_obj = Model(url=model_url, id=id)
+        model_obj = Model(url=model_url)
+        populate_model_info(model_obj)
 
         if(code_url is not None):
             code_obj = Code(url=code_url)
