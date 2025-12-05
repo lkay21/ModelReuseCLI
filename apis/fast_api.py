@@ -680,22 +680,25 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             Key={'model_id': int(id)}
         )
 
+        logger.info(f"Retrieved item for model_id {id}: {query}")
+
         item = query.get('Item')
         if not item:
             raise HTTPException(status_code=404, detail="Artifact DNE")
 
         model_url = item.get("url")
+        logger.info(f"Model URL for model_id {id}: {model_url}")
         code_id = item.get("code_id")
         dataset_id = item.get("dataset_id")
 
         logger.info(f"Model {id} has code_id={code_id}, dataset_id={dataset_id}")  # ADD THIS
 
 
-        if not code_id:
+        if code_id is None:
                 # llm get me a url please and thank you
                 pass
         
-        if not dataset_id:
+        if dataset_id is None:
                 # llm get me a url please and thank you
                 pass
         
@@ -703,6 +706,7 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             code_query = model_table.get_item(
                 Key={'model_id': int(code_id)}
             )
+            logger.info(f"Retrieved code item for code_id {code_id}: {code_query}")
             code_item = code_query.get('Item')
             code_url = code_item.get("url") if code_item else None
 
@@ -710,6 +714,7 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             dataset_query = model_table.get_item(
                 Key={'model_id': int(dataset_id)}
             )
+            logger.info(f"Retrieved dataset item for dataset_id {dataset_id}: {dataset_query}")
             dataset_item = dataset_query.get('Item')
             dataset_url = dataset_item.get("url") if dataset_item else None
 
@@ -720,11 +725,14 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             raise HTTPException(status_code=404, detail=f"Failed to retrieve associated artifacts: {e}")
 
         model_obj = Model(url=model_url, id=id)
-        code_obj = Code(url=code_url)
-        dataset_obj = Dataset(url=dataset_url)
 
-        model_obj.code = code_obj
-        model_obj.dataset = dataset_obj
+        if(code_url is not None):
+            code_obj = Code(url=code_url)
+            model_obj.code = code_obj
+
+        if(dataset_url is not None):
+            dataset_obj = Dataset(url=dataset_url)
+            model_obj.dataset = dataset_obj
 
 
         logger.info(f"About to evaluate model {id}")
