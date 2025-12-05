@@ -727,6 +727,9 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         model_obj = Model(url=model_url)
         populate_model_info(model_obj)
 
+        if("huggingface" in model_url):
+            model_obj.id = model_obj.id.replace("https://huggingface.co/", "")
+            
         model_obj.id = model_obj.id.lstrip('/')
 
         logger.info(f"Populated model info as model_id={model_obj.id} and name={model_obj.name}")
