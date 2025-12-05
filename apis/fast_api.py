@@ -23,6 +23,40 @@ import logging
 import requests
 import re
 
+correct_metric_format = {
+  "name": "string",
+  "category": "string",
+  "net_score": 0,
+  "net_score_latency": 0,
+  "ramp_up_time": 0,
+  "ramp_up_time_latency": 0,
+  "bus_factor": 0,
+  "bus_factor_latency": 0,
+  "performance_claims": 0,
+  "performance_claims_latency": 0,
+  "license": 0,
+  "license_latency": 0,
+  "dataset_and_code_score": 0,
+  "dataset_and_code_score_latency": 0,
+  "dataset_quality": 0,
+  "dataset_quality_latency": 0,
+  "code_quality": 0,
+  "code_quality_latency": 0,
+  "reproducibility": 0,
+  "reproducibility_latency": 0,
+  "reviewedness": 0,
+  "reviewedness_latency": 0,
+  "tree_score": 0,
+  "tree_score_latency": 0,
+  "size_score": {
+    "raspberry_pi": 0,
+    "jetson_nano": 0,
+    "desktop_pc": 0,
+    "aws_server": 0
+  },
+  "size_score_latency": 0
+}
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -158,12 +192,12 @@ def _genai_single_url(prompt: str) -> Optional[str]:
     Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
     """
-    if not PURDUE_GENAI_API_KEY:
+    if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
         return None
     try:
         headers = {
-            "Authorization": f"Bearer {PURDUE_GENAI_API_KEY}",
+            "Authorization": f"Bearer {GEN_AI_STUDIO_API_KEY}",
             "Content-Type": "application/json",
         }
         body = {
@@ -639,6 +673,8 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
+    rating_format = correct_metric_format.copy()
+    
     try: 
         query = model_table.get_item(
             Key={'model_id': int(id)}
@@ -689,10 +725,16 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             rating = model_obj.evaluate()
             logger.info(f"Computed rating for model {id}: {rating}")
 
+            for metric_name, metric_value in rating.items():
+                if metric_name in rating_format:
+                    rating_format[metric_name] = metric_value
+                else:
+                    rating_format[metric_name] = 0
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to compute artifact rating: {e}")
 
-        return rating
+        return rating_format
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"The artifact rating system encountered an error while computing at least one metric.")
