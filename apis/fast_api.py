@@ -400,6 +400,7 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
 
         name = item.get("name")
         url = item.get("url")
+        download_url = item.get("download_url") or url
 
         # 5) Response shape consistent with ingest_model
         return JSONResponse(
@@ -412,7 +413,7 @@ async def read_artifact(artifact_type: str, id: str, x_authorization: str = Head
                 },
                 "data": {
                     "url": url,
-                    "download_url": None,
+                    "download_url": download_url,
                 },
             },
         )
@@ -646,6 +647,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
+        "download_url": payload.url,
         "type": artifact_type,
         "name": name,
         "dataset_id": None,
@@ -690,7 +692,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
                 },
                 "data": {
                     "url": payload.url,
-                    "download_url": None
+                    "download_url": payload.url,
                 }
             }
         )
