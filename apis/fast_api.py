@@ -81,7 +81,7 @@ class ArtifactQuery(BaseModel):
 
 
 
-def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[float]:
+def _genai_single_float(dataset_bool: bool, code_bool: bool, url: str, model_url: str) -> Optional[float]:
     """
     Call Purdue GenAI Studio with a constrained prompt that should return a single number.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
@@ -153,6 +153,39 @@ def _genai_single_url(dataset_bool: bool, code_bool: bool, url: str, model_url: 
         logger.warning(f"GenAI call failed: {e}")
         return None
     
+def _genai_single_url(prompt: str) -> Optional[str]:
+    """
+    Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
+    Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
+    """
+    if not PURDUE_GENAI_API_KEY:
+        logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
+        return None
+    try:
+        headers = {
+            "Authorization": f"Bearer {PURDUE_GENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        body = {
+            "model": "llama3.1:latest",
+            "messages": [
+                {"role": "system", "content": "Reply with exactly one URL and nothing else."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0,
+        }
+        resp = requests.post(
+            PURDUE_GENAI_URL, headers=headers, json=body, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        text: str = data["choices"][0]["message"]["content"].strip()
+        m = re.search(r"https?://\S+", text)
+        return m.group(0) if m else None
+    except Exception as e:
+        logger.warning(f"GenAI call failed: {e}")
+        return None
+
+    
 
 def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
     best_match_rating = 0.0
@@ -164,11 +197,23 @@ def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
     for item in scan['Items']:
         model_id = item.get("model_id")
         model_url = item.get("url")
+        model_dataset_id = item.get("dataset_id")
+        model_code_id = item.get("code_id")
 
         if dataset_url is not None:
-            curr_rating = _genai_single_url(dataset_bool=True, code_bool=False, url=dataset_url, model_url=model_url)
+            if model_dataset_id is None:
+                logger.info(f"Evaluating dataset URL '{dataset_url}' against model_id {model_id}")
+                curr_rating = _genai_single_float(dataset_bool=True, code_bool=False, url=dataset_url, model_url=model_url)
+            else:
+                logger.info(f"Skipping model_id {model_id} since it already has a dataset_id")
+                continue
         elif code_url is not None:
-            curr_rating = _genai_single_url(dataset_bool=False, code_bool=True, url=code_url, model_url=model_url)
+            if model_code_id is None:
+                logger.info(f"Evaluating code URL '{code_url}' against model_id {model_id}")
+                curr_rating = _genai_single_float(dataset_bool=False, code_bool=True, url=code_url, model_url=model_url)
+            else:
+                logger.info(f"Skipping model_id {model_id} since it already has a code_id")
+                continue
         else:
             return None
         
@@ -182,6 +227,7 @@ def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
                 logger.warning(f"GenAI returned non-float rating: {curr_rating}")
                 continue
             
+    logger.info(f"Best match rating: {best_match_rating} for model_id: {best_model_id}")
     return best_model_id
 
 
@@ -512,7 +558,7 @@ async def update_artifact(
         "id": updated_item.get("model_id"),
         "type": updated_item.get("type"),
         "url": updated_item.get("url"),
-        "raw": updated_item,  # helpful for debugging
+        "raw": updated_item,  # helpful for debugging 
     }
 
 @app.delete("/artifacts/{artifact_type}/{id}")
@@ -598,11 +644,19 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             code_item = code_query.get('Item')
             code_url = code_item.get("url") if code_item else None
 
+            if not code_url:
+                # llm get me a url please and thank you
+                pass
+
             dataset_query = model_table.get_item(
                 Key={'model_id': int(dataset_id)}
             )
             dataset_item = dataset_query.get('Item')
             dataset_url = dataset_item.get("url") if dataset_item else None
+
+            if not dataset_url:
+                # llm get me a url please and thank you
+                pass
 
             if not code_url or not dataset_url:
                 raise HTTPException(status_code=404, detail="Associated code or dataset artifact DNE")
@@ -704,6 +758,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
         model_table.put_item(Item=item)
 
         if artifact_type == "dataset" or artifact_type == "code":
+            logger.info(f"Attempting to match {artifact_type} URL '{payload.url}' to existing models")
             matched_model_id = match_dataset_code_to_model(
                 dataset_url=payload.url if artifact_type == "dataset" else None,
                 code_url=payload.url if artifact_type == "code" else None
