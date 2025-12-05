@@ -195,6 +195,9 @@ def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
     scan = model_table.scan()
 
     for item in scan['Items']:
+        model_type = item.get("type")
+        if(model_type != "model"):
+            continue
         model_id = item.get("model_id")
         model_url = item.get("url")
         model_dataset_id = item.get("dataset_id")
