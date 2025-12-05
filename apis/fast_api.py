@@ -73,6 +73,7 @@ class ModelArtifact(BaseModel):
 class ModelIngestRequest(BaseModel):
     url: str
     name: Optional[str] = None
+    download_url: Optional[str] = None
 
 class ArtifactQuery(BaseModel):
     name: str
@@ -709,13 +710,15 @@ async def get_artifact_cost(artifact_type: str, id: str, x_authorization: str = 
 async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     logger.info(f"POST /artifact/{artifact_type} ingest called with payload={payload.dict()}")
     global last_time
-    """
-    Renegotiated ingest: register a *model* artifact.
 
-    - Path must be /artifact/model
-    - Body: {"model_id": "...", "url": "..."}
-    - Saves only model_id + url into DynamoDB 'models' table.
     """
+    Renegotiated ingest: register a *model* (or dataset/code) artifact.
+
+    - Path: /artifact/{artifact_type} with artifact_type in {"model", "dataset", "code"}
+    - Body includes at least: {"url": "..."}
+      Optionally: {"name": "...", "download_url": "..."}
+    """
+
     # Only support model artifacts here
     supported_types = ["model", "dataset", "code"]
     if artifact_type not in supported_types:
@@ -731,119 +734,112 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
         )
 
+    # Generate unique ID
     unique_id = int(time.time() * 1000)
     if unique_id == last_time:
         unique_id += 1
     last_time = unique_id
 
     # Prefer the client-provided name if present; otherwise fall back to URL-derived name
-    if hasattr(payload, "name") and payload.name is not None and payload.name.strip() != "":
+    if getattr(payload, "name", None) and payload.name.strip() != "":
         name = payload.name
         logger.info(f"Using client-provided name '{name}' for URL '{payload.url}'")
     else:
         name = extract_name_from_url(payload.url)[1]
         logger.info(f"Extracted name '{name}' from URL '{payload.url}'")
 
+    # Prefer client-provided download_url; otherwise default to url
+    if getattr(payload, "download_url", None) and payload.download_url.strip() != "":
+        download_url = payload.download_url
+        logger.info(f"Using client-provided download_url '{download_url}' for URL '{payload.url}'")
+    else:
+        download_url = payload.url
+        logger.info(f"Defaulting download_url to '{download_url}'")
+
+    # Build the item to store in DynamoDB
     item = {
-        "model_id": unique_id,    # DynamoDB partition key
+        "model_id": unique_id,          # DynamoDB partition key
         "url": payload.url,
-        "download_url": payload.url,
+        "download_url": download_url,
         "type": artifact_type,
         "name": name,
         "dataset_id": None,
         "code_id": None,
     }
 
-    response = JSONResponse(
-        status_code=201,
-        content={
-            "metadata": {
-                "name": name,       # <-- uses the same name we stored
-                "id": unique_id,
-                "type": artifact_type,
-            },
-            "data": {
-                "url": payload.url,
-                "download_url": None,
-            },
-        },
-    )
-
     try:
+        # Store the artifact
         model_table.put_item(Item=item)
 
-        if artifact_type == "dataset" or artifact_type == "code":
+        # For dataset or code, try to link to an existing model via match_dataset_code_to_model
+        if artifact_type in ("dataset", "code"):
             logger.info(f"Attempting to match {artifact_type} URL '{payload.url}' to existing models")
             matched_model_id = match_dataset_code_to_model(
                 dataset_url=payload.url if artifact_type == "dataset" else None,
-                code_url=payload.url if artifact_type == "code" else None
+                code_url=payload.url if artifact_type == "code" else None,
             )
             if matched_model_id is not None:
                 logger.info(f"Dataset/Code URL '{payload.url}' matched to model_id {matched_model_id}")
-                
-                update_expression = "SET"
+
+                # Build update expression to set code_id or dataset_id on the matched model
+                update_expression = "SET "
                 expression_attribute_values = {}
                 expression_attribute_names = {}
 
                 if artifact_type == "code":
-                    code_id = unique_id if artifact_type == "code" else None
                     update_expression += "#code_id = :code_id"
-                    expression_attribute_values[":code_id"] = code_id
+                    expression_attribute_values[":code_id"] = unique_id
                     expression_attribute_names["#code_id"] = "code_id"
-
                 elif artifact_type == "dataset":
-                    dataset_id = unique_id if artifact_type == "dataset" else None
                     update_expression += "#dataset_id = :dataset_id"
-                    expression_attribute_values[":dataset_id"] = dataset_id
+                    expression_attribute_values[":dataset_id"] = unique_id
                     expression_attribute_names["#dataset_id"] = "dataset_id"
 
-                try: 
+                try:
                     model_table.update_item(
                         Key={"model_id": int(matched_model_id)},
                         UpdateExpression=update_expression,
                         ExpressionAttributeNames=expression_attribute_names,
                         ExpressionAttributeValues=expression_attribute_values,
                     )
-                    
                     logger.info(f"Updated model_id {matched_model_id} with new {artifact_type}_id {unique_id}")
-            
                 except Exception as e:
                     logger.error(f"Failed to update model_id {matched_model_id}: {e}")
                     raise HTTPException(
                         status_code=500,
                         detail=f"Failed to update model_id {matched_model_id}: {e}",
                     )
-
             else:
                 logger.info(f"Dataset/Code URL '{payload.url}' did not match any existing model")
 
+        # Shape the response like an artifact summary
         response = JSONResponse(
-            status_code=201, 
+            status_code=201,
             content={
                 "metadata": {
-                    "name": name, 
-                    "id": unique_id, 
-                    "type": artifact_type
+                    "name": name,
+                    "id": unique_id,
+                    "type": artifact_type,
                 },
                 "data": {
                     "url": payload.url,
-                    "download_url": payload.url,
-                }
-            }
+                    "download_url": download_url,
+                },
+            },
         )
 
         return response
-    
-    except Exception:
+
+    except HTTPException:
+        # Let HTTPExceptions bubble up
+        raise
+    except Exception as e:
+        logger.error(f"Failed to store model artifact: {e}")
         raise HTTPException(
             status_code=500,
             detail="Failed to store model artifact.",
         )
-    
 
-
-    # Shape the response like an artifact summary:
-    return
 
 
 # Add database creation (Logan started on it)
