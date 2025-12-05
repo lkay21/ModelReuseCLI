@@ -192,12 +192,12 @@ def _genai_single_url(prompt: str) -> Optional[str]:
     Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
     """
-    if not PURDUE_GENAI_API_KEY:
+    if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
         return None
     try:
         headers = {
-            "Authorization": f"Bearer {PURDUE_GENAI_API_KEY}",
+            "Authorization": f"Bearer {GEN_AI_STUDIO_API_KEY}",
             "Content-Type": "application/json",
         }
         body = {
