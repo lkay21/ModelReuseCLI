@@ -587,10 +587,41 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         if not item:
             raise HTTPException(status_code=404, detail="Artifact DNE")
 
-        url = item.get("url")
+        model_url = item.get("url")
+        code_id = item.get("code_id")
+        dataset_id = item.get("dataset_id")
 
-        model_obj = Model(url=url, id=id)
-        rating = model_obj.evaluate()
+        try: 
+            code_query = model_table.get_item(
+                Key={'model_id': int(code_id)}
+            )
+            code_item = code_query.get('Item')
+            code_url = code_item.get("url") if code_item else None
+
+            dataset_query = model_table.get_item(
+                Key={'model_id': int(dataset_id)}
+            )
+            dataset_item = dataset_query.get('Item')
+            dataset_url = dataset_item.get("url") if dataset_item else None
+
+            if not code_url or not dataset_url:
+                raise HTTPException(status_code=404, detail="Associated code or dataset artifact DNE")
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Failed to retrieve associated artifacts: {e}")
+
+        model_obj = Model(url=model_url, id=id)
+        code_obj = Code(url=code_url)
+        dataset_obj = Dataset(url=dataset_url)
+
+        model_obj.code = code_obj
+        model_obj.dataset = dataset_obj
+
+        try:
+            rating = model_obj.evaluate()
+            logger.info(f"Computed rating for model {id}: {rating}")
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to compute artifact rating: {e}")
 
         return rating
 
