@@ -20,7 +20,9 @@ def get_prompt_key() -> Dict[str, str]:
 
     # Purdue GenAI Studio and Gemini
     purdue_genai_token = get_purdue_genai_key()
+    logger.info(f"Purdue GenAI Studio key found: {purdue_genai_token}")
     gemini_api_key = get_gemini_key()
+
     if purdue_genai_token:
         return {"purdue_genai": purdue_genai_token}
     elif gemini_api_key:
