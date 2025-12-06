@@ -21,7 +21,20 @@ def get_prompt_key() -> Dict[str, str]:
     # Purdue GenAI Studio and Gemini
     purdue_genai_token = get_purdue_genai_key()
     logger.info(f"Purdue GenAI Studio key found: {purdue_genai_token}")
-    gemini_api_key = get_gemini_key()
+    if purdue_genai_token:
+        try:
+            # If it's a JSON string, extract the actual key
+            if purdue_genai_token.startswith("{"):
+                import json
+                parsed = json.loads(purdue_genai_token)
+                purdue_genai_token = parsed.get("GEN_AI_STUDIO_API_KEY", purdue_genai_token)
+            
+            logger.info(f"API key loaded successfully, length: {len(purdue_genai_token)}")
+        except (json.JSONDecodeError, AttributeError) as e:
+            logger.warning(f"Error parsing API key: {e}")
+    else:
+        logger.warning("API key not found")
+        gemini_api_key = get_gemini_key()
 
     if purdue_genai_token:
         return {"purdue_genai": purdue_genai_token}
