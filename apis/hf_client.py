@@ -34,16 +34,16 @@ class HFClient:
         try:
             info = self.api.model_info(model_id)
             return getattr(info, "__dict__", {}) or {}
-        except Exception:
-            logger.info(f"Failed to fetch model info for {model_id}")
+        except Exception as e:
+            logger.info(f"Failed to fetch model info for {model_id}. Exception: {e}")
             return {}
 
     def model_card_text(self, model_id: str) -> Optional[str]:
         try:
             card = ModelCard.load(model_id)
             return getattr(card, "text", None)
-        except Exception:
-            logger.info(f"Failed to fetch model card for {model_id}")
+        except Exception as e:
+            logger.info(f"Failed to fetch model card for {model_id}. Exception: {e}")
             return None
 
     # Datasets
