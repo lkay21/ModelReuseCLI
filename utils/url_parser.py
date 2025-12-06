@@ -229,6 +229,7 @@ def populate_model_info(model: Model) -> None:
     # Extract name from URL
     owner, model.name = extract_name_from_url(model.url)
     model.id = owner + "/" + model.name
+    logger.debug(f"Populated model ID: {model.id}")
     # TODO: Add HuggingFace API calls to populate hfAPIData
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient

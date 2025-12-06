@@ -21,7 +21,7 @@ def performance_claims(model_id: str) -> float:
         prompt_function = prompt_gemini
         api_key = get_gemini_key()
 
-    res = prompt_function(f"Read the following model card of a HuggingFaceModel. " \
+    res = prompt_function(f"Read the following model card of a HuggingFaceModel. With model url" \
                     "Evaluate on a float scale of 0 to 1 the claimed performance of the model. " \
                     "Assign 0.33 points if there is benchmarking data present " \
                     "and another 0.33 points if there are testing scores present "\
