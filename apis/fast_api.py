@@ -187,11 +187,14 @@ def _genai_single_float(dataset_bool: bool, code_bool: bool, url: str, model_url
         logger.warning(f"GenAI call failed: {e}")
         return None
     
-def _genai_single_url(prompt: str) -> Optional[str]:
+def _genai_single_url(model_url: Optional[str], url_search_type: str) -> Optional[str]:
     """
     Call Purdue GenAI Studio with a constrained prompt that should return a single URL.
     Returns None on any error or if not configured. Satisfies the Phase-1 LLM usage.
     """
+
+    prompt =  f"Given the model URL {model_url}, what is the corresponding {url_search_type} repository URL? Only provide the URL."
+
     if not GEN_AI_STUDIO_API_KEY:
         logger.info("GEN_AI_STUDIO_API_KEY not set; skipping GenAI enrichment.")
         return None
@@ -692,15 +695,6 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
         dataset_id = item.get("dataset_id")
 
         logger.info(f"Model {id} has code_id={code_id}, dataset_id={dataset_id}")  # ADD THIS
-
-
-        if code_id is None:
-                # llm get me a url please and thank you
-                pass
-        
-        if dataset_id is None:
-                # llm get me a url please and thank you
-                pass
         
         try: 
             code_query = model_table.get_item(
@@ -710,7 +704,6 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             code_item = code_query.get('Item')
             code_url = code_item.get("url") if code_item else None
 
-
             dataset_query = model_table.get_item(
                 Key={'model_id': int(dataset_id)}
             )
@@ -718,7 +711,16 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
             dataset_item = dataset_query.get('Item')
             dataset_url = dataset_item.get("url") if dataset_item else None
 
+            if code_url is None:
+                logger.info(f"No code URL found for code_id {code_id}, calling llm")
+                code_url = _genai_single_url(model_url=model_url, url_search_type="code")
+                logger.info(f"LLM returned code_url: {code_url}")
 
+            if dataset_url is None:
+                logger.info(f"No dataset URL found for dataset_id {dataset_id}, calling llm")
+                dataset_url = _genai_single_url(model_url=model_url, url_search_type="dataset")
+                logger.info(f"LLM returned dataset_url: {dataset_url}")
+            
             if not code_url or not dataset_url:
                 raise HTTPException(status_code=404, detail="Associated code or dataset artifact DNE")
         except Exception as e:
