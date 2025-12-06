@@ -771,8 +771,111 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
 #     return {"model_id": id, "rating": rating}
 
 @app.get("/artifact/{artifact_type}/{id}/cost")
-async def get_artifact_cost(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
-    return {"artifact_type": artifact_type, "id": id, "cost": 100}
+async def get_artifact_cost(
+    artifact_type: str,
+    id: str,
+    dependency: bool = Query(False),
+    x_authorization: str = Header(None, alias="X-Authorization"),
+):
+    """
+    Get the cost of an artifact (and optionally its dependencies).
+
+    Response shape (matches OpenAPI spec):
+
+    {
+      "<artifact_id>": {
+        "total_cost": <float>
+      },
+      "<dependency_id>": {
+        "total_cost": <float>
+      },
+      ...
+    }
+    """
+
+    # 1) Validate artifact_type
+    supported_types = {"model", "dataset", "code"}
+    if artifact_type not in supported_types:
+        raise HTTPException(
+            status_code=400,
+            detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.",
+        )
+
+    # 2) Parse and validate id
+    try:
+        model_id = int(id)
+        if model_id <= 0:
+            raise ValueError()
+    except ValueError:
+        # Invalid or non-positive ID -> 400 per cost spec
+        raise HTTPException(
+            status_code=400,
+            detail="There is missing field(s) in the artifact_type or artifact_id or it is formed improperly, or is invalid.",
+        )
+
+    # 3) Fetch the main artifact and ensure type matches
+    try:
+        query = model_table.get_item(Key={"model_id": model_id})
+        item = query.get("Item")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"The artifact cost calculator encountered an error.",
+        )
+
+    if not item or item.get("type") != artifact_type:
+        raise HTTPException(status_code=404, detail="Artifact does not exist.")
+
+    # Helper to compute a simple, deterministic cost for an item
+    def compute_cost(artifact_item: Dict[str, Any]) -> float:
+        url = artifact_item.get("url") or ""
+        # Simple heuristic: length of URL / 10, minimum 1.0
+        return max(len(url) / 10.0, 1.0)
+
+    cost_result: Dict[str, Dict[str, float]] = {}
+
+    # Add cost entry for the main artifact
+    main_cost = compute_cost(item)
+    cost_result[str(model_id)] = {"total_cost": main_cost}
+
+    # 4) If dependency=True and this is a model, include dataset/code dependencies if present
+    if dependency and artifact_type == "model":
+        dataset_id = item.get("dataset_id")
+        code_id = item.get("code_id")
+
+        # Add dataset dependency cost if we have a dataset_id
+        if dataset_id is not None:
+            try:
+                ds_query = model_table.get_item(Key={"model_id": int(dataset_id)})
+                ds_item = ds_query.get("Item")
+                if ds_item and ds_item.get("type") == "dataset":
+                    cost_result[str(dataset_id)] = {
+                        "total_cost": compute_cost(ds_item)
+                    }
+            except Exception:
+                # If dependency retrieval fails, treat as calculator error
+                raise HTTPException(
+                    status_code=500,
+                    detail="The artifact cost calculator encountered an error.",
+                )
+
+        # Add code dependency cost if we have a code_id
+        if code_id is not None:
+            try:
+                code_query = model_table.get_item(Key={"model_id": int(code_id)})
+                code_item = code_query.get("Item")
+                if code_item and code_item.get("type") == "code":
+                    cost_result[str(code_id)] = {
+                        "total_cost": compute_cost(code_item)
+                    }
+            except Exception:
+                raise HTTPException(
+                    status_code=500,
+                    detail="The artifact cost calculator encountered an error.",
+                )
+
+    return cost_result
+
 
 @app.post("/artifact/{artifact_type}")
 async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
