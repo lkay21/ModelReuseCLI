@@ -22,6 +22,7 @@ from model import Code, Dataset, Model
 import logging
 import requests
 import re
+import copy
 
 correct_metric_format = {
   "name": "string",
@@ -676,7 +677,7 @@ async def rate_model(id: str, authorization: str = Header(None, alias="Authoriza
     if not int(id):
         raise HTTPException(status_code=400, detail="Invalid artifact ID")
     
-    rating_format = correct_metric_format.copy()
+    rating_format = copy.deepcopy(correct_metric_format)
     
     try: 
         query = model_table.get_item(
