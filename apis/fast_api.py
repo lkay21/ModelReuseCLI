@@ -3,7 +3,7 @@ from urllib import response
 import json
 from fastapi import Depends, Header, FastAPI, HTTPException, Body, Query
 from fastapi.responses import JSONResponse
-from utils.url_parser import extract_name_from_url, populate_model_info, extract_name_from_url, classify_url
+from utils.url_parser import extract_name_from_url, populate_model_info, extract_name_from_url, classify_url, known_urls
 import string
 import sqlite3
 import secrets
@@ -809,6 +809,9 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     if hasattr(payload, "name") and payload.name is not None and payload.name.strip() != "":
         name = payload.name
         logger.info(f"Using client-provided name '{name}' for URL '{payload.url}'")
+    elif payload.url in known_urls[0]:
+        index = known_urls[0].index(payload.url)
+        name = known_urls[1][index]
     else:
         name = extract_name_from_url(payload.url)[1]
         logger.info(f"Extracted name '{name}' from URL '{payload.url}'")
