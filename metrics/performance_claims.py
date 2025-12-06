@@ -33,7 +33,7 @@ def performance_claims(model_id: str) -> float:
     try:
         score = float(res.rstrip())
         return score
-    except:
-        logger.error("ERROR: Could not parse performance claims score from LLM response.")
+    except Exception as e:
+        logger.error(f"ERROR: Could not parse performance claims score from LLM response. Exception: {e}")
         return 0
 
