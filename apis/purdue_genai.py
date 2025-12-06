@@ -22,7 +22,10 @@ def get_purdue_genai_key() -> Optional[str]:
         api_key (str): The API key if found, else None
     """
     try:
-        genai_token = os.getenv("GEN_AI_STUDIO_API_KEY")["GEN_AI_STUDIO_API_KEY"]
+        genai_token = os.getenv("GEN_AI_STUDIO_API_KEY")
+        if genai_token and genai_token.startswith("{"):
+            genai_token = json.loads(genai_token)["GEN_AI_STUDIO_API_KEY"]
+        
         if genai_token:
             return genai_token
         with open('purdue_genai_key.txt', 'r') as file:
