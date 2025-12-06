@@ -139,11 +139,6 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
     logger.debug(f"Extracting name from URL: {url}")
     if not url:
         return "", ""
-    
-    if url in known_urls[0]:
-        index = known_urls[0].index(url)
-        name = known_urls[1][index]
-        return "", name
 
     # GitHub pattern
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
@@ -172,6 +167,11 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
     if fallback_match:
         domain, name = fallback_match.groups()
         return domain, name
+    
+    if url in known_urls[0]:
+        index = known_urls[0].index(url)
+        name = known_urls[1][index]
+        return "", name
 
     # Default case: return empty strings if no match
     return "", ""
@@ -228,8 +228,9 @@ def populate_model_info(model: Model) -> None:
     """
     # Extract name from URL
     owner, model.name = extract_name_from_url(model.url)
+    logger.info(f"Extracted model name: {model.name} from URL: {model.url}")
     model.id = owner + "/" + model.name
-    logger.debug(f"Populated model ID: {model.id}")
+    logger.info(f"Populated model ID: {model.id}")
     # TODO: Add HuggingFace API calls to populate hfAPIData
     # Example implementation for metrics teams:
     # from apis.hf_client import HFClient
