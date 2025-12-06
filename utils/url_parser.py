@@ -139,11 +139,6 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
     logger.debug(f"Extracting name from URL: {url}")
     if not url:
         return "", ""
-    
-    if url in known_urls[0]:
-        index = known_urls[0].index(url)
-        name = known_urls[1][index]
-        return "", name
 
     # GitHub pattern
     github_match = re.search(r'github\.com/([^/]+)/([^/]+?)(?:\.git)?(?:/.*)?$', url, re.IGNORECASE)
@@ -172,6 +167,11 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
     if fallback_match:
         domain, name = fallback_match.groups()
         return domain, name
+    
+    if url in known_urls[0]:
+        index = known_urls[0].index(url)
+        name = known_urls[1][index]
+        return "", name
 
     # Default case: return empty strings if no match
     return "", ""
