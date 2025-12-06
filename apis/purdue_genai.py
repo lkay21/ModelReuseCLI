@@ -4,7 +4,7 @@ from typing import Optional
 import os
 import logging
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_result
-
+import json
 
 logger = logging.getLogger('cli_logger')
 
@@ -34,7 +34,7 @@ def get_purdue_genai_key() -> Optional[str]:
             logger.debug(f"Purdue GenAI Studio API Key: {genai_token}")
         except (json.JSONDecodeError, AttributeError) as e:
             logger.warning(f"Error parsing API key: {e}")
-            
+
         if genai_token:
             return genai_token
         with open('purdue_genai_key.txt', 'r') as file:
