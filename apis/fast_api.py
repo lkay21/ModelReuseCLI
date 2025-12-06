@@ -271,24 +271,24 @@ def match_dataset_code_to_model(dataset_url: str = None, code_url: str = None):
     return best_model_id
 
 
-def create_authentication_token(user_id, database_dir=database_dir):
-    now = m.floor(time.time() / 1000) 
-    expiration = now + (10 * 60 * 60)
+# def create_authentication_token(user_id, database_dir=database_dir):
+#     now = m.floor(time.time() / 1000) 
+#     expiration = now + (10 * 60 * 60)
 
-    jwt_payload = {
-        "iat": now,
-        "exp": expiration,
-        "sub": user_id,
-        "role": "admin"
-    }
+#     jwt_payload = {
+#         "iat": now,
+#         "exp": expiration,
+#         "sub": user_id,
+#         "role": "admin"
+#     }
 
-    token = jwt.encode(jwt_payload, SECRET_KEY, algorithm="HS256")
+#     token = jwt.encode(jwt_payload, SECRET_KEY, algorithm="HS256")
 
-    conn = sqlite3.connect(database_dir)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET secret_key = ? WHERE id = ?", (token, user_id))
-    conn.commit()
-    conn.close()
+#     conn = sqlite3.connect(database_dir)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE users SET secret_key = ? WHERE id = ?", (token, user_id))
+#     conn.commit()
+#     conn.close()
 
 def create_users_table():
     conn = sqlite3.connect(database_dir)
