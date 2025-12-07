@@ -1176,8 +1176,129 @@ async def get_artifact_audit(artifact_type: str, id: str, x_authorization: str =
     return {"artifact_type": artifact_type, "id": id, "audit": "audit_info"}
 
 @app.get("/artifact/model/{id}/lineage")
-async def get_artifact_lineage(id: str, x_authorization: str = Header(None, alias="X-Authorization")):
-    return {"model_id": id, "lineage": ["layer1", "layer2"]}
+async def get_artifact_lineage(
+    id: str,
+    x_authorization: str = Header(None, alias="X-Authorization"),
+):
+    """
+    Return a simple lineage graph for a model.
+
+    Shape:
+
+    {
+      "nodes": [
+        { "id": <int>, "name": <str>, "type": "model" | "dataset" | "code" },
+        ...
+      ],
+      "relationships": [
+        { "source": <int>, "target": <int>, "relationship": <str> },
+        ...
+      ]
+    }
+
+    - 400: invalid artifact ID (non-numeric or <= 0)
+    - 404: model artifact does not exist or is not a model
+    - 200: lineage graph JSON
+    """
+    # 1) Parse and validate ID
+    try:
+        model_id = int(id)
+        if model_id <= 0:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid artifact ID")
+
+    try:
+        # 2) Fetch the main model artifact
+        resp = model_table.get_item(Key={"model_id": model_id})
+        item = resp.get("Item")
+
+        if not item or item.get("type") != "model":
+            raise HTTPException(status_code=404, detail="Artifact DNE")
+
+        model_name = item.get("name")
+        dataset_id = item.get("dataset_id")
+        code_id = item.get("code_id")
+
+        # 3) Build nodes list
+        nodes: List[Dict[str, Any]] = []
+
+        # Always include the model node
+        nodes.append(
+            {
+                "id": model_id,
+                "name": model_name,
+                "type": "model",
+            }
+        )
+
+        relationships: List[Dict[str, Any]] = []
+
+        # Helper to add a dependency node + relationship edge
+        def add_dependency_node(
+            dep_id: int,
+            expected_type: str,
+            rel_type: str,
+        ) -> None:
+            try:
+                dep_resp = model_table.get_item(Key={"model_id": dep_id})
+                dep_item = dep_resp.get("Item")
+            except Exception as e:
+                logger.warning(f"Failed to load dependency {dep_id}: {e}")
+                return
+
+            if not dep_item or dep_item.get("type") != expected_type:
+                return
+
+            nodes.append(
+                {
+                    "id": dep_id,
+                    "name": dep_item.get("name"),
+                    "type": expected_type,
+                }
+            )
+            relationships.append(
+                {
+                    "source": dep_id,
+                    "target": model_id,
+                    "relationship": rel_type,
+                }
+            )
+
+        # 4) Include dataset/code nodes if present
+        if isinstance(dataset_id, int):
+            add_dependency_node(dataset_id, "dataset", "uses")
+        elif isinstance(dataset_id, str):
+            # Handle case where IDs were stored as strings
+            try:
+                add_dependency_node(int(dataset_id), "dataset", "uses")
+            except ValueError:
+                pass
+
+        if isinstance(code_id, int):
+            add_dependency_node(code_id, "code", "uses")
+        elif isinstance(code_id, str):
+            try:
+                add_dependency_node(int(code_id), "code", "uses")
+            except ValueError:
+                pass
+
+        # 5) Return the lineage graph
+        return {
+            "nodes": nodes,
+            "relationships": relationships,
+        }
+
+    except HTTPException:
+        # Propagate explicit HTTP errors untouched
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error computing lineage for model {id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="The artifact lineage system encountered an error.",
+        )
+
 
 @app.post("/artifact/model/{id}/license-check")
 async def check_model_license(id: str, license_info: dict, x_authorization: str = Header(None, alias="X-Authorization")):
