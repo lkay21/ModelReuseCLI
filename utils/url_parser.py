@@ -157,10 +157,16 @@ def extract_name_from_url(url: str) -> Tuple[str, str]:
         return hfspace_match.group(1), hfspace_match.group(2)
 
     # Hugging Face datasets/models pattern
+    # First try the standard owner/model format
     hf_match = re.search(r'huggingface\.co/(datasets/)?([^/]+)/([^/]+)', url, re.IGNORECASE)
     if hf_match:
         namespace, name = hf_match.groups()[1:]
         return namespace, name
+    
+    # Fallback for single-name models (e.g., distilbert-base-uncased-distilled-squad)
+    hf_single_match = re.search(r'huggingface\.co/([^/]+)$', url, re.IGNORECASE)
+    if hf_single_match:
+        return "", hf_single_match.group(1)
 
     # General fallback for other websites
     fallback_match = re.search(r'https?://(?:www\.)?([^/]+)/([^/]+)', url, re.IGNORECASE)
@@ -229,7 +235,13 @@ def populate_model_info(model: Model) -> None:
     # Extract name from URL
     owner, model.name = extract_name_from_url(model.url)
     logger.info(f"Extracted model name: {model.name} from URL: {model.url}")
-    model.id = owner + "/" + model.name
+    
+    # Set model ID: use owner/name format if owner exists, otherwise just the name
+    if owner:
+        model.id = owner + "/" + model.name
+    else:
+        model.id = model.name
+    
     logger.info(f"Populated model ID: {model.id}")
     # TODO: Add HuggingFace API calls to populate hfAPIData
     # Example implementation for metrics teams:
