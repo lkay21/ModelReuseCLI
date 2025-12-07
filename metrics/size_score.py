@@ -19,7 +19,7 @@ def size_score(model_id: str) -> Dict[str, float]:
     if 'safetensors' not in model_info.keys() or model_info["safetensors"] is None:
         return {plat: 0 for plat in PLATFORM_SIZE_LIMITS}
     parameters = model_info['safetensors'].total/1e9
-    result = PLATFORM_SIZE_LIMITS
+    result = {}
     for plat in PLATFORM_SIZE_LIMITS:
         if parameters > PLATFORM_SIZE_LIMITS[plat] or parameters < LOWER_SIZE_LIMIT:
             result[plat] = 0
