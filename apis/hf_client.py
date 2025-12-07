@@ -32,7 +32,8 @@ class HFClient:
     # Models
     def model_info(self, model_id: str) -> Dict[str, Any]:
         try:
-            info = self.api.model_info(model_id)
+            # Use token=False for public repositories to avoid 401 errors
+            info = self.api.model_info(model_id, token=False)
             return getattr(info, "__dict__", {}) or {}
         except Exception as e:
             logger.info(f"Failed to fetch model info for {model_id}. Exception: {e}")
@@ -40,7 +41,8 @@ class HFClient:
 
     def model_card_text(self, model_id: str) -> Optional[str]:
         try:
-            card = ModelCard.load(model_id)
+            # Use token=False for public repositories to avoid 401 errors
+            card = ModelCard.load(model_id, token=False)
             return getattr(card, "text", None)
         except Exception as e:
             logger.info(f"Failed to fetch model card for {model_id}. Exception: {e}")
@@ -49,7 +51,8 @@ class HFClient:
     # Datasets
     def dataset_info(self, dataset_id: str) -> Dict[str, Any]:
         try:
-            info = self.api.dataset_info(dataset_id)
+            # Use token=False for public repositories to avoid 401 errors
+            info = self.api.dataset_info(dataset_id, token=False)
             return getattr(info, "__dict__", {}) or {}
         except Exception:
             logger.info(f"Failed to fetch dataset info for {dataset_id}")
@@ -57,7 +60,8 @@ class HFClient:
 
     def dataset_card_text(self, dataset_id: str) -> Optional[str]:
         try:
-            card = DatasetCard.load(dataset_id)
+            # Use token=False for public repositories to avoid 401 errors
+            card = DatasetCard.load(dataset_id, token=False)
             return getattr(card, "text", None)
         except Exception:
             logger.info(f"Failed to fetch dataset card for {dataset_id}")
