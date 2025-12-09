@@ -683,6 +683,9 @@ async def rate_model(
     - 404: model artifact does not exist
     - 200: rating JSON, even if there is no linked code/dataset
     """
+
+    start_time = time.time()
+
     token_header = authorization or x_authorization
     logger.info(f"GET /artifact/model/{id}/rate called, auth={token_header}")
 
@@ -793,6 +796,9 @@ async def rate_model(
             else:
                 # Ignore unknown metrics; they don't affect the autograder
                 logger.debug(f"Ignoring extra metric {metric_name}={metric_value}")
+
+        elapsed_time = time.time() - start_time
+        logger.info(f"Rating computation for model {model_id} took {elapsed_time:.2f} seconds")
 
         return rating_format
 
