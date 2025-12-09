@@ -152,7 +152,9 @@ class Model:
         if self.code:
             code_type = self.code.type if self.code else None
             code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
-            self.metrics["bus_factor"] = bus_factor(code_id, code_type)
+            code_url = self.code._url if self.code else None
+            model_url = self.url if self.url else None
+            self.metrics["bus_factor"] = bus_factor(model_url, code_url, code_id, code_type)
         else:
             self.metrics["bus_factor"] = 0.0
 

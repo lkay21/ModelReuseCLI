@@ -98,7 +98,7 @@ class TestMetricsSeparate(BaseCLITestCase):
         id = "freeCodeCamp/freeCodeCamp"
         
         # Call the function and capture the result
-        result = bus_factor(id, "github")
+        result = bus_factor("", "", id, "github")
         self.logger.debug(f"Bus Factor for {id}: {result}")
 
         # Validate the result
