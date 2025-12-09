@@ -65,35 +65,57 @@ def size_score(model_id: str) -> Dict[str, float]:
 
     client = HFClient()
     model_info = client.model_info(model_id)
-    if 'safetensors' not in model_info.keys() or model_info["safetensors"] is None:
-        logger.info(f"No safetensors info available for model {model_id}, using total size calculation.")
-        total_size_bytes = get_size(model_id)
 
-        if total_size_bytes <= 0:
-            result =  { "raspberry_pi": 0.01, "jetson_nano": 0.01, "desktop_pc": 0.01, "aws_server": 0.01}
-        else:
-            mb = 1024 * 1024
-            gb = 1024 * mb
-            rpi = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * mb))))
-            jetson = max(0.01, min(1.0, 1.0 - (total_size_bytes / (1 * gb))))
-            desktop = max(0.01, min(1.0, 1.0 - (total_size_bytes / (10 * gb))))
-            aws = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * gb))))
+    total_size_bytes = get_size(model_id)
 
-            result ={"raspberry_pi": rpi, "jetson_nano": jetson, "desktop_pc": desktop, "aws_server": aws}
-        
-        # If no safetensors info is available, add our code to not return 0 for all platforms
-        # return {plat: 0 for plat in PLATFORM_SIZE_LIMITS}
+    if total_size_bytes <= 0:
+        result =  { "raspberry_pi": 0.01, "jetson_nano": 0.01, "desktop_pc": 0.01, "aws_server": 0.01}
+    else:
+        mb = 1024 * 1024
+        gb = 1024 * mb
+        rpi = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * mb))))
+        jetson = max(0.01, min(1.0, 1.0 - (total_size_bytes / (1 * gb))))
+        desktop = max(0.01, min(1.0, 1.0 - (total_size_bytes / (10 * gb))))
+        aws = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * gb))))
 
-        return result
-    parameters = model_info['safetensors'].total/1e9
-    result = {}
-    for plat in PLATFORM_SIZE_LIMITS:
-        if parameters > PLATFORM_SIZE_LIMITS[plat] or parameters < LOWER_SIZE_LIMIT:
-            result[plat] = 0
-        else:
-            result[plat] = round(log10(parameters/LOWER_SIZE_LIMIT)/log10(PLATFORM_SIZE_LIMITS[plat]/LOWER_SIZE_LIMIT), ndigits=2)
-        
+        result ={"raspberry_pi": rpi, "jetson_nano": jetson, "desktop_pc": desktop, "aws_server": aws}
+    
+    # If no safetensors info is available, add our code to not return 0 for all platforms
+    # return {plat: 0 for plat in PLATFORM_SIZE_LIMITS}
+
     return result
+
+
+
+    # if 'safetensors' not in model_info.keys() or model_info["safetensors"] is None:
+    #     logger.info(f"No safetensors info available for model {model_id}, using total size calculation.")
+    #     total_size_bytes = get_size(model_id)
+
+    #     if total_size_bytes <= 0:
+    #         result =  { "raspberry_pi": 0.01, "jetson_nano": 0.01, "desktop_pc": 0.01, "aws_server": 0.01}
+    #     else:
+    #         mb = 1024 * 1024
+    #         gb = 1024 * mb
+    #         rpi = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * mb))))
+    #         jetson = max(0.01, min(1.0, 1.0 - (total_size_bytes / (1 * gb))))
+    #         desktop = max(0.01, min(1.0, 1.0 - (total_size_bytes / (10 * gb))))
+    #         aws = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * gb))))
+
+    #         result ={"raspberry_pi": rpi, "jetson_nano": jetson, "desktop_pc": desktop, "aws_server": aws}
+        
+    #     # If no safetensors info is available, add our code to not return 0 for all platforms
+    #     # return {plat: 0 for plat in PLATFORM_SIZE_LIMITS}
+
+    #     return result
+    # parameters = model_info['safetensors'].total/1e9
+    # result = {}
+    # for plat in PLATFORM_SIZE_LIMITS:
+    #     if parameters > PLATFORM_SIZE_LIMITS[plat] or parameters < LOWER_SIZE_LIMIT:
+    #         result[plat] = 0.01
+    #     else:
+    #         score = round(log10(parameters/LOWER_SIZE_LIMIT)/log10(PLATFORM_SIZE_LIMITS[plat]/LOWER_SIZE_LIMIT), ndigits=2)
+    #         result[plat] = round(max(0.01, min(1.0, score)), 2)
+    # return result
     
 # if __name__ == "__main__":
     
