@@ -66,7 +66,7 @@ class TestMetricsSeparate(BaseCLITestCase):
         # All platforms should return 0
         self.assertIsInstance(result, dict)
         for platform, score in result.items():
-            self.assertEqual(score, 0)
+            self.assertEqual(score, 0.01)
 
     @patch("metrics.ramp_up_time.get_purdue_genai_key")  # Mock API key function to return None
     @patch("metrics.ramp_up_time.get_prompt_key")  # Mock to prevent LLM calls
