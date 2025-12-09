@@ -73,10 +73,10 @@ def size_score(model_id: str) -> Dict[str, float]:
     else:
         mb = 1024 * 1024
         gb = 1024 * mb
-        rpi = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * mb))))
-        jetson = max(0.01, min(1.0, 1.0 - (total_size_bytes / (1 * gb))))
-        desktop = max(0.01, min(1.0, 1.0 - (total_size_bytes / (10 * gb))))
-        aws = max(0.01, min(1.0, 1.0 - (total_size_bytes / (100 * gb))))
+        rpi = max(0.5, min(1.0, 1.0 - (total_size_bytes / (100 * mb))))
+        jetson = max(0.5, min(1.0, 1.0 - (total_size_bytes / (1 * gb))))
+        desktop = max(0.5, min(1.0, 1.0 - (total_size_bytes / (10 * gb))))
+        aws = max(0.5, min(1.0, 1.0 - (total_size_bytes / (100 * gb))))
 
         result ={"raspberry_pi": rpi, "jetson_nano": jetson, "desktop_pc": desktop, "aws_server": aws}
     
