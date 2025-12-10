@@ -205,10 +205,15 @@ class TestMetricsSeparate(BaseCLITestCase):
             ]
         }
 
-        dataset_id = "test-dataset"
-        code_id = "test-repo"
-        code_type = "github"
-        result = dataset_and_code_score(dataset_id, code_id, code_type)
+        # dataset_id = "test-dataset"
+        # code_id = "test-repo"
+        # code_type = "github"
+        # result = dataset_and_code_score(dataset_id, code_id, code_type)
+
+        dataset_url = "https://huggingface.co/datasets/test-dataset"
+        code_url = "https://github.com/test-repo"
+        model_url = "https://huggingface.co/models/test-model"
+        result = dataset_and_code_score(dataset_url, code_url, model_url)
         
         print(f"Dataset and code score result: {result}")
 
