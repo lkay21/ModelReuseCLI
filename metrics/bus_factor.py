@@ -69,10 +69,21 @@ def get_genai_bus_factor(model_url: str, code_url: str, repo_meta: dict = None) 
         target_url = model_url or code_url
         if not target_url:
             raise ValueError("No URL provided for GenAI analysis.")
-        prompt = (
-            "Analyze the bus factor for this model/repository by examining documentation and contributor distribution. "
-            "Return only a decimal number between 0.0 and 1.0 representing bus factor score."
-        )
+        prompt = """Analyze the bus factor for this model/repository by examining READMEs, documentation, and contributor distribution.
+
+Bus factor measures how well knowledge and contributions are distributed:
+- High bus factor (closer to 1.0) = Knowledge is well-distributed, good documentation, builds on established research
+- Low bus factor (closer to 0.0) = Knowledge is concentrated, poor documentation, requires specialized knowledge
+
+Consider:
+1. How well the README/documentation references existing research
+2. Whether the approach builds on established methods
+3. How accessible the knowledge is to new contributors
+4. Documentation quality and completeness
+5. Overlap with well-known techniques and papers
+
+Return only a decimal number between 0.0 and 1.0 representing bus factor score.
+URL:"""
         response = get_genai_metric_data(target_url, prompt)
         if response:
             match = re.search(r'(\d+\.\d+)', str(response))
