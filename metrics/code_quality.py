@@ -298,8 +298,13 @@ def code_quality(code_url: str) -> float:
         # Extract license from GitHub data (only if HF license not set)
         # data["repo_meta"] = github_data.get("contributors", {})
         files = github_data.get("files", [])
-        score = analyze_code_quality(files)
+        code_quality = analyze_code_quality(files)
+
+    keys = ("test_coverage_norm", "style_norm",
+            "comment_ratio_norm", "maintainability_norm")
+    vals = [float(code_quality[k]) for k in keys if k in code_quality]
+    value = sum(vals) / len(vals) if vals else 0.0
     
-    return score
+    return value
         
 
