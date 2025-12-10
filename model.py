@@ -143,7 +143,8 @@ class Model:
 
     def calcRampUp(self) -> None:
         t = int(time.perf_counter_ns() / 1e6)
-        score = ramp_up_time(self.id)  # returns float 
+        model_url = self.url if self.url else None
+        score = ramp_up_time(model_url)  # returns float 
         self.metrics["ramp_up_time"] = round(score, ndigits=2)
         self.latencies["ramp_up_time_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
