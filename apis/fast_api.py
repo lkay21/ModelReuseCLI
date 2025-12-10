@@ -718,6 +718,7 @@ async def rate_model(
             raise HTTPException(status_code=404, detail="Artifact DNE")
 
         model_url = item.get("url")
+        model_name = item.get("name")
         code_id = item.get("code_id")
         dataset_id = item.get("dataset_id")
 
@@ -792,7 +793,10 @@ async def rate_model(
 
         for metric_name, metric_value in rating.items():
             if metric_name in rating_format:
-                rating_format[metric_name] = metric_value
+                if metric_name == "name":
+                    rating_format["name"] = model_name or metric_value
+                else:
+                    rating_format[metric_name] = metric_value
             else:
                 # Ignore unknown metrics; they don't affect the autograder
                 logger.debug(f"Ignoring extra metric {metric_name}={metric_value}")
@@ -972,7 +976,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
-        "download_url": payload.url,
+        "download_url": payload.download_url or payload.url,
         "type": artifact_type,
         "name": name,
         "dataset_id": None,
@@ -989,7 +993,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             },
             "data": {
                 "url": payload.url,
-                "download_url": None,
+                "download_url": payload.download_url or payload.url,
             },
         },
     )
