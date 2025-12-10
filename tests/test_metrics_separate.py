@@ -135,7 +135,9 @@ class TestMetricsSeparate(BaseCLITestCase):
     def test_code_quality(self):
         """Test code_quality function."""
         code_url = "https://github.com/google-research/bert"
-        result = code_quality(code_url, "github")
+        # result = code_quality(code_url, "github")
+        result = code_quality(code_url)
+
 
         self.logger.debug(f"Code quality result: {result}")
 
