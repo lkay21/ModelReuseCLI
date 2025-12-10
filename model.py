@@ -178,7 +178,11 @@ class Model:
         code_type = self.code.type if self.code else None
         code_id = self.code._url[self.code._url.index(f"{code_type}.com")+11:] if self.code else None
         dataset_id = self.dataset._name if self.dataset else None
-        self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_id, code_id, code_type)
+        dataset_url = self.dataset._url if self.dataset else None
+        code_url = self.code._url if self.code else None
+        model_url = self.url if self.url else None
+        self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_url, code_url, model_url)
+        # self.metrics["dataset_and_code_score"] = dataset_and_code_score(dataset_id, code_id, code_type)
         self.latencies["dataset_and_code_score_latency"] = int(time.perf_counter_ns() / 1e6 - t)
 
     def calcDatasetQuality(self) -> None:

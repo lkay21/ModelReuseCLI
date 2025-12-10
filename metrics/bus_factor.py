@@ -89,6 +89,7 @@ URL:"""
             match = re.search(r'(\d+\.\d+)', str(response))
             if match:
                 score = float(match.group(1))
+                score = max(0.5, min(1.0, score))  # Clamp to [0.5, 1.0]
                 if 0.0 <= score <= 1.0:
                     return score
                 if 1.0 < score <= 100.0:
