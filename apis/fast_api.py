@@ -23,6 +23,8 @@ import logging
 import requests
 import re
 import copy
+from fastapi.responses import HTMLResponse
+
 
 correct_metric_format = {
   "name": "string",
@@ -361,8 +363,122 @@ def verify_token(x_authorization: str = Header(None)) -> int:
 
     return id
 
+@app.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def serve_frontend():
+    return """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ModelReuseCLI – Model Registry Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+        content="ECE 461 ModelReuseCLI: a trustworthy model registry for models, datasets, and code artifacts." />
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+      background: #ffffff;
+      color: #111111;
+    }
+    header {
+      background: #0b3d91;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    main {
+      padding: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h2 {
+      margin-top: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input, button {
+      font: inherit;
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 350px;
+      margin-top: 0.3rem;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+    button {
+      background: #0b3d91;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:focus,
+    input:focus {
+      outline: 2px solid #ffb100;
+    }
+    .card {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      background: #fafafa;
+    }
+  </style>
+</head>
 
-@app.get("/")
+<body>
+  <header>
+    <h1>ModelReuseCLI – Model Registry</h1>
+  </header>
+
+  <main>
+    <h2>Overview</h2>
+    <p>This frontend is provided by the ModelReuseCLI FastAPI service. Use the button below to test backend connectivity.</p>
+
+    <h2>Backend Health Check</h2>
+    <label for="health-endpoint">Endpoint to test</label>
+    <input id="health-endpoint" type="text" value="/health" />
+
+    <button id="health-button">Run health check</button>
+
+    <div id="health-result" class="card" aria-live="polite">
+      <p>No request sent yet.</p>
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById("health-button");
+    const input = document.getElementById("health-endpoint");
+    const result = document.getElementById("health-result");
+
+    btn.addEventListener("click", async () => {
+      const path = input.value.trim() || "/health";
+      result.innerHTML = "<p>Loading...</p>";
+
+      try {
+        const res = await fetch(path);
+        const data = await res.json();
+        result.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      } catch (err) {
+        result.innerHTML = "<p>Error: " + err + "</p>";
+      }
+    });
+  </script>
+</body>
+</html>
+"""
+
+
+@app.get("/apis", include_in_schema=False)
 async def read_root(x_authorization: str = Header(None)):
     logger.info("GET / called x_authorization=%s", x_authorization)
     return {"message": "Welcome to the ModelReuseCLI API"}
