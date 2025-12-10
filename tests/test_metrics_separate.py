@@ -85,9 +85,7 @@ class TestMetricsSeparate(BaseCLITestCase):
         MockGetApiKey.return_value = None  # This prevents the actual LLM call
 
         model_id = "test-model"
-        model_url = f"https://huggingface.co/{model_id}"
-        result = ramp_up_time(model_url)
-        # result = ramp_up_time(model_id)
+        result = ramp_up_time(model_id)
         
         print(f"Ramp up time result: {result}")
 
