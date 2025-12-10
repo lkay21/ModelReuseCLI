@@ -957,6 +957,11 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
             detail="There is missing field(s) in the artifact_query or it is formed improperly, or is invalid.",
         )
 
+    if "download_url" in payload.dict():
+        download_url = payload.download_url
+    else:
+        download_url = payload.url
+
     unique_id = int(time.time() * 1000)
     if unique_id == last_time:
         unique_id += 1
@@ -976,7 +981,7 @@ async def ingest_model(artifact_type: str, payload: ModelIngestRequest):
     item = {
         "model_id": unique_id,    # DynamoDB partition key
         "url": payload.url,
-        "download_url": payload.download_url or payload.url,
+        "download_url": download_url,
         "type": artifact_type,
         "name": name,
         "dataset_id": None,
