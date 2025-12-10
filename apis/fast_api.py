@@ -1444,7 +1444,7 @@ async def get_artifact_by_regex(pattern: str, x_authorization: str = Header(None
 
 @app.get("/tracks")
 async def get_tracks():
-    return {"plannedTracks": ["Access control track"]}
+    return {"plannedTracks": [None]}
 
 @app.on_event("startup")
 def startup_event():

@@ -4,7 +4,11 @@ import os
 import ast
 import subprocess
 import sys
+import requests
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 from pathlib import Path
+
 
 from cloning.clone_bridge import clone_with_isogit  
 
@@ -12,135 +16,254 @@ import logging
 logger = logging.getLogger('cli_logger')
 
 
-def _ensure_flake8() -> None:
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "flake8", "--version"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.error("flake8 required. Try: pip install flake8")
-        # raise FileNotFoundError("flake8 not found. Please install it via 'pip install flake8'.")
+def analyze_code_quality(files: List[str]) -> Dict[str, float]:
+    """Lightweight heuristics based on file list."""
+    if not files:
+        return {
+            "test_coverage_norm": 0.0,
+            "style_norm": 0.5,
+            "comment_ratio_norm": 0.5,
+            "maintainability_norm": 0.5,
+        }
+    py = [f for f in files if f.endswith(".py")]
+    tests = [f for f in files if f.endswith(".py") and "test" in f.lower()]
+    test_coverage_norm = min(1.0, len(tests) / max(1, len(py) * 0.3))
+    has_requirements = any("requirements" in f.lower() for f in files)
+    has_readme = any(os.path.basename(f).lower().startswith("readme")
+                     for f in files)
+    has_setup = any(f in {"setup.py", "pyproject.toml",
+                    "setup.cfg"} for f in files)
+    maintainability_norm = (int(has_requirements) +
+                            int(has_readme) + int(has_setup)) / 3.0
+    return {
+        "test_coverage_norm": test_coverage_norm,
+        "style_norm": 0.5,
+        "comment_ratio_norm": 0.5,
+        "maintainability_norm": maintainability_norm,
+    }
 
-def _simple_lint_check(repo_dir: Path) -> tuple[int, int]:
-    _ensure_flake8()
+
+
+# def _ensure_flake8() -> None:
+#     try:
+#         subprocess.run(
+#             [sys.executable, "-m", "flake8", "--version"],
+#             check=True,
+#             capture_output=True,
+#             text=True,
+#         )
+#     except (subprocess.CalledProcessError, FileNotFoundError):
+#         logger.error("flake8 required. Try: pip install flake8")
+#         # raise FileNotFoundError("flake8 not found. Please install it via 'pip install flake8'.")
+
+# def _simple_lint_check(repo_dir: Path) -> tuple[int, int]:
+#     _ensure_flake8()
     
-    # Get Python files with basic exclusions
-    exclude_dirs = {"examples", "tests", "test", "docs", "__pycache__", ".git", "build", "dist"}
-    py_files = []
+#     # Get Python files with basic exclusions
+#     exclude_dirs = {"examples", "tests", "test", "docs", "__pycache__", ".git", "build", "dist"}
+#     py_files = []
     
-    for f in repo_dir.rglob("*.py"):
-        if len(py_files) >= 100:  # Stop searching after 100 files found
-            break
-        if not any(part in exclude_dirs for part in f.parts):
-            py_files.append(f)
+#     for f in repo_dir.rglob("*.py"):
+#         if len(py_files) >= 100:  # Stop searching after 100 files found
+#             break
+#         if not any(part in exclude_dirs for part in f.parts):
+#             py_files.append(f)
         
-    sample_files = py_files[:25]
-    if not sample_files:
-        return 0, 0
+#     sample_files = py_files[:25]
+#     if not sample_files:
+#         return 0, 0
     
-    # Run flake8 with basic config and timeout
-    file_args = [str(f.relative_to(repo_dir)) for f in sample_files]
+#     # Run flake8 with basic config and timeout
+#     file_args = [str(f.relative_to(repo_dir)) for f in sample_files]
     
-    try:
-        proc = subprocess.run(
-            [
-                sys.executable, "-m", "flake8", 
-                *file_args, 
-                "--count",
-                "--max-line-length=128",
-                "--ignore=E501,W503,E203"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=repo_dir,
-            timeout=30
-        )
+#     try:
+#         proc = subprocess.run(
+#             [
+#                 sys.executable, "-m", "flake8", 
+#                 *file_args, 
+#                 "--count",
+#                 "--max-line-length=128",
+#                 "--ignore=E501,W503,E203"
+#             ],
+#             capture_output=True,
+#             text=True,
+#             cwd=repo_dir,
+#             timeout=30
+#         )
         
-        # Extract error count
-        for line in reversed((proc.stdout or "").strip().splitlines()):
-            if line.strip().isdigit():
-                return int(line.strip()), len(sample_files)
-        return 0, len(sample_files)
+#         # Extract error count
+#         for line in reversed((proc.stdout or "").strip().splitlines()):
+#             if line.strip().isdigit():
+#                 return int(line.strip()), len(sample_files)
+#         return 0, len(sample_files)
         
-    except subprocess.TimeoutExpired:
-        logger.error(f"  Lint timeout, skipping", file=sys.stderr)
-        return 0, 0
+#     except subprocess.TimeoutExpired:
+#         logger.error(f"  Lint timeout, skipping", file=sys.stderr)
+#         return 0, 0
 
 
-def _lint_score(errors: int, num_files: int) -> float:
-    # cap = 100  # Fixed cap like original implementation
-    # return max(0.0, 1.0 - min(1.0, errors / cap))
-    if num_files == 0:
-        return 1.0  # no python to lint, technically perfect score
+# def _lint_score(errors: int, num_files: int) -> float:
+#     # cap = 100  # Fixed cap like original implementation
+#     # return max(0.0, 1.0 - min(1.0, errors / cap))
+#     if num_files == 0:
+#         return 1.0  # no python to lint, technically perfect score
 
-    ERRORS_PER_FILE_CAP = 50
+#     ERRORS_PER_FILE_CAP = 50
     
-    errors_per_file = errors / num_files
+#     errors_per_file = errors / num_files
     
-    # Linearly scale the score down from 1.0 to 0.0 based on error density.
-    score = 1.0 - (errors_per_file / ERRORS_PER_FILE_CAP)
+#     # Linearly scale the score down from 1.0 to 0.0 based on error density.
+#     score = 1.0 - (errors_per_file / ERRORS_PER_FILE_CAP)
     
-    return .5 * max(0.0, score)
+#     return .5 * max(0.0, score)
 
 
 
-# Purdue GenAI naming subscore ([0, 0.5]) using AST variable names
-def _collect_var_names(repo_dir: Path, max_files: int = 10) -> list[str]:
-    names: list[str] = []
-    for f in list(repo_dir.rglob("*.py"))[:max_files]:
-        try:
-            src = f.read_text(encoding="utf-8", errors="ignore")
-            tree = ast.parse(src)
-        except Exception:
-            continue
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                names.extend(a.arg for a in node.args.args)
-            elif isinstance(node, ast.Assign):
-                for t in node.targets:
-                    if isinstance(t, ast.Name):
-                        names.append(t.id)
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                names.append(node.target.id)
-            elif isinstance(node, ast.For) and isinstance(node.target, ast.Name):
-                names.append(node.target.id)
-    return names[:200]
+# # Purdue GenAI naming subscore ([0, 0.5]) using AST variable names
+# def _collect_var_names(repo_dir: Path, max_files: int = 10) -> list[str]:
+#     names: list[str] = []
+#     for f in list(repo_dir.rglob("*.py"))[:max_files]:
+#         try:
+#             src = f.read_text(encoding="utf-8", errors="ignore")
+#             tree = ast.parse(src)
+#         except Exception:
+#             continue
+#         for node in ast.walk(tree):
+#             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+#                 names.extend(a.arg for a in node.args.args)
+#             elif isinstance(node, ast.Assign):
+#                 for t in node.targets:
+#                     if isinstance(t, ast.Name):
+#                         names.append(t.id)
+#             elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+#                 names.append(node.target.id)
+#             elif isinstance(node, ast.For) and isinstance(node.target, ast.Name):
+#                 names.append(node.target.id)
+#     return names[:200]
 
 
-def _maybe_purdue_genai_naming(repo_dir: Path) -> float | None:
+# def _maybe_purdue_genai_naming(repo_dir: Path) -> float | None:
+#     try:
+#         from apis.purdue_genai import get_purdue_genai_key, prompt_purdue_genai
+#         key = get_purdue_genai_key()
+#     except Exception:
+#         key = None
+#         prompt_purdue_genai = None  
+
+#     if not (key and prompt_purdue_genai):
+#         return None
+
+#     var_names = _collect_var_names(repo_dir)
+#     if not var_names:
+#         return None
+
+#     prompt = (
+#         "Rate Python variable naming quality (clarity, descriptiveness, snake_case, "
+#         "avoiding cryptic names). Return ONLY a float in [0,0.5].\n\n"
+#         f"Variables (sample): {var_names}\n\nJust the number:"
+#     )
+#     txt = (prompt_purdue_genai(prompt, key) or "").strip()
+#     logger.debug(f"Purdue GENAI prompt result: {txt}")
+#     for tok in txt.replace(",", " ").split():
+#         try:
+#             val = float(tok)
+#             return max(0.0, min(0.5, val))
+#         except Exception:
+#             continue
+#     return None
+
+def safe_request(url: str, timeout: int = 10, **
+                 kwargs) -> Optional[requests.Response]:
+    """Make a safe HTTP GET request with error handling."""
     try:
-        from apis.purdue_genai import get_purdue_genai_key, prompt_purdue_genai
-        key = get_purdue_genai_key()
+        resp = requests.get(url, timeout=timeout, **kwargs)
+        resp.raise_for_status()
+        return resp
+    except Exception as e:
+        logger.debug(f"Request failed for {url}: {e}")
+        return None
+    
+
+    
+def extract_repo_info(github_url: str) -> Tuple[Optional[str], Optional[str]]:
+    """Extract (owner, repo) from a GitHub URL."""
+    try:
+        if "github.com" not in github_url:
+            return None, None
+        path = urlparse(github_url).path.strip("/")
+        parts = path.split("/")
+        if len(parts) >= 2:
+            return parts[0], parts[1]
     except Exception:
-        key = None
-        prompt_purdue_genai = None  
+        pass
+    return None, None
 
-    if not (key and prompt_purdue_genai):
-        return None
 
-    var_names = _collect_var_names(repo_dir)
-    if not var_names:
-        return None
+def get_github_repo_data(code_url: str) -> Dict[str, Any]:
+    """Fetch GitHub repository metadata used by metrics (bus factor, etc.)."""
+    owner, repo = extract_repo_info(code_url)
+    if not owner or not repo:
+        return {}
 
-    prompt = (
-        "Rate Python variable naming quality (clarity, descriptiveness, snake_case, "
-        "avoiding cryptic names). Return ONLY a float in [0,0.5].\n\n"
-        f"Variables (sample): {var_names}\n\nJust the number:"
-    )
-    txt = (prompt_purdue_genai(prompt, key) or "").strip()
-    logger.debug(f"Purdue GENAI prompt result: {txt}")
-    for tok in txt.replace(",", " ").split():
-        try:
-            val = float(tok)
-            return max(0.0, min(0.5, val))
-        except Exception:
-            continue
-    return None
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {"Authorization": f"token {token}"} if token else {}
 
-def code_quality(target: str, code_type: str) -> float:
+    data: Dict[str, Any] = {
+        "contributors": {},
+        "files": [],
+        "license": None,
+        "stars": 0,
+        "forks": 0,
+        "created_at": None,
+        "updated_at": None,
+    }
+
+    try:
+        repo_resp = safe_request(
+            f"https://api.github.com/repos/{owner}/{repo}", headers=headers)
+        if repo_resp:
+            rd = repo_resp.json()
+            data.update({
+                "stars": rd.get("stargazers_count", 0) or 0,
+                "forks": rd.get("forks_count", 0) or 0,
+                "created_at": rd.get("created_at"),
+                "updated_at": rd.get("updated_at"),
+                "license": (rd.get("license") or {}).get("spdx_id") if rd.get("license") else None,
+            })
+
+        contrib_resp = safe_request(
+            f"https://api.github.com/repos/{owner}/{repo}/contributors",
+            headers=headers)
+        if contrib_resp:
+            lst = contrib_resp.json()
+            if isinstance(lst, list) and lst:
+                total = sum(c.get("contributions", 0) for c in lst)
+                top = lst[0].get("contributions", 0) if total else 0
+                data["contributors"] = {
+                    "contributors_count": len(lst),
+                    "top_contributor_pct": (top / total) if total else 1.0,
+                    "total_contributions": total,
+                }
+
+        # try main then master
+        for branch in ("main", "master"):
+            tree_resp = safe_request(
+                f"https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1",
+                headers=headers,
+            )
+            if tree_resp and tree_resp.ok:
+                tree = tree_resp.json().get("tree", [])
+                data["files"] = [it["path"]
+                                 for it in tree if it.get("type") == "blob"]
+                break
+    except Exception as e:
+        logger.debug(f"Failed to fetch GitHub data: {e}")
+
+    return data
+
+def code_quality(code_url: str) -> float:
+# def code_quality(target: str, code_type: str) -> float:
+
     """
     Returns float in [0,1].
       - Lint score from flake8 maps to [0,1].
@@ -148,24 +271,40 @@ def code_quality(target: str, code_type: str) -> float:
             score = 0.5 * lint + naming
         Else, return lint-only (offline-friendly).
     """
-    clone_root: str = "./models"
-    if(code_type != "github"):
-        return 0.1
-    p = Path(target)
-    if p.exists() and p.is_dir():
-        repo_dir = p
-    else:
-        clone_with_isogit(target, clone_root)
-        name = target.rstrip("/").split("/")[-1].replace(".git", "")
-        repo_dir = Path(clone_root) / name
+    # clone_root: str = "./models"
+    # if(code_type != "github"):
+    #     return 0.1
+    # p = Path(target)
+    # if p.exists() and p.is_dir():
+    #     repo_dir = p
+    # else:
+    #     clone_with_isogit(target, clone_root)
+    #     name = target.rstrip("/").split("/")[-1].replace(".git", "")
+    #     repo_dir = Path(clone_root) / name
 
-    num_errors, files_checked = _simple_lint_check(repo_dir)
-    logger.debug(f"  Found {num_errors} linting errors in {files_checked} files for {target}")
-    lint01 = _lint_score(num_errors, files_checked)
-    naming05 = _maybe_purdue_genai_naming(repo_dir)
-    if naming05 is None:
-        logger.debug(f"  Using lint-only score: {lint01:.3f}")
-        return 2 * lint01
+    # num_errors, files_checked = _simple_lint_check(repo_dir)
+    # logger.debug(f"  Found {num_errors} linting errors in {files_checked} files for {target}")
+    # lint01 = _lint_score(num_errors, files_checked)
+    # naming05 = _maybe_purdue_genai_naming(repo_dir)
+    # if naming05 is None:
+    #     logger.debug(f"  Using lint-only score: {lint01:.3f}")
+    #     return 2 * lint01
 
-    return max(0.0, min(1.0, lint01 + naming05))
+    # return max(0.0, min(1.0, lint01 + naming05))
+
+    github_data = get_github_repo_data(code_url)
+
+    if github_data:
+        # Extract license from GitHub data (only if HF license not set)
+        # data["repo_meta"] = github_data.get("contributors", {})
+        files = github_data.get("files", [])
+        code_quality = analyze_code_quality(files)
+
+    keys = ("test_coverage_norm", "style_norm",
+            "comment_ratio_norm", "maintainability_norm")
+    vals = [float(code_quality[k]) for k in keys if k in code_quality]
+    value = sum(vals) / len(vals) if vals else 0.0
+    
+    return value
+        
 
