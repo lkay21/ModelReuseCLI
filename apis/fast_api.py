@@ -1307,6 +1307,7 @@ async def get_artifact_by_name(
 async def get_artifact_audit(artifact_type: str, id: str, x_authorization: str = Header(None, alias="X-Authorization")):
     return {"artifact_type": artifact_type, "id": id, "audit": "audit_info"}
 
+
 @app.get("/artifact/model/{id}/lineage")
 async def get_artifact_lineage(
     id: str,
@@ -1319,11 +1320,11 @@ async def get_artifact_lineage(
 
     {
       "nodes": [
-        { "id": <int>, "name": <str>, "type": "model" | "dataset" | "code" },
+        { "artifact_id": <int>, "name": <str>, "source": "model" | "dataset" | "code" },
         ...
       ],
-      "relationships": [
-        { "source": <int>, "target": <int>, "relationship": <str> },
+      "edges": [
+        { "from_node_artifact_id": <int>, "to_node_artifact_id": <int>, "relationship": <str> },
         ...
       ]
     }
@@ -1352,25 +1353,25 @@ async def get_artifact_lineage(
         dataset_id = item.get("dataset_id")
         code_id = item.get("code_id")
 
-        # 3) Build nodes list
+        # 3) Build nodes list in the expected shape
         nodes: List[Dict[str, Any]] = []
 
         # Always include the model node
         nodes.append(
             {
-                "id": model_id,
+                "artifact_id": model_id,
                 "name": model_name,
-                "type": "model",
+                "source": "model",
             }
         )
 
-        relationships: List[Dict[str, Any]] = []
+        edges: List[Dict[str, Any]] = []
 
-        # Helper to add a dependency node + relationship edge
-        def add_dependency_node(
+        # Helper to add a dependency node + edge
+        def add_dependency(
             dep_id: int,
             expected_type: str,
-            rel_type: str,
+            relationship: str,
         ) -> None:
             try:
                 dep_resp = model_table.get_item(Key={"model_id": dep_id})
@@ -1382,43 +1383,45 @@ async def get_artifact_lineage(
             if not dep_item or dep_item.get("type") != expected_type:
                 return
 
+            # Add node for the dependency
             nodes.append(
                 {
-                    "id": dep_id,
+                    "artifact_id": dep_id,
                     "name": dep_item.get("name"),
-                    "type": expected_type,
-                }
-            )
-            relationships.append(
-                {
-                    "source": dep_id,
-                    "target": model_id,
-                    "relationship": rel_type,
+                    "source": expected_type,  # "dataset" or "code"
                 }
             )
 
-        # 4) Include dataset/code nodes if present
+            # Add edge from dependency -> model
+            edges.append(
+                {
+                    "from_node_artifact_id": dep_id,
+                    "to_node_artifact_id": model_id,
+                    "relationship": relationship,
+                }
+            )
+
+        # 4) Include dataset/code nodes + edges if present
         if isinstance(dataset_id, int):
-            add_dependency_node(dataset_id, "dataset", "uses")
+            add_dependency(dataset_id, "dataset", "dataset")
         elif isinstance(dataset_id, str):
-            # Handle case where IDs were stored as strings
             try:
-                add_dependency_node(int(dataset_id), "dataset", "uses")
+                add_dependency(int(dataset_id), "dataset", "dataset")
             except ValueError:
                 pass
 
         if isinstance(code_id, int):
-            add_dependency_node(code_id, "code", "uses")
+            add_dependency(code_id, "code", "code")
         elif isinstance(code_id, str):
             try:
-                add_dependency_node(int(code_id), "code", "uses")
+                add_dependency(int(code_id), "code", "code")
             except ValueError:
                 pass
 
-        # 5) Return the lineage graph
+        # 5) Return the lineage graph in the expected format
         return {
             "nodes": nodes,
-            "relationships": relationships,
+            "edges": edges,
         }
 
     except HTTPException:
@@ -1430,7 +1433,6 @@ async def get_artifact_lineage(
             status_code=500,
             detail="The artifact lineage system encountered an error.",
         )
-
 
 @app.post("/artifact/model/{id}/license-check")
 async def check_model_license(id: str, license_info: dict, x_authorization: str = Header(None, alias="X-Authorization")):
