@@ -110,6 +110,7 @@ class ModelArtifact(BaseModel):
 class ModelIngestRequest(BaseModel):
     url: str
     name: Optional[str] = None
+    download_url: Optional[str] = None
 
 class ArtifactQuery(BaseModel):
     name: str
